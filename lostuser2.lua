@@ -54,19 +54,6 @@ local function getKey(short, obj)
   return t[1]
 end
 
--- Get value from global
-local function api(s, p)
-  if p==nil then p = _G end
-  local t,k = {}
-  for c in s:gmatch'[^.]+' do
-    if p==nil or type(p)=='function' then break end
-    k = getKey(c, p)
-    p = p[k]
-    t[#t+1] = k
-  end
-  return p, table.concat(t,'.')
-end
-
 local shortened
 
 local function shortFnc(f)
@@ -239,19 +226,32 @@ addCaptureMacro('~~', function (head, body)
 end)
 
 
--- global shortand
-local function globFnc(r)
-  local c = r:sub(1, 1)
-  if c:match'[A-Z]' and _G[c] ~= nil then
-    local res, way = api(r:sub(2), _G[c])
-    return res and c..'.'..way or r
-  end
-  local res, way = api(r)
-  return res and way or r
-end
-local globRgx = '%.('..WRD..('%.?[_%a%d]*'):rep(5)..')'
-addMacro('^'..globRgx, globFnc)
-addMacro('([^_%a%d%.])'..globRgx, function(p, r) return p..globFnc(r) end)
+-- -- Get value from global
+-- local function api(s, p)
+--   if p==nil then p = _G end
+--   local t,k = {}
+--   for c in s:gmatch'[^.]+' do
+--     if p==nil or type(p)=='function' then break end
+--     k = getKey(c, p)
+--     p = p[k]
+--     t[#t+1] = k
+--   end
+--   return p, table.concat(t,'.')
+-- end
+
+-- -- Global Shortand
+-- local function globFnc(r)
+--   local c = r:sub(1, 1)
+--   if c:match'[A-Z]' and _G[c] ~= nil then
+--     local res, way = api(r:sub(2), _G[c])
+--     return res and c..'.'..way or r
+--   end
+--   local res, way = api(r)
+--   return res and way or r
+-- end
+-- local globRgx = '%.('..WRD..('%.?[_%a%d]*'):rep(5)..')'
+-- addMacro('^'..globRgx, globFnc)
+-- addMacro('([^_%a%d%.])'..globRgx, function(p, r) return p..globFnc(r) end)
 
 -- Run only once
 local is_first_run = true
@@ -298,7 +298,8 @@ end
 -- Assemble --
 
 -- Dump everything down and suck 4 slots from top then trade
--- ~#Rc*i{Rsel(i)Rd(0)}~~1,5{IsFS(1,i)`T}
+-- ~#Rc*i{Rsel(i)Rd(0)}Rs(2)~~1,5{IsFS(1,i)`T}
+-- ~#Rc*i{Rsel(i)Rd(0)}~~1,5{IsFS(1,i)}Rsk(3)~:Tg(){~~1,5{?!v{tr}}}
 
 -- Test environment run
 -- if debug.upvalueid then
