@@ -37,8 +37,8 @@ end
 
 -----------------------------------------------------------------
 -----------------------------------------------------------------
-local getmetatable, setmetatable, print, rawget, type, table, pairs, rawset, tostring, next, load
-    = getmetatable, setmetatable, print, rawget, type, table, pairs, rawset, tostring, next, load
+-- local getmetatable, setmetatable, print, rawget, type, table, pairs, rawset, tostring, next, load
+--     = getmetatable, setmetatable, print, rawget, type, table, pairs, rawset, tostring, next, load
 
 local function sortByLen(t)
   table.sort(t, function(a,b)return#a<#b end)
@@ -165,7 +165,7 @@ local function replLetter(str, letter, to)
     :gsub('([^_%a%d])'..letter..'([^_%a%d])', '%1'..to..'%2')
 end
 
-_MACROS = {}
+local _MACROS = {}
 
 local function addMacro(rgx, fnc_or_str)
   _MACROS[#_MACROS+1] = {rgx, fnc_or_str}
@@ -175,7 +175,7 @@ local function addCaptureMacro(prefix, fnc)
   addMacro(prefix..'(.-%b{})', captureGen(fnc))
 end
 
-addMacro('`T', [[~~Tg(){?!v{tr}}]]) -- Trade all trades
+addMacro('`T', [[~:Tg(){?!v{tr}}]]) -- Trade all trades
 addMacro('`Z', [[a=`!a ;; ??`!Rm(3){ Rtn(a) c=`!Rm(3) Rtn(a) ??c{Rtn(a)Rm(3)} a=`!a}]]) -- Zig-Zag move
 addMacro('`&', ' and ')
 addMacro('`!', ' not ')
@@ -218,14 +218,13 @@ addCaptureMacro('~#', function (head, body)
   body = replLetter(body, 'i', i)
   head = replLetter(head, 'i', i)
   local haveP = head ~= nil and not head:match"^%s*$"
-  return 'for '..i..'=1, R.inventorySize(), 1 do\n'..
-    (haveP and 'if '..head..' then\n  ' or '')..
-    body
-  ..(haveP and '\nend' or '')..'\nend '
+  return 'for '..i..'=1, R.inventorySize(), 1 do\n'
+    ..(haveP and makeCondition(head, body, true) or body)
+    ..'\nend '
 end)
 
 -- Pairs
-addCaptureMacro('~~', function (head, body)
+addCaptureMacro('~:', function (head, body)
   local id = nextID()
   body = replLetter(body, 'k', 'k'..id)
   body = replLetter(body, 'v', 'v'..id)
@@ -233,7 +232,7 @@ addCaptureMacro('~~', function (head, body)
 end)
 
 -- Loop
-addCaptureMacro('~', function (head, body)
+addCaptureMacro('~~', function (head, body)
   local i = 'i'..nextID()
   body = replLetter(body, 'i', i)
   return 'for '..i..'='..head..', 1 do\n'..body..'\nend '
@@ -269,10 +268,7 @@ transpile = function(text)
   local i = 1
   while i <= #_MACROS do
     -- print('lookup:', _MACROS[i][1])
-    result = result:gsub(_MACROS[i][1], function(...)
-      local v = _MACROS[i][2]
-      return type(v)=='string' and v or v(...)
-    end)
+    result = result:gsub(_MACROS[i][1], _MACROS[i][2])
     i=i+1
   end
   tab = tab - 1
@@ -302,31 +298,31 @@ end
 -- Assemble --
 
 -- Dump everything down and suck 4 slots from top then trade
--- ~#Rc(i)>0{Rsel(i)Rd(0)}~1,5{IsFS(1,i)`T}
+-- ~#Rc*i{Rsel(i)Rd(0)}~~1,5{IsFS(1,i)`T}
 
 -- Test environment run
-if debug.upvalueid then
-  run[[
-pt'\nFor pairs() test'
+-- if debug.upvalueid then
+--   run[[
+-- pt'\nFor pairs() test'
 
-j=5
-~~_G{??t*v=='table'{
-  j=j-1
-  ??j>0{
-    pt('\n-- '..k..':')
-    ~~v{
-      i.w(' '..k)
-    }
-  }
-}}
+-- j=5
+-- ~:_G{??t*v=='table'{
+--   j=j-1
+--   ??j>0{
+--     pt('\n-- '..k..':')
+--     ~:v{
+--       i.w(' '..k)
+--     }
+--   }
+-- }}
 
-pt'\n\nSafe pointer and call'
+-- pt'\n\nSafe pointer and call'
 
-?.io{write'Hello\n'}
-?!__G{print}
-;;]]
-  os.exit(0)
-end
+-- ?.io{write'Hello\n'}
+-- ?!__G{print}
+-- ;;]]
+-- end
+if debug.upvalueid then  os.exit(0) end
 
 -- Play music
 local program = ({...})[1] or R.name()
