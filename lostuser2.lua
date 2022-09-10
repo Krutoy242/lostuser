@@ -22,7 +22,8 @@ do
   end
   table.sort(cmpList, function(a,b)return#a[1]<#b[1] end)
   for _, v in pairs(cmpList) do
-    _G[v[1]:sub(1, 1):upper()] = component.proxy(v[2])
+    local c = v[1]:sub(1, 1):upper()
+    _G[c] = component.proxy(v[2])
   end
 end
 
@@ -126,7 +127,7 @@ local __id = 0
 local function nextID() __id=__id+1; return __id-1 end
 
 local function transpileTabbed(str,from,to)
-  return --[[ ('  '):rep(tab).. ]]transpile(str:sub(from, to)):gsub('\n', '\n'..('  '):rep(tab))
+  return transpile(str:sub(from, to)):gsub('\n', '\n'..string.rep('  ',tab))
 end
 
 local WRD = '[_%a][_%a%d]*'
@@ -326,7 +327,8 @@ end
 if debug.upvalueid then  os.exit(0) end
 
 -- Play music
-local program = ({...})[1] or R.name()
+local cmd = ...
+local program = cmd or (D or R).name()
 for s in program:sub(1,5):gmatch"%S" do
   computer.beep(200 + s:byte() * 10, 0.05)
 end
