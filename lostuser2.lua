@@ -1,13 +1,23 @@
+-- local getmetatable, setmetatable, pairs, require, print, table, debug, type, error, tostring, load
+--     = getmetatable, setmetatable, pairs, require, print, table, debug, type, error, tostring, load
+
+-- 
+
+--[[
+Deploy script:
+
+crunch --lz77 lostuser2.lua lostuser2.min.lua && flash -q lostuser2.min.lua LostUser
+
+]]
+
 -- If we run from PC
-if debug.upvalueid then goto OC end
+if not debug.upvalueid then
 
 -- If we run from OpenOS
 if require then
-  component = require'component'
-  computer = require'computer'
-else
-  if not print then print = function()end end
+  component, computer = require'component', require'computer'
 end
+if not print then print = function(...)end end
 
 proxy = function(name)
   local p = component.list(name)()
@@ -34,16 +44,11 @@ sleep = os and os.sleep or function(t)
   until u() >= d
 end
 
-::OC::
-
------------------------------------------------------------------
------------------------------------------------------------------
--- local getmetatable, setmetatable, print, rawget, type, table, pairs, rawset, tostring, next, load
---     = getmetatable, setmetatable, print, rawget, type, table, pairs, rawset, tostring, next, load
-
-local function sortByLen(t)
-  table.sort(t, function(a,b)return#a<#b end)
 end
+
+
+-----------------------------------------------------------------
+-----------------------------------------------------------------
 
 -- Get first object field key by shortand
 local function getKey(short, obj)
@@ -51,49 +56,125 @@ local function getKey(short, obj)
   for k in pairs(obj)do
     if type(k)=='string' and k:match(rgx) then t[#t+1] = k end
   end
-  sortByLen(t)
+  table.sort(t, function(a,b)return#a<#b end)
   return t[1]
 end
 
-local shortened
+local q
 
-local function shortFnc(f)
+--- Make call function
+---@param f function
+---@return function
+local function QFnc(f)
   return function(_, ...)
-    -- print('-', _, ...)
     local result = table.pack(f(...))
     for k, v in pairs(result) do
-      result[k] = shortened(v)
+      result[k] = q(v)
     end
-    -- print('+', table.unpack(result))
-    -- error('>calling>')
     return table.unpack(result)
   end
 end
 
-shortened = function(t)
-  local tp = type(t)
-  if tp ~= 'table' and tp ~= 'function' then return t end
-  local old = getmetatable(t)
-  -- print('old:',tp, t, old)
-  if old and old.__short then return t end
+local function isQ(t)
+  local succes, mt = pcall(getmetatable, t)
+  return succes and mt and mt.__q
+end
+
+local function isCallable(t)
+  return (type(t) == 'function' or isQ(t)) and getmetatable(t).__call ~= nil
+end
+
+--- For each t run f(v,k), pack and return Qued result
+---@param t table
+---@param f function
+local function packFor(t,f)
+  local r,i = {},1
+  for k, v in pairs(t) do
+    local callable,f1,v1 = isCallable(f),f,v
+    if not callable then f1,v1=v1,f1 end
+    local resultTable = table.pack(f1(v1,k))
+    if #resultTable>1 or resultTable[1] == nil then
+      r[i] = q(resultTable)
+    -- elseif resultTable[1] ~= nil then
+    else
+      r[i] = resultTable[1]
+    -- -- else r[i] = k
+    end
+    i=i+1
+  end
+  return q(r)
+end
+
+q = function(t)
+  local qtype = type(t)
+  local qIsFunction = qtype == 'function'
+  if qtype ~= 'table' and not qIsFunction then return t end
+  if isQ(t) then return t end
 
   local mt = {
-    __short = true,
-    __call = shortFnc(t),
-    __mul = shortFnc(t),
-    __tostring = function() return '{short}'..tostring(t) end,
+    __q = true,
+    __call = QFnc(t),
+    __mul = QFnc(t),
+    __tostring = function() return '{q}'..(qIsFunction and tostring(t) or '#'..#t..': '..tostring(t)) end,
+    __band = function(self, ...) -- Make a function
+      local args = table.pack(...)
+      return q(function(k,v)
+        return t(table.unpack(args))
+      end)
+    end,
+    __bor = function(self, pipe_to) -- Pipe into function
+      local pipe_is_callable = isCallable(pipe_to)
+
+      -- Left side is table
+      if qtype == 'table' then
+        if pipe_is_callable then
+          return packFor(t, pipe_to)
+
+        else
+          -- Both sides are tables
+          return packFor(t, function(v,k) return packFor(pipe_to, v) end)
+
+        end
+
+      -- Left side is function
+      else
+
+        -- pipe_to is function
+        if pipe_is_callable then
+          return q(function(...) return pipe_to(t(...)) end)
+
+        -- pipe_to is table
+        else
+          return packFor(pipe_to, t)
+        end
+      end
+    end,
   }
-  if tp == 'function' then
+  if qIsFunction then
     return setmetatable({}, mt)
   end
 
-  mt.__index = function(self, key)
+  function mt:__index(key)
     local exact = t[key]
     local v
     if exact ~= nil then
       v = exact
     else
-      if key:match'^[A-Z]' then
+      if key:sub(1,1) == '_' then
+        -- Lodash
+        local subCommand = key:sub(2)
+        if subCommand == '' then
+          v = function(...)
+            print(...)
+          end
+        end
+        local num = tonumber(subCommand)
+        if num then
+          local arr={}
+          for i=1,num do arr[i]=i end
+          v = arr
+        end
+      elseif key:match'^[A-Z]' then
         -- Big letter shortand
         local c = key:sub(1,1)
         local C = t[c]
@@ -106,16 +187,16 @@ shortened = function(t)
         v = t[getKey(key, t)]
       end
     end
-    return shortened(v)
+    return q(v)
   end
   mt.__newindex = t
-  mt.__pairs = function(_)
-    return function(_, k)
+  function mt:__pairs()
+    return function(self, k)
       local k, v = next(t, k)
-      return k, shortened(v)
+      return k, q(v)
     end, t, nil
   end
-  mt.__len = function() return #t end
+  function mt:__len() return #t end
 
   return setmetatable({}, mt)
 end
@@ -168,6 +249,13 @@ addMacro('`Z', [[a=`!a ;; ??`!Rm(3){ Rtn(a) c=`!Rm(3) Rtn(a) ??c{Rtn(a)Rm(3)} a=
 addMacro('`&', ' and ')
 addMacro('`!', ' not ')
 
+-- Syntax Sugar
+for _,c in pairs{'%+','%-'} do
+  local from, to = '('..WRD..'[%._%a%d]*)('..c..')'..c, '(function() %1=__number(%1)%21 return %1 end)'
+  addMacro(from..c, to)
+  addMacro(from, to..'()')
+end
+
 -- Add Macros
 addCaptureMacro('@', addMacro)
 
@@ -176,7 +264,7 @@ local function makeCondition(cond, body, falsy)
   return [[
 
 local __if = (]].. cond ..[[)
-if __if ]].. (falsy and [[and __if ~= '' and __if ~= 0 ]] or '') ..[[then
+if __if ]].. (falsy and 'and __truthy(__if) ' or '') ..[[then
   ]].. body ..[[
 
 end
@@ -268,7 +356,6 @@ transpile = function(text)
   local result = text
   local i = 1
   while i <= #_MACROS do
-    -- print('lookup:', _MACROS[i][1])
     result = result:gsub(_MACROS[i][1], _MACROS[i][2])
     i=i+1
   end
@@ -277,15 +364,27 @@ transpile = function(text)
 end
 
 
-local __ENV = shortened(_ENV)
+local __ENV = q(_ENV)
+
+-- __ENV._ = q(function(n) local a={} for i=1,n do a[i]=i end return a end)
+__ENV.__truthy = function(a)
+  if a and a ~= '' and a ~= 0 then return true end
+  return false
+end
+__ENV.__number = function(a)
+  local t = type(a)
+  if t=='number' then return a end
+  if t=='string' then return tonumber(a) end
+  return __ENV.__truthy(a) and 1 or 0
+end
+
 local function run(input)
   local code = transpile(input)
-  if code == nil or code:match'^%s*$' then
-    return
-  end
+  if code == nil or code:match'^%s*$' then return end
   code = code:gsub('^%s*',''):gsub('%s*$',''):gsub('[%s\n]*\n','\n')
-  print('\n'..code)
-  local res, err = load(code, nil, nil, __ENV)
+  print(code)
+  local res, err = load('return '..code, nil, nil, __ENV)
+  if err then res, err = load(code, nil, nil, __ENV) end
   if err then
     print(err)
   else
@@ -323,13 +422,25 @@ end
 -- ?.io{write'Hello\n'}
 -- ?!__G{print}
 -- ;;]]
--- end
-if debug.upvalueid then  os.exit(0) end
+
+if debug.upvalueid then
+Dd = function(...) print('Dd',...) end
+Dsu = function(...) print('Dsu',...) end
+run[[
+_4|(a+++|Dsu|Dd&a)
+]]
+end
+
+
+if debug.upvalueid then os.exit(0) end
 
 -- Play music
-local cmd = ...
-local program = cmd or (D or R).name()
-for s in program:sub(1,5):gmatch"%S" do
+local cmd, prog = ...
+if cmd then prog = cmd
+elseif D then prog = D.name() elseif R then prog = R.name() end
+if not prog then error'No program defined' end
+for s in prog:sub(1,5):gmatch"%S" do
   computer.beep(200 + s:byte() * 10, 0.05)
 end
-run(program)
+run(prog)
+
