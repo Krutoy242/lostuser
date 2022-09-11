@@ -361,11 +361,26 @@ end
 
 local __ENV = q(_ENV)
 
--- __ENV._ = q(function(n) local a={} for i=1,n do a[i]=i end return a end)
+local function run(input, once)
+  local code = transpile(input)
+  if code == nil or code:match'^%s*$' then return end
+  code = code:gsub('[%s\n]*\n','\n'):gsub('^%s*',''):gsub('%s*$','')
+  print(code)
+  local res, err = load('return '..code, nil, nil, __ENV)
+  if err then res, err = load(code, nil, nil, __ENV) end
+  if err then
+    error(err)
+  else
+    print('once:',once)
+    repeat res() until once
+  end
+end
+
 __ENV.__truthy = function(a)
   if a and a ~= '' and a ~= 0 then return true end
   return false
 end
+
 __ENV.__number = function(a)
   local t = type(a)
   if t=='number' then return a end
@@ -373,21 +388,8 @@ __ENV.__number = function(a)
   return __ENV.__truthy(a) and 1 or 0
 end
 
-local function run(input)
-  local code = transpile(input)
-  if code == nil or code:match'^%s*$' then return end
-  code = code:gsub('^%s*',''):gsub('%s*$',''):gsub('[%s\n]*\n','\n')
-  print(code)
-  local res, err = load('return '..code, nil, nil, __ENV)
-  if err then res, err = load(code, nil, nil, __ENV) end
-  if err then
-    error(err)
-  else
-    while true do
-      res()
-      if debug.upvalueid then os.exit(0) end
-    end
-  end
+__ENV.run = function(text)
+  return run(text, true)
 end
 
 
@@ -423,9 +425,9 @@ end
 if debug.upvalueid then
 Dd = function(...) print('Dd',...) end
 Dsu = function(...) print('Dsu',...) end
-run[[
-_4|(a+++|Dsu|Dd&a)
-]]
+run([[
+run'_4|(a+++|Dsu|Dd&a)'
+]], debug.upvalueid)
 end
 
 
