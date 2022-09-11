@@ -13,9 +13,8 @@ Robot BIOS program for Minecraft OpenComputers mod.
   - [Usage](#usage)
   - [Syntax](#syntax)
     - [TL;DR](#tldr)
-    - [Naming mechanic](#naming-mechanic)
-  - [Operators](#operators)
-    - [Predefined](#predefined)
+    - [Loop](#loop)
+    - [Globals](#globals)
   - [Debug](#debug)
     - [Debugging with `error()`](#debugging-with-error)
     - [Debugging from advanced robot](#debugging-from-advanced-robot)
@@ -57,13 +56,13 @@ If you crafted it, you can skip next step `Write program on EEPROM`.
 1. Download file from the internet (need ![](https://is.gd/zrPusF 'Internet Card')), run from command line:
 
 ```
-wget https://gist.githubusercontent.com/Krutoy242/db63637d605c2c247bc95e939c7f7ddd/raw/lostuser.min.lua
+wget https://gist.githubusercontent.com/Krutoy242/1f18eaf6b262fb7ffb83c4666a93cbcc/raw/lostuser2.min.lua
 ```
 
 2. To write on existing EEPROM run:
 
 ```
-flash -q lostuser.min.lua LostUser
+flash -q lostuser2.min.lua LostUser
 ```
 
 ### Insert in robot
@@ -74,9 +73,9 @@ Take EEPROM from computer case and merge with robot.
 
 ## Usage
 
-Robot programmed by **renaming it**. You must rename Robot on ![](https://is.gd/pYpuM1 'Anvil') or with ![](https://is.gd/VgGaLN 'Labeller') (from _Integrated Dynamics_ item).
+Robot programmed by **renaming it**. You must rename Robot on ![](https://is.gd/pYpuM1 'Anvil') or with ![](https://is.gd/VgGaLN 'Labeller').
 
-Name your Robot `\3`, place on ground, turn on, and see how its clicking blocks in front.
+Name your Robot `R.use(3)`, place on ground, turn on, and see how its clicking blocks in front.
 
 ![](https://i.imgur.com/tgsaqxj.gif)
 
@@ -87,90 +86,41 @@ Name your Robot `\3`, place on ground, turn on, and see how its clicking blocks 
 
 If you don't want to learn Lua and you need the robot to right/left click, a few simple names for the robot and the result:
 
-- `\3z` The robot will right click on the block on the front each second.
-- `/3z` The robot will swing with a sword or break the block in front of it.
+- `R.use(3)` The robot will right click on the block on the front.
+- `R.swing(3)` The robot will swing with a sword or break the block in front of it.
 
-### Naming mechanic
+### Loop
 
-- **Each symbol means _command_**
+Robot will execute it's name as Lua code in `while true` loop.
 
-  Progran run from left to right. Each symbol executed and return its result forward.
-  For example:
+### Globals
 
-  > `\3z` - This program would call `robot.use(3)` then call `robot.move(3)`
+All components are sorted by name length and added to global variables by the first letter.
 
-- **Some actions have _parameters_**
+For example:
+```less
+R	=>	robot
+E	=>	eeprom
+T	=>	trading
+C	=>	computer
+I	=>	inventory_controller
+...
+```
 
-  Parameters can be any value.  
-  All **1-digit numbers** parsed as numbers. Usually its [sides](https://ocdoc.cil.li/api:sides).
+Additional globals:
 
-  > `|0|1m3` - Place blocks under robot (`|` is alias for `robot.place`), then over the robot, then move forward.
+- `sleep(seconds)`
+- `proxy(partial_name)`
 
-- **_Commands_ return values**
-
-  This values can be used for other functions as parameters.
-
-  > `^(#1)` - Select slot equal number of items in first slot. Robot must have ![Inventory Upgrade](https://is.gd/1qkAir 'Inventory Upgrade')
-  >
-  > Program here run first _command_ `^` (`robot.select`), but it needs a param, so it try to get param from next _command_. `#` is alias for `robot.count`, so its return number used as param for `^` _command_.
-  >
-  > Notice that without the brackets `^#1`, the `robot.select` function would get the `robot.count` function as a parameter, which would cause an error.
-
-- **Constants**
-
-  There is few constants:
-
-  - `n` - number of inventory slots. Equal to executing `robot.inventorySize()`
-  - `i` - if you are inside `for i` loop, or was in it, return last `i`
-  - `*` - alias for `nil`
-
-  > `#n` - Select last slot of robot, if it have _inventory upgrade_.
-
-## Operators
-
-Operators is hardcoded symbols that control program flow.
-
-All parameters have default values. You can use defaul values by calling operators with `nil` instead parameters.
-
-| Symbol | Params                                              | Description                                                                                                             | Example                                                                                                                                                    |
-| :----: | :-------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-|  `-`   | `value=true`                                        | Write `value` into variable with symbol right after `-`.                                                                | `-a5` - writes `5` into variable with name `a`.                                                                                                            |
-|  `~`   | `program=''`                                        | Define a symbol right after `~` as alias with code in parameter `program`. This code would run when alias symbol occur. | `~M'm1' MMM` - define symbol `M` as program `m1` (means `robot.move(1)`), and then execute it 3 times.                                                     |
-|  `?`   | `condition=false`<br>`onTruthy=''`<br>`onFalthy=''` | if `condition` then return `onTruthy()` else return `onFalthy()` end                                                    | `?M"R"'L'` - If succesfully moved forward, turn right, or turn left otherwise.<br>`?{<#5>>0}'^i'*` - select slot 5 if its non-empty. Do nothing otherwise. |
-|  `!`   | `program=''`<br>`from='1'`<br>`to='maxinteger'`     | for i=`from`,`to`,1 do `program()` end<br>Break loop when `program()` return truthy value                               | `!"?{<#i>>0}'^i'*"1n` - Select first non-empty slot.                                                                                                       |
-
-|    Symbol     | Description                                                                                                                | Example                                                                                                                               |
-| :-----------: | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-|   ' " &#96;   | Takes all text until next quote and return as string.                                                                      | `-a"one'two'"` - writes string `one'two'` into variable `a`                                                                           |
-|  `(`code`)`   | Run code inside parenthesis and return its value.(¹)<br>Note that capture is not recursive. `(a(b))` would capture `(a(b)` | `z(#1)` - sleeps for number of seconds equal to number of items in first slot.                                                        |
-|   `{`lua`}`   | Return as lua evaluated expression.(²)(³)                                                                                  | `t{true}` - turn right.<br>`^{12}` - select 12th slot.<br>`{proxy'piston'.push}3` - push block in front (if piston upgrade installed) |
-| `[`pointer`]` | Return pointer to globals. Can use shortands. First letter is mandatory, other can content any symbols between.            | `[cpr]` or `[computer]` - return global variable `computer`<br>`[cpr.bep]` - return `computer.beep`                                   |
-
-**¹** : Only last result would be returned.
-
-> `-a1 -b2 ^(ab)` - Would select second slot.
-
-**²** : You can use `< >` inside lua code to execute program between `< >` as commands.
-
-> `-a{not <a>}` - Negate variable `a`.
-
-**³** : There is some predefined globals:
-
-- `proxy`
-- `r = proxy"robot"`
-- `ic = proxy"y_c"`
-
-### Predefined
-
-There is many predefined symbols. See them at the beginning of [source file](https://gist.githubusercontent.com/Krutoy242/db63637d605c2c247bc95e939c7f7ddd/raw/d63a80a7ec6393bad8a44ef6803de9895eec3d43/lostuser.lua).
 
 ## Debug
 
 ### Debugging with `error()`
 
-Robots without screen and GPU cant show messages. So, there is predefined function `e` that could throw an error that would be visible by right-clicking ![Analyzer](https://is.gd/EYKTlS 'Analyzer').
+Robots without screen and GPU cant show messages.
+Use `error(msg)` that would be visible by right-clicking ![Analyzer](https://is.gd/EYKTlS 'Analyzer').
 
-> `e[r.cT]` - Error with `robot.compareFluidTo` documentation.
+> `e(R.cT)` - Error with `robot.compareFluidTo` documentation.
 
 ### Debugging from advanced robot
 
@@ -179,16 +129,10 @@ If you want a deeper level of debugging, load the program on a robot with a comp
 Download program on robot:
 
 ```sh
-wget https://gist.githubusercontent.com/Krutoy242/db63637d605c2c247bc95e939c7f7ddd/raw/d63a80a7ec6393bad8a44ef6803de9895eec3d43/lostuser.lua
+wget [...]
 ```
 
-The program can accept 2 commands
-
-- The program text to execute (instead of the robot's name)
-- Logging output level [1-3]
-  1. Programs and subprograms only
-  2. All commands
-  3. Include initialization commands in the debug
+First robot parameter - the program text to execute (instead of the robot's name)
 
 Since the robot screen is very small, I suggest redirecting the output to a file.
 
@@ -197,21 +141,10 @@ Example:
 Run this from shell. Robot would move forward and then stop program.
 
 ```sh
-lostuser.lua "MX" 2 > out
+lostuser "Rm(3)o.e()" > out
 ```
 
-Rich debug info would be output into `out` file:
-
-```c#
-PROGRAM "MX" {
-  ALIAS M == "m3"
-  PROGRAM "m3" {
-    VAR m == "function(direction:number):boolean -- Move in the specified direction."
-  } return true
-  ALIAS X == "[os.exit]*"
-  PROGRAM "[os.exit]*" {
-    api: os.exit os.exit
-```
+In `out` file you will see its code.
 
 ## Examples
 
