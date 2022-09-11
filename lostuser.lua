@@ -6,7 +6,7 @@
 --[[
 Deploy script:
 
-crunch --lz77 lostuser2.lua lostuser2.min.lua && flash -q lostuser2.min.lua LostUser
+crunch --lz77 lostuser.lua lostuser.min.lua && flash -q lostuser.min.lua LostUser
 
 ]]
 
