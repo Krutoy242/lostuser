@@ -1,6 +1,6 @@
 # `Lost User` - simpliest robot
 
-Robot BIOS program for Minecraft OpenComputers mod.
+Robot (or drone!) BIOS program for Minecraft OpenComputers mod.
 
 
 - [`Lost User` - simpliest robot](#lost-user---simpliest-robot)
@@ -19,8 +19,6 @@ Robot BIOS program for Minecraft OpenComputers mod.
     - [Debugging with `error()`](#debugging-with-error)
     - [Debugging from advanced robot](#debugging-from-advanced-robot)
   - [Examples](#examples)
-    - [IC2 crops](#ic2-crops)
-    - [Ferrous-Juniper farm](#ferrous-juniper-farm)
   - [Links](#links)
 
 ## Why?
@@ -56,13 +54,13 @@ If you crafted it, you can skip next step `Write program on EEPROM`.
 1. Download file from the internet (need ![](https://is.gd/zrPusF 'Internet Card')), run from command line:
 
 ```
-wget https://gist.githubusercontent.com/Krutoy242/1f18eaf6b262fb7ffb83c4666a93cbcc/raw/lostuser2.min.lua
+wget https://gist.githubusercontent.com/Krutoy242/1f18eaf6b262fb7ffb83c4666a93cbcc/raw/lostuser.min.lua
 ```
 
 2. To write on existing EEPROM run:
 
 ```
-flash -q lostuser2.min.lua LostUser
+flash -q lostuser.min.lua LostUser
 ```
 
 ### Insert in robot
@@ -111,6 +109,7 @@ Additional globals:
 
 - `sleep(seconds)`
 - `proxy(partial_name)`
+- `run(text)` run text once same way as robot name
 
 
 ## Debug
@@ -129,7 +128,7 @@ If you want a deeper level of debugging, load the program on a robot with a comp
 Download program on robot:
 
 ```sh
-wget [...]
+wget https://gist.githubusercontent.com/Krutoy242/1f18eaf6b262fb7ffb83c4666a93cbcc/raw/lostuser.lua
 ```
 
 First robot parameter - the program text to execute (instead of the robot's name)
@@ -148,23 +147,10 @@ In `out` file you will see its code.
 
 ## Examples
 
-### IC2 crops
-
-We would use this robot to breeding **Industrial Craft 2** crops.
-
-To do this, you need to plant the seeds in a checker order, and put cross sticks between them. Also, the robot has to run along the bed and right-click Weeding Trowel to pick up the weeds.
-
-### Ferrous-Juniper farm
-
-In this example, the robot runs a complex program: `?(y0)'E9nS18''^9/0s18|0'Z`.
-
-This program:
-1. Tosses items from slots 9-16 down
-2. Picks up items in slots 1-8 from top
-3. Moves in a zig-zag pattern, breaks the block underneath and puts a new one
+> [unfinished readme part]
 
 
 ## Links
 
-- [Gist with source code and readme](https://gist.github.com/Krutoy242/db63637d605c2c247bc95e939c7f7ddd)
+- [Gist with source code and readme](https://gist.githubusercontent.com/Krutoy242/1f18eaf6b262fb7ffb83c4666a93cbcc)
 - Modpack this robot was programmed for: [Enigmatica 2: Expert - Extended](https://www.curseforge.com/minecraft/modpacks/enigmatica-2-expert-extended)

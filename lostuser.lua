@@ -1,9 +1,22 @@
 --[[
+
+Lost User - simpliest robot
+
+Author: Krutoy242
+
+Source and readme:
+https://gist.githubusercontent.com/Krutoy242/1f18eaf6b262fb7ffb83c4666a93cbcc
+
+]]
+
+--[[
 Deploy script:
 
 crunch --lz77 lostuser.lua lostuser.min.lua && flash -q lostuser.min.lua LostUser
 
 ]]
+
+local proxy, sleep
 
 -- If we run from PC
 if not debug.upvalueid then
@@ -392,6 +405,8 @@ __ENV.run = function(text)
   return run(text, true)
 end
 
+__ENV.proxy = proxy
+__ENV.sleep = sleep
 
 -- Assemble --
 
