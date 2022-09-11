@@ -1,8 +1,3 @@
--- local getmetatable, setmetatable, pairs, require, print, table, debug, type, error, tostring, load
---     = getmetatable, setmetatable, pairs, require, print, table, debug, type, error, tostring, load
-
--- 
-
 --[[
 Deploy script:
 
@@ -294,7 +289,7 @@ addCaptureMacro('~#', function (head, body)
   body = replLetter(body, 'i', i)
   head = replLetter(head, 'i', i)
   local haveP = head ~= nil and not head:match"^%s*$"
-  return 'for '..i..'=1, R.inventorySize(), 1 do\n'
+  return 'for '..i..'=1, (D or R).inventorySize() do\n'
     ..(haveP and makeCondition(head, body, true) or body)
     ..'\nend '
 end)
@@ -386,9 +381,10 @@ local function run(input)
   local res, err = load('return '..code, nil, nil, __ENV)
   if err then res, err = load(code, nil, nil, __ENV) end
   if err then
-    print(err)
+    error(err)
   else
-    while not res() do
+    while true do
+      res()
       if debug.upvalueid then os.exit(0) end
     end
   end
@@ -423,6 +419,7 @@ end
 -- ?!__G{print}
 -- ;;]]
 
+
 if debug.upvalueid then
 Dd = function(...) print('Dd',...) end
 Dsu = function(...) print('Dsu',...) end
@@ -443,4 +440,3 @@ for s in prog:sub(1,5):gmatch"%S" do
   computer.beep(200 + s:byte() * 10, 0.05)
 end
 run(prog)
-
