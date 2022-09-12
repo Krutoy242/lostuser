@@ -384,8 +384,9 @@ local function run(input, once)
   if err then
     error(err)
   else
-    print('once:',once)
-    repeat res() until once
+    repeat
+      res()
+    until once
   end
 end
 
@@ -440,9 +441,8 @@ __ENV.sleep = sleep
 if debug.upvalueid then
 Dd = function(...) print('Dd',...) end
 Dsu = function(...) print('Dsu',...) end
-run([[
-run'_4|(a+++|Dsu|Dd&a)'
-]], debug.upvalueid)
+b = function()return{4,5,6}end
+run("run'_4|(a+++|Dsu|tb.u&(Dd&a))'", debug.upvalueid)
 end
 
 
