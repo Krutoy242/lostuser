@@ -16,7 +16,17 @@ crunch --lz77 lostuser.lua lostuser.min.lua && flash -q lostuser.min.lua LostUse
 
 ]]
 
-local proxy, sleep
+--[[
+██╗███╗   ██╗██╗████████╗
+██║████╗  ██║██║╚══██╔══╝
+██║██╔██╗ ██║██║   ██║   
+██║██║╚██╗██║██║   ██║   
+██║██║ ╚████║██║   ██║   
+╚═╝╚═╝  ╚═══╝╚═╝   ╚═╝   
+]]
+
+-- Forward declarations
+local proxy, sleep, run, loadTranslated
 
 -- If we run from PC
 if not debug.upvalueid then
@@ -54,9 +64,20 @@ end
 
 end
 
+local function localError(err)
+  if computer then computer.beep(800, 0.05) end
+end
 
------------------------------------------------------------------
------------------------------------------------------------------
+--[[
+ ██████╗    ████████╗ █████╗ ██████╗ ██╗     ███████╗
+██╔═══██╗   ╚══██╔══╝██╔══██╗██╔══██╗██║     ██╔════╝
+██║   ██║█████╗██║   ███████║██████╔╝██║     █████╗  
+██║▄▄ ██║╚════╝██║   ██╔══██║██╔══██╗██║     ██╔══╝  
+╚██████╔╝      ██║   ██║  ██║██████╔╝███████╗███████╗
+ ╚══▀▀═╝       ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚══════╝╚══════╝
+]]
+
+local q -- q(x) to turn Function / Table into Q
 
 -- Get first object field key by shortand
 local function getKey(short, obj)
@@ -67,8 +88,6 @@ local function getKey(short, obj)
   table.sort(t, function(a,b)return#a<#b end)
   return t[1]
 end
-
-local q
 
 --- Make call function
 ---@param f function
@@ -89,24 +108,46 @@ local function isQ(t)
 end
 
 local function isCallable(t)
-  return (type(t) == 'function' or isQ(t)) and getmetatable(t).__call ~= nil
+  return type(t) == 'function' or isQ(t) -- TODO: fix if Q-table not actually callable
 end
 
---- For each t run f(v,k), pack and return Qued result
+--- Generate safe function from lua code
+---@param txt string Lua code to load as function body
+local function makeRunedFunction(txt)
+  local loaded, err = loadTranslated(
+    'function(...) local a1,a2,a3,a4 = ... return '..txt..' end',
+    txt
+  )
+  if err then
+    localError(err)
+    return q{}
+  else
+    return function(...)
+      local safeResult = table.pack(pcall(loaded(), ...))
+      if not safeResult[1] then
+        localError(safeResult[2])
+        return nil
+      end
+      return table.unpack(safeResult, 2)
+    end
+  end
+end
+
+--- For each t run f(v,k)
+--- pack and return Qued result
 ---@param t table
 ---@param f function
 local function packFor(t,f)
   local r,i = {},1
   for k, v in pairs(t) do
-    local callable,f1,v1 = isCallable(f),f,v
-    if not callable then f1,v1=v1,f1 end
-    local resultTable = table.pack(f1(v1,k))
+    -- local callable,f1,v1 = isCallable(f),f,v
+    -- if not callable then f1,v1=v1,f1 end
+    -- local resultTable = table.pack(f1(v1,k))
+    local resultTable = table.pack(f(v,k))
     if #resultTable>1 or resultTable[1] == nil then
       r[i] = q(resultTable)
-    -- elseif resultTable[1] ~= nil then
     else
       r[i] = resultTable[1]
-    -- -- else r[i] = k
     end
     i=i+1
   end
@@ -131,27 +172,34 @@ q = function(t)
       end)
     end,
     __bor = function(self, pipe_to) -- Pipe into function
-      local pipe_is_callable = isCallable(pipe_to)
+      local pipe_to_type = type(pipe_to)
+      local pipeTo_asFunc, pipe_is_callable
+      if pipe_to_type == 'string' then
+        pipeTo_asFunc = makeRunedFunction(pipe_to)
+        pipe_is_callable = true
+      else
+        pipeTo_asFunc = pipe_to
+        pipe_is_callable = isCallable(pipe_to)
+      end
 
-      -- Left side is table
       if qtype == 'table' then
-        if pipe_is_callable then
-          return packFor(t, pipe_to)
 
+        -- Table | (Function or String)
+        if pipe_is_callable then
+          return packFor(self, pipeTo_asFunc)
+
+        -- Table | Any
         else
-          -- Both sides are tables
-          return packFor(t, function(v,k) return packFor(pipe_to, v) end)
+          return packFor(self, function(v,k) return packFor(pipe_to, v) end)
 
         end
-
-      -- Left side is function
       else
 
-        -- pipe_to is function
+        -- Function | (Function or String)
         if pipe_is_callable then
-          return q(function(...) return pipe_to(t(...)) end)
+          return q(function(...) return pipeTo_asFunc(t(...)) end)
 
-        -- pipe_to is table
+        -- Function | Any
         else
           return packFor(pipe_to, t)
         end
@@ -169,7 +217,7 @@ q = function(t)
       v = exact
     else
       if key:sub(1,1) == '_' then
-        -- Lodash
+        -- Ludash
         local subCommand = key:sub(2)
         if subCommand == '' then
           v = function(...)
@@ -209,25 +257,77 @@ q = function(t)
   return setmetatable({}, mt)
 end
 
-local transpile
+--[[
+████████╗██████╗  █████╗ ███╗   ██╗███████╗██╗      █████╗ ████████╗███████╗
+╚══██╔══╝██╔══██╗██╔══██╗████╗  ██║██╔════╝██║     ██╔══██╗╚══██╔══╝██╔════╝
+   ██║   ██████╔╝███████║██╔██╗ ██║███████╗██║     ███████║   ██║   █████╗  
+   ██║   ██╔══██╗██╔══██║██║╚██╗██║╚════██║██║     ██╔══██║   ██║   ██╔══╝  
+   ██║   ██║  ██║██║  ██║██║ ╚████║███████║███████╗██║  ██║   ██║   ███████╗
+   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝╚══════╝╚═╝  ╚═╝   ╚═╝   ╚══════╝
+]]
+
+local _MACROS = {}
 local tab = 0
+
+local function translate(text)
+  tab = tab + 1
+  local result = text
+  local i = 1
+  while i <= #_MACROS do
+    result = result:gsub(_MACROS[i][1], _MACROS[i][2])
+    i=i+1
+  end
+  tab = tab - 1
+  return result
+end
 
 local __id = 0
 local function nextID() __id=__id+1; return __id-1 end
 
-local function transpileTabbed(str,from,to)
-  return transpile(str:sub(from, to)):gsub('\n', '\n'..string.rep('  ',tab))
+--[[
+███╗   ███╗ █████╗  ██████╗██████╗  ██████╗ ███████╗
+████╗ ████║██╔══██╗██╔════╝██╔══██╗██╔═══██╗██╔════╝
+██╔████╔██║███████║██║     ██████╔╝██║   ██║███████╗
+██║╚██╔╝██║██╔══██║██║     ██╔══██╗██║   ██║╚════██║
+██║ ╚═╝ ██║██║  ██║╚██████╗██║  ██║╚██████╔╝███████║
+╚═╝     ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝
+]]
+
+local function addMacro(rgx, fnc_or_str)
+  _MACROS[#_MACROS+1] = {rgx, fnc_or_str}
 end
 
+-----------------------------------------------------------------
+-- Simple replaces
+-----------------------------------------------------------------
+
+addMacro('`T', [[Tg!|'a1.tr!']]) -- Trade all trades
+addMacro('`Z', [[a=`!a ;; ??`!Rm(3){ Rtn(a) c=`!Rm(3) Rtn(a) ??c{Rtn(a)Rm(3)} a=`!a}]]) -- Zig-Zag move
+addMacro('`&', ' and ')
+addMacro('`!', ' not ')
+
+-- Syntax Sugar
 local WRD = '[_%a][_%a%d]*'
-local IFS = WRD..'[,_%a%d]*'
+for _,c in pairs{'%+','%-'} do
+  local from, to = '('..WRD..'[%._%a%d]*)('..c..')'..c, '(function() %1=__number(%1)%21 return %1 end)'
+  addMacro(from..c, to)
+  addMacro(from, to..'()')
+end
+
+-----------------------------------------------------------------
+-- Captures {}
+-----------------------------------------------------------------
+
+local function translateTabbed(str,from,to)
+  return translate(str:sub(from, to)):gsub('\n', '\n'..string.rep('  ',tab))
+end
 
 local function captureGen(fnc)
   return function (r)
     local from,to = r:match'(){()'
     if not from then return '' end
     local head = r:sub(1, from-1)
-    local body = transpileTabbed(r, to, -2)
+    local body = translateTabbed(r, to, -2)
     if type(fnc)=='function' then return fnc(head, body) or ''
     else
       return fnc:gsub('HEAD', head):gsub('BODY', body)
@@ -235,39 +335,17 @@ local function captureGen(fnc)
   end
 end
 
-local function replLetter(str, letter, to)
-  return str
-    :gsub('^'..letter..'([^_%a%d])', to..'%1')
-    :gsub('([^_%a%d])'..letter..'$', '%1'..to)
-    :gsub('([^_%a%d])'..letter..'([^_%a%d])', '%1'..to..'%2')
-end
-
-local _MACROS = {}
-
-local function addMacro(rgx, fnc_or_str)
-  _MACROS[#_MACROS+1] = {rgx, fnc_or_str}
-end
-
 local function addCaptureMacro(prefix, fnc)
   addMacro(prefix..'(.-%b{})', captureGen(fnc))
-end
-
-addMacro('`T', [[~:Tg(){?!v{tr}}]]) -- Trade all trades
-addMacro('`Z', [[a=`!a ;; ??`!Rm(3){ Rtn(a) c=`!Rm(3) Rtn(a) ??c{Rtn(a)Rm(3)} a=`!a}]]) -- Zig-Zag move
-addMacro('`&', ' and ')
-addMacro('`!', ' not ')
-
--- Syntax Sugar
-for _,c in pairs{'%+','%-'} do
-  local from, to = '('..WRD..'[%._%a%d]*)('..c..')'..c, '(function() %1=__number(%1)%21 return %1 end)'
-  addMacro(from..c, to)
-  addMacro(from, to..'()')
 end
 
 -- Add Macros
 addCaptureMacro('@', addMacro)
 
--- Conditional
+-----------------------------------------------------------------
+-- Conditionals
+-----------------------------------------------------------------
+
 local function makeCondition(cond, body, falsy)
   return [[
 
@@ -296,6 +374,17 @@ if type(__p)=='table' and (type(__p.BODY)=='table' or type(__p.BODY)=='function'
 end
 ]])
 
+-----------------------------------------------------------------
+-- Loops
+-----------------------------------------------------------------
+
+local function replLetter(str, letter, to)
+  return str
+    :gsub('^'..letter..'([^_%a%d])', to..'%1')
+    :gsub('([^_%a%d])'..letter..'$', '%1'..to)
+    :gsub('([^_%a%d])'..letter..'([^_%a%d])', '%1'..to..'%2')
+end
+
 -- For Each inventory slot
 addCaptureMacro('~#', function (head, body)
   local i = 'i'..nextID()
@@ -322,6 +411,12 @@ addCaptureMacro('~~', function (head, body)
   return 'for '..i..'='..head..', 1 do\n'..body..'\nend '
 end)
 
+-----------------------------------------------------------------
+-- Lowest priority
+-----------------------------------------------------------------
+
+-- Exec
+addMacro('!', '()')
 
 -- -- Get value from global
 -- local function api(s, p)
@@ -350,6 +445,10 @@ end)
 -- addMacro('^'..globRgx, globFnc)
 -- addMacro('([^_%a%d%.])'..globRgx, function(p, r) return p..globFnc(r) end)
 
+-----------------------------------------------------------------
+-- Weird stuff
+-----------------------------------------------------------------
+
 -- Run only once
 local is_first_run = true
 function on_first_run(fnc)
@@ -359,34 +458,38 @@ addMacro('(.+);;(.*)', function(once, rest)
   return 'on_first_run(function()\n  '..once..'\n  \nend)\n'..rest
 end)
 
-transpile = function(text)
-  tab = tab + 1
-  local result = text
-  local i = 1
-  while i <= #_MACROS do
-    result = result:gsub(_MACROS[i][1], _MACROS[i][2])
-    i=i+1
-  end
-  tab = tab - 1
-  return result
-end
-
+--[[
+██╗      ██████╗  █████╗ ██████╗ 
+██║     ██╔═══██╗██╔══██╗██╔══██╗
+██║     ██║   ██║███████║██║  ██║
+██║     ██║   ██║██╔══██║██║  ██║
+███████╗╚██████╔╝██║  ██║██████╔╝
+╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═════╝ 
+]]
 
 local __ENV = q(_ENV)
 
-local function run(input, once)
-  local code = transpile(input)
-  if code == nil or code:match'^%s*$' then return end
+loadTranslated = function(text, chunkName)
+  local code = translate(text)
+  if code == nil or code:match('^%s*$') then
+    localError('Unable to translate: '..text)
+    return nil
+  end
   code = code:gsub('[%s\n]*\n','\n'):gsub('^%s*',''):gsub('%s*$','')
-  print(code)
-  local res, err = load('return '..code, nil, nil, __ENV)
-  if err then res, err = load(code, nil, nil, __ENV) end
+  print('Code:',code)
+  local res, err = load('return '..code, chunkName, nil, __ENV)
+  if err then res, err = load(code, chunkName, nil, __ENV) end
   if err then
-    error(err)
-  else
-    repeat
-      res()
-    until once
+    localError(err)
+  end
+  return res, err
+end
+
+run = function(input)
+  local fnc = loadTranslated(input)
+  while true do
+    local r = fnc()
+    if isCallable(r) then r() end
   end
 end
 
@@ -403,7 +506,7 @@ __ENV.__number = function(a)
 end
 
 __ENV.run = function(text)
-  return run(text, true)
+  return loadTranslated(text)()
 end
 
 __ENV.proxy = proxy
@@ -438,15 +541,22 @@ __ENV.sleep = sleep
 -- ;;]]
 
 
-if debug.upvalueid then
-Dd = function(...) print('Dd',...) end
-Dsu = function(...) print('Dsu',...) end
-b = function()return{4,5,6}end
-run("run'_4|(a+++|Dsu|tb.u&(Dd&a))'", debug.upvalueid)
-end
+-- if debug.upvalueid then
+--   T = {
+--     getTrades = function() return {
+--       {trade=function()print('!trade1')end},
+--       {trade=function()print('!trade2')end},
+--       n=2,
+--     } end
+--   }
+--   print(
+--     'debugResult:',
+--     loadTranslated("Tg!|'a1.tr!'")()
+--   )
+-- end
 
 
-if debug.upvalueid then os.exit(0) end
+-- if debug.upvalueid then os.exit(0) end
 
 -- Play music
 local cmd, prog = ...
@@ -457,3 +567,18 @@ for s in prog:sub(1,5):gmatch"%S" do
   computer.beep(200 + s:byte() * 10, 0.05)
 end
 run(prog)
+
+--[[
+
+Available ops:
+&|~<<>>+-*/^%//==< <=
+
+Some programs:
+Dm(tb.u(Nf(300)[a++%2+1].p))s(3)~#{Dsel(i)Dd(0)Dsu(0)}
+a++b=Nf(300)[a%2+1]Dm(tb.u(b.p))s(14)run(b.l)
+
+
+Tg!|'a1.tr!'
+~:Tg(){?!v{tr}}
+
+]]
