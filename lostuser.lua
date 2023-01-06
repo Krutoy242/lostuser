@@ -10,13 +10,6 @@ https://gist.githubusercontent.com/Krutoy242/1f18eaf6b262fb7ffb83c4666a93cbcc
 ]]
 
 --[[
-Deploy script:
-
-crunch --lz77 lostuser.lua lostuser.min.lua && flash -q lostuser.min.lua LostUser
-
-]]
-
---[[
 ██╗███╗   ██╗██╗████████╗
 ██║████╗  ██║██║╚══██╔══╝
 ██║██╔██╗ ██║██║   ██║   
@@ -212,37 +205,42 @@ q = function(t)
 
   function mt:__index(key)
     local exact = t[key]
+    if exact ~= nil then return q(exact) end
+
     local v
-    if exact ~= nil then
-      v = exact
-    else
-      if key:sub(1,1) == '_' then
-        -- Ludash
-        local subCommand = key:sub(2)
-        if subCommand == '' then
-          v = function(...)
-            print(...)
-          end
-        end
-        local num = tonumber(subCommand)
-        if num then
-          local arr={}
-          for i=1,num do arr[i]=i end
-          v = arr
-        end
-      elseif key:match'^[A-Z]' then
-        -- Big letter shortand
-        local c = key:sub(1,1)
-        local C = t[c]
-        if C then
-          local rest = key:sub(2)
-          v = C[getKey(rest, C)]
-        end
+
+    -- Global key that started with _
+    if key:sub(1,1) == '_' then
+      -- Empty: _ global return function that just print output
+      -- TODO: add functionality for q{}._
+      if #key == 1 then v = function(...) print(...) end end
+      
+      -- Number: _8 create table {1,2,3,4,5,6,7,8}
+      local subCommand = key:sub(2)
+      local num = tonumber(subCommand)
+      if num then
+        local arr={}
+        for i=1,num do arr[i]=i end
+        v = arr
       end
-      if v == nil then
-        v = t[getKey(key, t)]
+
+    -- Big letter shortand
+    elseif key:match'^[A-Z]' then
+      local c = key:sub(1,1)
+      local C = t[c]
+      if C then
+        v = C[getKey(key:sub(2), C)]
       end
     end
+
+    -- Other cases
+    if v == nil then
+      print('target key: '..key)
+      for k,v in pairs(t) do print('key: '..k) end
+      print('found key: '..tostring(getKey(key, t)))
+      v = t[getKey(key, t)]
+    end
+
     return q(v)
   end
   mt.__newindex = t
@@ -314,6 +312,8 @@ for _,c in pairs{'%+','%-'} do
   addMacro(from, to..'()')
 end
 
+-- TODO: Add *= += and stuff
+
 -----------------------------------------------------------------
 -- Captures {}
 -----------------------------------------------------------------
@@ -346,11 +346,11 @@ addCaptureMacro('@', addMacro)
 -- Conditionals
 -----------------------------------------------------------------
 
-local function makeCondition(cond, body, falsy)
+local function makeCondition(cond, body, checkFalsy)
   return [[
 
 local __if = (]].. cond ..[[)
-if __if ]].. (falsy and 'and __truthy(__if) ' or '') ..[[then
+if __if ]].. (checkFalsy and 'and __truthy(__if) ' or '') ..[[then
   ]].. body ..[[
 
 end
@@ -467,6 +467,7 @@ end)
 ╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═════╝ 
 ]]
 
+-- Global environment inside loaded code
 local __ENV = q(_ENV)
 
 loadTranslated = function(text, chunkName)
@@ -476,19 +477,18 @@ loadTranslated = function(text, chunkName)
     return nil
   end
   code = code:gsub('[%s\n]*\n','\n'):gsub('^%s*',''):gsub('%s*$','')
-  print('Code:',code)
+  -- print('Code:',code)
   local res, err = load('return '..code, chunkName, nil, __ENV)
   if err then res, err = load(code, chunkName, nil, __ENV) end
-  if err then
-    localError(err)
-  end
+  if err then localError(err) end
   return res, err
 end
 
 run = function(input)
-  local fnc = loadTranslated(input)
+  local fnc, err = loadTranslated(input)
+  local r
   while true do
-    local r = fnc()
+    r = fnc()
     if isCallable(r) then r() end
   end
 end
@@ -517,44 +517,6 @@ __ENV.sleep = sleep
 -- Dump everything down and suck 4 slots from top then trade
 -- ~#Rc*i{Rsel(i)Rd(0)}Rs(2)~~1,5{IsFS(1,i)`T}
 -- ~#Rc*i{Rsel(i)Rd(0)}~~1,5{IsFS(1,i)}Rsk(3)~:Tg(){~~1,5{?!v{tr}}}
-
--- Test environment run
--- if debug.upvalueid then
---   run[[
--- pt'\nFor pairs() test'
-
--- j=5
--- ~:_G{??t*v=='table'{
---   j=j-1
---   ??j>0{
---     pt('\n-- '..k..':')
---     ~:v{
---       i.w(' '..k)
---     }
---   }
--- }}
-
--- pt'\n\nSafe pointer and call'
-
--- ?.io{write'Hello\n'}
--- ?!__G{print}
--- ;;]]
-
-
--- if debug.upvalueid then
---   T = {
---     getTrades = function() return {
---       {trade=function()print('!trade1')end},
---       {trade=function()print('!trade2')end},
---       n=2,
---     } end
---   }
---   print(
---     'debugResult:',
---     loadTranslated("Tg!|'a1.tr!'")()
---   )
--- end
-
 
 -- if debug.upvalueid then os.exit(0) end
 
