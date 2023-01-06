@@ -518,17 +518,25 @@ __ENV.sleep = sleep
 -- ~#Rc*i{Rsel(i)Rd(0)}Rs(2)~~1,5{IsFS(1,i)`T}
 -- ~#Rc*i{Rsel(i)Rd(0)}~~1,5{IsFS(1,i)}Rsk(3)~:Tg(){~~1,5{?!v{tr}}}
 
--- if debug.upvalueid then os.exit(0) end
+local cmd, prog, pointer = ...
+
+-- Program is called from shell
+if cmd then prog = cmd
+
+-- Program defined by Robot/Drone name
+elseif D then pointer = D elseif R then pointer = R end
+if pointer and pointer.name then prog = pointer.name() end
+
+if not prog or prog=='' then error'No program defined' end
 
 -- Play music
-local cmd, prog = ...
-if cmd then prog = cmd
-elseif D then prog = D.name() elseif R then prog = R.name() end
-if not prog then error'No program defined' end
-for s in prog:sub(1,5):gmatch"%S" do
-  computer.beep(200 + s:byte() * 10, 0.05)
+if prog:sub(1,1) ~= ' ' then
+  for s in prog:sub(1,5):gmatch"%S" do
+    computer.beep(200 + s:byte() * 10, 0.05)
+  end
 end
-run(prog)
+
+return run(prog)
 
 --[[
 
