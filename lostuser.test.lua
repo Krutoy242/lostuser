@@ -15,9 +15,7 @@ https://gist.githubusercontent.com/Krutoy242/1f18eaf6b262fb7ffb83c4666a93cbcc
 crunch --lz77 lostuser.lua lostuser.min.lua && flash -q lostuser.min.lua LostUser
 
 ■ Download and test
-wget -f https://is.gd/mAN3WA lostuser.lua
-wget -f https://is.gd/lostuser_test_lua lostuser.test.lua
-lostuser.test
+wget -f https://raw.githubusercontent.com/Krutoy242/lostuser/main/lostuser.lua && wget -f https://raw.githubusercontent.com/Krutoy242/lostuser/main/lostuser.test.lua && lostuser.test
 
 ]]
 

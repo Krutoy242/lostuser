@@ -54,7 +54,7 @@ If you crafted it, you can skip next step `Write program on EEPROM`.
 1. Download file from the internet (need ![](https://is.gd/zrPusF 'Internet Card')), run from command line:
 
 ```
-wget https://gist.githubusercontent.com/Krutoy242/1f18eaf6b262fb7ffb83c4666a93cbcc/raw/lostuser.min.lua
+wget https://raw.githubusercontent.com/Krutoy242/lostuser/main/lostuser.min.lua
 ```
 
 2. To write on existing EEPROM run:
@@ -128,7 +128,7 @@ If you want a deeper level of debugging, load the program on a robot with a comp
 Download program on robot:
 
 ```sh
-wget https://gist.githubusercontent.com/Krutoy242/1f18eaf6b262fb7ffb83c4666a93cbcc/raw/lostuser.lua
+wget https://raw.githubusercontent.com/Krutoy242/lostuser/main/lostuser.lua
 ```
 
 First robot parameter - the program text to execute (instead of the robot's name)
@@ -152,5 +152,5 @@ In `out` file you will see its code.
 
 ## Links
 
-- [Gist with source code and readme](https://gist.githubusercontent.com/Krutoy242/1f18eaf6b262fb7ffb83c4666a93cbcc)
+- [Repo with source code and readme](https://raw.githubusercontent.com/Krutoy242/lostuser)
 - Modpack this robot was programmed for: [Enigmatica 2: Expert - Extended](https://www.curseforge.com/minecraft/modpacks/enigmatica-2-expert-extended)
