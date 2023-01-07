@@ -115,9 +115,10 @@ end
 
 --- Generate safe function from lua code
 ---@param txt string Lua code to load as function body
-local function makeRunedFunction(txt)
+---@param params string param names devided by comma
+local function makeRunedFunction(txt, params)
   local loaded, err = loadTranslated(
-    'function(...) local a1,a2,a3,a4 = ... return '..txt..' end',
+    'function(...) local '.. params ..' = ... return '..txt..' end',
     txt
   )
   if err then
@@ -158,10 +159,13 @@ local function packFor(t, f)
   return q(r)
 end
 
-local function getTarget(target)
+--- Generate helper functions
+---@param target any Anything we targeting function to
+---@param params string param names devided by comma
+local function getTarget(target, params)
   local targetFnc, targetCallable
   if type(target) == 'string' then
-    targetFnc = makeRunedFunction(target)
+    targetFnc = makeRunedFunction(target, params)
     targetCallable = true
   else
     targetFnc = target
@@ -189,7 +193,7 @@ local function filter(t, f, checkNil)
 end
 
 local function buildFilter(t, isTable, target, checkNil)
-  local targetFnc, targetCallable = getTarget(target)
+  local targetFnc, targetCallable = getTarget(target, 'v,k')
 
   if isTable then if targetCallable
     -- Table x (Function or String)
@@ -255,7 +259,7 @@ q = function(t)
   -- Map t into u(t)
   -----------------------------------------------------------------
   function mt:__mul(target)
-    local targetFnc, targetCallable = getTarget(target)
+    local targetFnc, targetCallable = getTarget(target, 'v,k')
 
     if qtype == 'table' then if targetCallable
       -- Table x (Function or String)
@@ -302,7 +306,7 @@ q = function(t)
   -- Reduce
   -----------------------------------------------------------------
   function mt:__mod(target)
-    local f, targetCallable = getTarget(target)
+    local f, targetCallable = getTarget(target, 'a,b')
   
     if qtype == 'table' then if targetCallable
       -- Table x (Function or String)
@@ -329,6 +333,12 @@ q = function(t)
   end
 
   -----------------------------------------------------------------
+  --[[
+    TODO: Possible need to implement
+    - zip
+    - compose
+    - flat
+  ]]
   --[[
      <     >     <=    >=    ~=    ==
      |
