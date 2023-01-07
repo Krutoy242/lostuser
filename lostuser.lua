@@ -59,6 +59,12 @@ end
 
 local function localError(err)
   if computer then computer.beep(800, 0.05) end
+  error(debug.traceback(err))
+end
+
+local function __falsy(a)
+  if not a or a == '' or a == 0 then return false end
+  return true
 end
 
 --[[
@@ -133,19 +139,90 @@ end
 --- pack and return Qued result
 ---@param t table
 ---@param f function
-local function packFor(t,f)
+local function packFor(t, f)
   local r,i = {},1
   for k, v in pairs(t) do
     -- local callable,f1,v1 = isCallable(f),f,v
     -- if not callable then f1,v1=v1,f1 end
     -- local resultTable = table.pack(f1(v1,k))
-    local resultTable = table.pack(f(v,k))
-    if #resultTable>1 or resultTable[1] == nil then
+    local resultTable = table.pack(f(q(v), k))
+    if resultTable.n > 1 then
+      resultTable.n = nil
       r[i] = q(resultTable)
     else
-      r[i] = resultTable[1]
+      r[i] = q(resultTable[1])
     end
     i=i+1
+  end
+  return q(r)
+end
+
+local function getTarget(target)
+  local targetFnc, targetCallable
+  if type(target) == 'string' then
+    targetFnc = makeRunedFunction(target)
+    targetCallable = true
+  else
+    targetFnc = target
+    targetCallable = isCallable(target)
+  end
+  return targetFnc, targetCallable
+end
+
+--- Filter table.
+--- Remove values for keys that not pass predicate
+--- {1, '', 3, 0, foo = false, goo=true}  / 'a1' => {1, 3, goo=true}
+--- {1, '', 3, 0, foo = false, goo=true} // 'a1' => {goo=true}
+---@param t table
+---@param p function
+---@param isStrict boolean
+local function filter(t, f, isStrict)
+  local r = {}
+  for k, v in pairs(t) do
+    if isStrict
+      then if f(v,k) then r[k] = v end
+      else if not __falsy(f(v,k)) then r[k] = v end
+    end
+  end
+  return q(r)
+end
+
+local function buildFilter(t, isTable, target, isStrict)
+  local targetFnc, targetCallable = getTarget(target)
+
+  if isTable then if targetCallable
+    -- Table x (Function or String)
+    then return filter(t, targetFnc, isStrict)
+
+    -- Table x Table
+    -- TODO: implement Table x Table filtering
+    else return error('Could not Filter Table x Table')
+
+    end
+  else
+
+    if targetCallable
+    -- Function x (Function or String)
+    -- TODO: implement Function x Function filtering
+    then return error('Could not Filter Function x Function')
+
+    -- Function x Table
+    -- TODO: implement Function x Table filtering
+    else return error('Could not Filter Function x Table')
+
+    end
+  end
+end
+
+local function reducer(t, f)
+  local pre,r
+  for k, v in pairs(t) do
+    if not pre then
+      r = v
+      pre = true
+    else
+      r = f(r, v)
+    end
   end
   return q(r)
 end
@@ -154,18 +231,15 @@ q = function(t)
   local qtype = type(t)
   local qIsFunction = qtype == 'function'
   if qtype ~= 'table' and not qIsFunction then return t end
-  if isQ(t) then return t end
+  if isQ(t) then
+    -- error(debug.traceback('Trying to Q(t) when t is already Q'))
+    return t
+  end
 
   local mt = {
     __q = true,
-    __call = QFnc(t),
     __tostring = function() return '{q}'..(qIsFunction and tostring(t) or '#'..#t..': '..tostring(t)) end,
   }
-  --
-  -- t * v
-  -- call Q as function with right side as params
-  --
-  mt.__mul = QFnc(t)
 
   --
   -- t & u
@@ -176,49 +250,100 @@ q = function(t)
   end
 
   -----------------------------------------------------------------
-  -- t | u
+  -- t * u
   -- Map t into u(t)
   -----------------------------------------------------------------
-  function mt:__bor(pipe_to)
-    local pipe_to_type = type(pipe_to)
-    local pipeTo_asFunc, pipe_is_callable
-    if pipe_to_type == 'string' then
-      pipeTo_asFunc = makeRunedFunction(pipe_to)
-      pipe_is_callable = true
-    else
-      pipeTo_asFunc = pipe_to
-      pipe_is_callable = isCallable(pipe_to)
-    end
+  function mt:__mul(target)
+    local targetFnc, targetCallable = getTarget(target)
 
-    if qtype == 'table' then
+    if qtype == 'table' then if targetCallable
+      -- Table x (Function or String)
+      -- simple map, apply function or compiled string as function
+      then return packFor(t, targetFnc)
 
-      -- Table | (Function or String)
-      if pipe_is_callable then
-        return packFor(self, pipeTo_asFunc)
-
-      -- Table | Any
-      else
-        return packFor(self, function(v,k) return packFor(pipe_to, v) end)
+      -- Table x Table
+      -- {a,b} x {c,d} => {{c(a), d(a)}, {c(b), d(b)}}
+      else return packFor(t, function(v,k) return packFor(target, v) end)
 
       end
     else
 
-      -- Function | (Function or String)
-      if pipe_is_callable then
-        return q(function(...) return pipeTo_asFunc(t(...)) end)
+      if targetCallable
+      -- Function x (Function or String)
+      then return q(function(...) return targetFnc(t(...)) end)
 
-      -- Function | Any
-      else
-        return packFor(pipe_to, t)
+      -- Function x Table
+      -- f x {1,2,3} => {f(1), f(2), f(3)}
+      else return packFor(target, t)
+
       end
     end
   end
+
   -----------------------------------------------------------------
-  -- All available ops:
-  -- | & ~ << >> + - * / // ^ % == < <=
+  -- t / u
+  -- Filter
+  -----------------------------------------------------------------
+  function mt:__div(target)
+    return buildFilter(t, qtype == 'table', target, false)
+  end
+
+  -----------------------------------------------------------------
+  -- t // u
+  -- Filter strict
+  -----------------------------------------------------------------
+  function mt:__idiv(target)
+    return buildFilter(t, qtype == 'table', target, true)
+  end
+
+  -----------------------------------------------------------------
+  -- t % u
+  -- Reduce
+  -----------------------------------------------------------------
+  function mt:__mod(target)
+    local f, targetCallable = getTarget(target)
+  
+    if qtype == 'table' then if targetCallable
+      -- Table x (Function or String)
+      then return reducer(t, f)
+  
+      -- Table x Table
+      -- TODO: implement Table x Table
+      else return error('Could not reduce Table x Table')
+  
+      end
+    else
+  
+      if targetCallable
+      -- Function x (Function or String)
+      -- TODO: implement Function x Function
+      then return error('Could not reduce Function x Function')
+  
+      -- Function x Table
+      -- TODO: implement Function x Table
+      else return error('Could not reduce Function x Table')
+  
+      end
+    end
+  end
+
+  -----------------------------------------------------------------
+  --[[
+     <     >     <=    >=    ~=    ==
+     |
+     ~
+     &
+     <<    >>
+     ..
+     +     -
+     *     /     //    %
+     unary operators (not   #     -     ~)
+     ^
+  ]]
   -----------------------------------------------------------------
 
   if qIsFunction then
+    mt.__call = QFnc(t)
     return setmetatable({}, mt)
   end
 
@@ -500,19 +625,19 @@ loadTranslated = function(text, chunkName)
   return res, err
 end
 
+local XTerminated = false
 run = function(input)
   local fnc, err = loadTranslated(input)
   local r
   while true do
     r = fnc()
     if isCallable(r) then r() end
+    if XTerminated then return end
   end
 end
 
-__ENV.__falsy = function(a)
-  if not a or a == '' or a == 0 then return false end
-  return true
-end
+__ENV.X = function(...) XTerminated = true print(...) end
+__ENV.__falsy = __falsy
 
 __ENV.__number = function(a)
   local t = type(a)
