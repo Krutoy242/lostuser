@@ -59,10 +59,10 @@ end
 
 local function localError(err)
   if computer then computer.beep(800, 0.05) end
-  error(debug.traceback(err))
+  -- error(debug.traceback(err))
 end
 
-local function __falsy(a)
+local function __truthy(a)
   if not a or a == '' or a == 0 then return false end
   return true
 end
@@ -145,6 +145,7 @@ local function packFor(t, f)
     -- local callable,f1,v1 = isCallable(f),f,v
     -- if not callable then f1,v1=v1,f1 end
     -- local resultTable = table.pack(f1(v1,k))
+    -- TODO: should not call q(v) on v instead pairs(t) should return Q
     local resultTable = table.pack(f(q(v), k))
     if resultTable.n > 1 then
       resultTable.n = nil
@@ -175,24 +176,24 @@ end
 --- {1, '', 3, 0, foo = false, goo=true} // 'a1' => {goo=true}
 ---@param t table
 ---@param p function
----@param isStrict boolean
-local function filter(t, f, isStrict)
+---@param checkNil boolean
+local function filter(t, f, checkNil)
   local r = {}
   for k, v in pairs(t) do
-    if isStrict
-      then if f(v,k) then r[k] = v end
-      else if not __falsy(f(v,k)) then r[k] = v end
+    local res = f(q(v),k)
+    if checkNil and res ~= nil or __truthy(res) then
+      r[k] = v
     end
   end
   return q(r)
 end
 
-local function buildFilter(t, isTable, target, isStrict)
+local function buildFilter(t, isTable, target, checkNil)
   local targetFnc, targetCallable = getTarget(target)
 
   if isTable then if targetCallable
     -- Table x (Function or String)
-    then return filter(t, targetFnc, isStrict)
+    then return filter(t, targetFnc, checkNil)
 
     -- Table x Table
     -- TODO: implement Table x Table filtering
@@ -218,13 +219,13 @@ local function reducer(t, f)
   local pre,r
   for k, v in pairs(t) do
     if not pre then
-      r = v
+      r = q(v)
       pre = true
     else
-      r = f(r, v)
+      r = q(f(r, q(v)))
     end
   end
-  return q(r)
+  return r
 end
 
 q = function(t)
@@ -491,7 +492,7 @@ local function makeCondition(cond, body, checkFalsy)
   return [[
 
 local __if = (]].. cond ..[[)
-if __if ]].. (checkFalsy and 'and not __falsy(__if) ' or '') ..[[then
+if __if ]].. (checkFalsy and 'and __truthy(__if) ' or '') ..[[then
   ]].. body ..[[
 
 end
@@ -637,13 +638,13 @@ run = function(input)
 end
 
 __ENV.X = function(...) XTerminated = true print(...) end
-__ENV.__falsy = __falsy
+__ENV.__truthy = __truthy
 
 __ENV.__number = function(a)
   local t = type(a)
   if t=='number' then return a end
   if t=='string' then return tonumber(a) end
-  return (not __ENV.__falsy(a)) and 1 or 0
+  return __ENV.__truthy(a) and 1 or 0
 end
 
 __ENV.run = function(text)

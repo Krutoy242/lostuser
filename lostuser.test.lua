@@ -138,11 +138,16 @@ test('      Expose error', shouldError('Test Error', ' error"Test Error"'))
 test('   Global shortand', shouldError('Exit', ' e"Exit"'))
 test('  Should print msg', shouldPrint(" X'test'", '"test"'))
 
-_G.T = { getTrades = function() return {
-  {trade=function()return 't1' end, isEnabled=function()return true end},
+_G.T = {
+{name='n1', take=true},{name='n2'},{name='n3', take=0},
+getTrades = function() return {
+  {trade=function()return 't1' end, isEnabled=function()return false end},
   {trade=function()return 't2' end, isEnabled=function()return true end},
-} end }
+  n = 2,
+} end}
 test('   Map to function', shouldPrint(" X(Tg!*'a1.t!')", '{"t1","t2"}'))
+test('            Filter', shouldPrint(" X(T/'a1.t'*'a1.n')", '{"n1"}'))
+test('    No-null Filter', shouldPrint(" X(T//'a1.t'*'a1.n')", '{"n1","n3"}'))
 -- test('   Macros: pairs()', shouldPrint(" Tg!/'t*a1=='table'|'pt*a1'", "trade\ntrade"))
 -- test('   Macros: pairs()', shouldPrint(" ~:Tg!{??t*v=='table'{pt*k}}", "trade\ntrade"))
 -- test('Macros: safe pntr.', shouldPrint(" ?.io{write'Hello\n'}", ""))
