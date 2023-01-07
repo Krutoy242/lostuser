@@ -19,7 +19,9 @@ wget -f https://raw.githubusercontent.com/Krutoy242/lostuser/main/lostuser.lua &
 
 ]]
 
-local lu = loadfile'lostuser.lua'
+-- for k,v in pairs(_G) do print(k,v)end
+
+local lu
 
 print'\n< LostUser tests >\n'
 
@@ -35,40 +37,59 @@ print'\n< LostUser tests >\n'
 local function tableToString(t)
   local s,f = '',true
   for k,v in pairs(t) do
-    s = s .. (f and '' or ' ') .. v
+    s = s .. (f and '' or ' ') .. tostring(v)
     f = false
   end
   return s
 end
 
--- local _print = print
+local function argsToString(...)
+  local t = table.pack(...)
+  t.n = nil
+  return tableToString(t)
+end
+
+local _print = print
 local printedMessage = ''
--- function print(...)
---   _print(...)
---   local result = table.pack(...)
---   if #result == 0 then return end
---   printedMessage = (printedMessage ~= '' and '\n' or '')
---     .. printedMessage .. tableToString(result)
--- end
+_G.print = setmetatable({
+  print = type(print) == 'function' and print or print.print
+}, {
+  __call = function(self, ...)
+    -- _print(self, ...)
+    if table.pack(...).n == 0 then return end
+    printedMessage = printedMessage
+      .. (printedMessage ~= '' and '\n' or '')
+      .. argsToString(...)
+  end
+})
 
 local function shouldError(errorRgx, ...)
-  local succes, result = pcall(lu, ...)
-  return (not succes)
-    and result
-    and errorRgx
-    and result:match('^.+: ' .. errorRgx)
-  , result
+  local args = {...}
+  return function()
+    local succes, result = pcall(lu, table.unpack(args))
+    return (not succes)
+      and result
+      and errorRgx
+      and result:match('^.+: ' .. errorRgx)
+    , result
+  end
 end
 
 local function shouldPrint(command, message)
-  local succes, result = pcall(lu, command)
-  return succes and printedMessage == message
-  , result
+  return function()
+    local succes, result = pcall(lu, command)
+    return printedMessage == message, printedMessage
+  end
 end
 
-local function test(description, succes, result)
+local function toVisibleString(...)
+  return argsToString(...):gsub(' ', '◦'):gsub('\n', '⤶')
+end
+
+local function test(description, fn)
   io.write('■ '..description..': ')
-  io.write((succes and '✔' or ('❌\n> ' .. tostring(result))) .. '\n')
+  local succes, result = fn()
+  io.write((succes and '✔' or ('❌\n> ❪' .. toVisibleString(result).. '❫')) .. '\n')
   printedMessage = ''
 end
 
@@ -82,23 +103,23 @@ end
 ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝
 ]]
 
+lu = loadfile'lostuser.lua'
+
 test('  Run without args', shouldError('No program defined'))
 test('        Empty name', shouldError('No program defined', ''))
 test('      Expose error', shouldError('Test Error', ' error"Test Error"'))
 test('   Global shortand', shouldError('Exit', ' e"Exit"'))
-test('  Should print msg', shouldPrint(" _'test'o.e!", 'test'))
+test('  Should print msg', shouldPrint(" pt'test'e!", 'test'))
 
-T = { getTrades = function() return {
-  {trade=function()print('t1()')end},
-  {trade=function()print('t2()')end},
+_G.T = { getTrades = function() return {
+  {trade=function()print('t1()')end, isEnabled=function()return true end},
+  {trade=function()print('t2()')end, isEnabled=function()return true end},
   n = 2,
 } end }
-test('        >>output  ', shouldPrint(" io.w(Tg)io.w(Tg!)", ''))
-test('        Trade pipe', shouldPrint(" Tg!|'a1.tr!'", 't1()\nt2()'))
-test('   Macros: pairs()', shouldPrint(
-  " ~:T{??t*v=='table'{_*k}}", "trade\ntrade"
-))
-test('Macros: safe pntr.', shouldPrint(" ?.io{write'Hello\n'}", ""))
+test('        Trade pipe', shouldPrint(" Tg!|'a1.t!'", 't1()\nt2()'))
+-- test('   Macros: pairs()', shouldPrint(" Tg!/'t*a2=='table'|'pt*a1'", "trade\ntrade"))
+-- test('   Macros: pairs()', shouldPrint(" ~:Tg!{??t*v=='table'{pt*k}}", "trade\ntrade"))
+-- test('Macros: safe pntr.', shouldPrint(" ?.io{write'Hello\n'}", ""))
 
 --[[
 

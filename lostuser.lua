@@ -72,7 +72,10 @@ end
 
 local q -- q(x) to turn Function / Table into Q
 
--- Get first object field key by shortand
+--- Get first object field key by shortand
+---@param short string
+---@param obj table
+---@return string
 local function getKey(short, obj)
   local t,rgx = {},'^'..short:gsub('.','%1.*')
   for k in pairs(obj)do
@@ -156,49 +159,65 @@ q = function(t)
   local mt = {
     __q = true,
     __call = QFnc(t),
-    __mul = QFnc(t),
     __tostring = function() return '{q}'..(qIsFunction and tostring(t) or '#'..#t..': '..tostring(t)) end,
-    __band = function(self, ...) -- Make a function
-      local args = table.pack(...)
-      return q(function(k,v)
-        return t(table.unpack(args))
-      end)
-    end,
-    __bor = function(self, pipe_to) -- Pipe into function
-      local pipe_to_type = type(pipe_to)
-      local pipeTo_asFunc, pipe_is_callable
-      if pipe_to_type == 'string' then
-        pipeTo_asFunc = makeRunedFunction(pipe_to)
-        pipe_is_callable = true
-      else
-        pipeTo_asFunc = pipe_to
-        pipe_is_callable = isCallable(pipe_to)
-      end
-
-      if qtype == 'table' then
-
-        -- Table | (Function or String)
-        if pipe_is_callable then
-          return packFor(self, pipeTo_asFunc)
-
-        -- Table | Any
-        else
-          return packFor(self, function(v,k) return packFor(pipe_to, v) end)
-
-        end
-      else
-
-        -- Function | (Function or String)
-        if pipe_is_callable then
-          return q(function(...) return pipeTo_asFunc(t(...)) end)
-
-        -- Function | Any
-        else
-          return packFor(pipe_to, t)
-        end
-      end
-    end,
   }
+  --
+  -- t * v
+  -- call Q as function with right side as params
+  --
+  mt.__mul = QFnc(t)
+
+  --
+  -- t & u
+  -- make a lambda function
+  --
+  function mt:__band(arg)
+    return q(function(...) return t(arg, ...) end)
+  end
+
+  -----------------------------------------------------------------
+  -- t | u
+  -- Map t into u(t)
+  -----------------------------------------------------------------
+  function mt:__bor(pipe_to)
+    local pipe_to_type = type(pipe_to)
+    local pipeTo_asFunc, pipe_is_callable
+    if pipe_to_type == 'string' then
+      pipeTo_asFunc = makeRunedFunction(pipe_to)
+      pipe_is_callable = true
+    else
+      pipeTo_asFunc = pipe_to
+      pipe_is_callable = isCallable(pipe_to)
+    end
+
+    if qtype == 'table' then
+
+      -- Table | (Function or String)
+      if pipe_is_callable then
+        return packFor(self, pipeTo_asFunc)
+
+      -- Table | Any
+      else
+        return packFor(self, function(v,k) return packFor(pipe_to, v) end)
+
+      end
+    else
+
+      -- Function | (Function or String)
+      if pipe_is_callable then
+        return q(function(...) return pipeTo_asFunc(t(...)) end)
+
+      -- Function | Any
+      else
+        return packFor(pipe_to, t)
+      end
+    end
+  end
+  -----------------------------------------------------------------
+  -- All available ops:
+  -- | & ~ << >> + - * / // ^ % == < <=
+  -----------------------------------------------------------------
+
   if qIsFunction then
     return setmetatable({}, mt)
   end
@@ -235,9 +254,6 @@ q = function(t)
 
     -- Other cases
     if v == nil then
-      print('target key: '..key)
-      for k,v in pairs(t) do print('key: '..k) end
-      print('found key: '..tostring(getKey(key, t)))
       v = t[getKey(key, t)]
     end
 
@@ -350,7 +366,7 @@ local function makeCondition(cond, body, checkFalsy)
   return [[
 
 local __if = (]].. cond ..[[)
-if __if ]].. (checkFalsy and 'and __truthy(__if) ' or '') ..[[then
+if __if ]].. (checkFalsy and 'and not __falsy(__if) ' or '') ..[[then
   ]].. body ..[[
 
 end
@@ -468,7 +484,7 @@ end)
 ]]
 
 -- Global environment inside loaded code
-local __ENV = q(_ENV)
+local __ENV = q(_G)
 
 loadTranslated = function(text, chunkName)
   local code = translate(text)
@@ -493,16 +509,16 @@ run = function(input)
   end
 end
 
-__ENV.__truthy = function(a)
-  if a and a ~= '' and a ~= 0 then return true end
-  return false
+__ENV.__falsy = function(a)
+  if not a or a == '' or a == 0 then return false end
+  return true
 end
 
 __ENV.__number = function(a)
   local t = type(a)
   if t=='number' then return a end
   if t=='string' then return tonumber(a) end
-  return __ENV.__truthy(a) and 1 or 0
+  return (not __ENV.__falsy(a)) and 1 or 0
 end
 
 __ENV.run = function(text)
@@ -540,8 +556,6 @@ return run(prog)
 
 --[[
 
-Available ops:
-&|~<<>>+-*/^%//==< <=
 
 Some programs:
 Dm(tb.u(Nf(300)[a++%2+1].p))s(3)~#{Dsel(i)Dd(0)Dsu(0)}
