@@ -44,7 +44,7 @@ do
   table.sort(cmpList, function(a,b)return#a[1]<#b[1] end)
   for _, v in pairs(cmpList) do
     local c = v[1]:sub(1, 1):upper()
-    _G[c] = component.proxy(v[2])
+    if _G[c]==nil then _G[c] = component.proxy(v[2]) end
   end
 end
 
@@ -58,8 +58,9 @@ end
 end
 
 local function localError(err)
-  if computer then computer.beep(800, 0.05) end
-  -- error(debug.traceback(err))
+  if computer then computer.beep(1800, 2) end
+  print(debug.traceback(err):sub(1, 200))
+  os.exit(1)
 end
 
 local function __truthy(a)
@@ -96,6 +97,12 @@ end
 ---@return function
 local function QFnc(f)
   return function(_, ...)
+    if type(f) == 'table' then
+      local mt =  getmetatable(f)
+      if not mt or not mt.__call then
+        error(debug.traceback('This table not callable: '..tostring(f)))
+      end
+    end
     local result = table.pack(f(...))
     for k, v in pairs(result) do
       result[k] = q(v)
@@ -110,7 +117,13 @@ local function isQ(t)
 end
 
 local function isCallable(t)
-  return type(t) == 'function' or isQ(t) -- TODO: fix if Q-table not actually callable
+  local ty = type(t)
+  if ty == 'function' then return true end
+  if ty == 'table' then
+    local mt = getmetatable(t)
+    if mt and mt.__call then return true end
+  end
+  return false
 end
 
 --- Generate safe function from lua code
@@ -234,8 +247,8 @@ end
 
 q = function(t)
   local qtype = type(t)
-  local qIsFunction = qtype == 'function'
-  if qtype ~= 'table' and not qIsFunction then return t end
+  local qIsCallable = isCallable(t)
+  if qtype ~= 'table' and not qIsCallable then return t end
   if isQ(t) then
     -- error(debug.traceback('Trying to Q(t) when t is already Q'))
     return t
@@ -243,7 +256,7 @@ q = function(t)
 
   local mt = {
     __q = true,
-    __tostring = function() return '{q}'..(qIsFunction and tostring(t) or '#'..#t..': '..tostring(t)) end,
+    __tostring = function() return '{q}'..(qIsCallable and tostring(t) or '#'..#t..': '..tostring(t)) end,
   }
 
   --
@@ -353,7 +366,7 @@ q = function(t)
   ]]
   -----------------------------------------------------------------
 
-  if qIsFunction then
+  if qIsCallable then
     mt.__call = QFnc(t)
     return setmetatable({}, mt)
   end
@@ -451,7 +464,7 @@ end
 -- Simple replaces
 -----------------------------------------------------------------
 
-addMacro('`T', [[Tg!|'a1.tr!']]) -- Trade all trades
+addMacro('`T', [[Tg!*'v.tr!']]) -- Trade all trades
 addMacro('`Z', [[a=`!a ;; ??`!Rm(3){ Rtn(a) c=`!Rm(3) Rtn(a) ??c{Rtn(a)Rm(3)} a=`!a}]]) -- Zig-Zag move
 addMacro('`&', ' and ')
 addMacro('`!', ' not ')
@@ -498,70 +511,70 @@ addCaptureMacro('@', addMacro)
 -- Conditionals
 -----------------------------------------------------------------
 
-local function makeCondition(cond, body, checkFalsy)
-  return [[
+-- local function makeCondition(cond, body, checkFalsy)
+--   return [[
 
-local __if = (]].. cond ..[[)
-if __if ]].. (checkFalsy and 'and __truthy(__if) ' or '') ..[[then
-  ]].. body ..[[
+-- local __if = (]].. cond ..[[)
+-- if __if ]].. (checkFalsy and 'and __truthy(__if) ' or '') ..[[then
+--   ]].. body ..[[
 
-end
-]]
-end
+-- end
+-- ]]
+-- end
 
-addCaptureMacro('?%?', makeCondition('HEAD', 'BODY', true)) -- Simple
+-- addCaptureMacro('?%?', makeCondition('HEAD', 'BODY', true)) -- Simple
 
--- Safe pointer
-addCaptureMacro('?%.', [[
-if type(HEAD)=='table' then
-    HEAD.BODY
-end
-]])
+-- -- Safe pointer
+-- addCaptureMacro('?%.', [[
+-- if type(HEAD)=='table' then
+--     HEAD.BODY
+-- end
+-- ]])
 
--- Safe call
-addCaptureMacro('?!', [[
-local __p = HEAD
-if type(__p)=='table' and (type(__p.BODY)=='table' or type(__p.BODY)=='function') then
-  HEAD.BODY()
-end
-]])
+-- -- Safe call
+-- addCaptureMacro('?!', [[
+-- local __p = HEAD
+-- if type(__p)=='table' and (type(__p.BODY)=='table' or type(__p.BODY)=='function') then
+--   HEAD.BODY()
+-- end
+-- ]])
 
 -----------------------------------------------------------------
 -- Loops
 -----------------------------------------------------------------
 
-local function replLetter(str, letter, to)
-  return str
-    :gsub('^'..letter..'([^_%a%d])', to..'%1')
-    :gsub('([^_%a%d])'..letter..'$', '%1'..to)
-    :gsub('([^_%a%d])'..letter..'([^_%a%d])', '%1'..to..'%2')
-end
+-- local function replLetter(str, letter, to)
+--   return str
+--     :gsub('^'..letter..'([^_%a%d])', to..'%1')
+--     :gsub('([^_%a%d])'..letter..'$', '%1'..to)
+--     :gsub('([^_%a%d])'..letter..'([^_%a%d])', '%1'..to..'%2')
+-- end
 
--- For Each inventory slot
-addCaptureMacro('~#', function (head, body)
-  local i = 'i'..nextID()
-  body = replLetter(body, 'i', i)
-  head = replLetter(head, 'i', i)
-  local haveP = head ~= nil and not head:match"^%s*$"
-  return 'for '..i..'=1, (D or R).inventorySize() do\n'
-    ..(haveP and makeCondition(head, body, true) or body)
-    ..'\nend '
-end)
+-- -- For Each inventory slot
+-- addCaptureMacro('~#', function (head, body)
+--   local i = 'i'..nextID()
+--   body = replLetter(body, 'i', i)
+--   head = replLetter(head, 'i', i)
+--   local haveP = head ~= nil and not head:match"^%s*$"
+--   return 'for '..i..'=1, (D or R).inventorySize() do\n'
+--     ..(haveP and makeCondition(head, body, true) or body)
+--     ..'\nend '
+-- end)
 
--- Pairs
-addCaptureMacro('~:', function (head, body)
-  local id = nextID()
-  body = replLetter(body, 'k', 'k'..id)
-  body = replLetter(body, 'v', 'v'..id)
-  return 'for k'..id..', v'..id..' in pairs('..head..') do\n'..body..'\nend '
-end)
+-- -- Pairs
+-- addCaptureMacro('~:', function (head, body)
+--   local id = nextID()
+--   body = replLetter(body, 'k', 'k'..id)
+--   body = replLetter(body, 'v', 'v'..id)
+--   return 'for k'..id..', v'..id..' in pairs('..head..') do\n'..body..'\nend '
+-- end)
 
--- Loop
-addCaptureMacro('~~', function (head, body)
-  local i = 'i'..nextID()
-  body = replLetter(body, 'i', i)
-  return 'for '..i..'='..head..', 1 do\n'..body..'\nend '
-end)
+-- -- Loop
+-- addCaptureMacro('~~', function (head, body)
+--   local i = 'i'..nextID()
+--   body = replLetter(body, 'i', i)
+--   return 'for '..i..'='..head..', 1 do\n'..body..'\nend '
+-- end)
 
 -----------------------------------------------------------------
 -- Lowest priority
@@ -663,6 +676,7 @@ end
 
 __ENV.proxy = proxy
 __ENV.sleep = sleep
+__ENV.api = api
 
 -- Assemble --
 
@@ -670,14 +684,14 @@ __ENV.sleep = sleep
 -- ~#Rc*i{Rsel(i)Rd(0)}Rs(2)~~1,5{IsFS(1,i)`T}
 -- ~#Rc*i{Rsel(i)Rd(0)}~~1,5{IsFS(1,i)}Rsk(3)~:Tg(){~~1,5{?!v{tr}}}
 
-local cmd, prog, pointer = ...
+local cmd, prog = ...
+local pointer = R or D
 
 -- Program is called from shell
 if cmd then prog = cmd
 
 -- Program defined by Robot/Drone name
-elseif D then pointer = D elseif R then pointer = R end
-if pointer and pointer.name then prog = pointer.name() end
+elseif pointer and pointer.name then prog = pointer.name() end
 
 if not prog or prog=='' then error'No program defined' end
 
@@ -698,7 +712,7 @@ Dm(tb.u(Nf(300)[a++%2+1].p))s(3)~#{Dsel(i)Dd(0)Dsu(0)}
 a++b=Nf(300)[a%2+1]Dm(tb.u(b.p))s(14)run(b.l)
 
 
-Tg!|'a1.tr!'
+Tg!*'a1.tr!'
 ~:Tg(){?!v{tr}}
 
 ]]

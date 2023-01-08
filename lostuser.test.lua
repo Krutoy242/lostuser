@@ -39,9 +39,9 @@ local function serialize(val, name)
 
   if name then tmp = tmp .. name .. " = " end
   
-  if type(val) == "table" and getmetatable(val).__call then
+  --[[ if type(val) == "table" and getmetatable(val).__call then
     tmp = tmp .. 'f()'
-  elseif type(val) == "table" then
+  else ]]if type(val) == "table" then
     tmp = tmp .. "{"
 
     local i = 1
