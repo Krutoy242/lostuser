@@ -11,8 +11,14 @@ https://gist.githubusercontent.com/Krutoy242/1f18eaf6b262fb7ffb83c4666a93cbcc
 
 --[[
 
+■ Preperations:
+oppm install crunch
+
 ■ Deploy script:
 crunch --lz77 lostuser.lua lostuser.min.lua && flash -q lostuser.min.lua LostUser
+
+■ Download and write
+wget -f https://raw.githubusercontent.com/Krutoy242/lostuser/main/lostuser.min.lua && flash -q lostuser.min.lua LostUser
 
 ■ Download and test
 wget -f https://raw.githubusercontent.com/Krutoy242/lostuser/main/lostuser.lua && wget -f https://raw.githubusercontent.com/Krutoy242/lostuser/main/lostuser.test.lua && lostuser.test
@@ -37,7 +43,7 @@ print'\n< LostUser tests >\n'
 local function serialize(val, name)
   local tmp = ''
 
-  if name then tmp = tmp .. name .. " = " end
+  if name then tmp = tmp .. name .. "=" end
   
   --[[ if type(val) == "table" and getmetatable(val).__call then
     tmp = tmp .. 'f()'
@@ -140,23 +146,28 @@ test('  Should print msg', shouldPrint(" X'test'", '"test"'))
 
 _G.T = {
 {name='n1', take=true, index=1},{name='n2'},{name='n3', take=0, index=3},
+exp=function(a,b) return a^b end,
 getTrades = function() return {
   {trade=function()return 't1' end, isEnabled=function()return false end},
   {trade=function()return 't2' end, isEnabled=function()return true end},
-  n = 2,
 } end}
 test('   Map to function', shouldPrint(" X(Tg!*'v.t!')", '{"t1","t2"}'))
-test('            Filter', shouldPrint(" X(T/'v.t'*'v.n')", '{"n1"}'))
+test('     Map to number', shouldPrint(" X(T*2)", '{2,2,2,exp=2,getTrades=2}'))
+test('  Map Fnc x Number', shouldPrint(" X((Te*3)^4)", '81.0'))
+test('     Truthy Filter', shouldPrint(" X(T/'v.t'*'v.n')", '{"n1"}'))
 test('    No-null Filter', shouldPrint(" X(T//'v.t'*'v.n')", '{"n1","n3"}'))
 test('            Reduce', shouldPrint(" X(T*'v.i'/'v'%'a+b')", '4'))
--- test('   Macros: pairs()', shouldPrint(" Tg!/'t*v=='table'|'pt*v'", "trade\ntrade"))
--- test('   Macros: pairs()', shouldPrint(" ~:Tg!{??t*v=='table'{pt*k}}", "trade\ntrade"))
--- test('Macros: safe pntr.', shouldPrint(" ?.io{write'Hello\n'}", ""))
+test('            Makros', shouldPrint(" X(⒯ⓐⓝ⒡ⓞ⒡)", 'true'))
+test('        Variable i', shouldPrint(" if i==2 then X()end pt(i)", '0\n1\n2'))
 
 --[[
 
 TODO: Some programs to test
 
 i++Dsw(0)Ds(0)Dp(0)Dm(1>>((i+1)%5),0,(-1)^(i//5))s(1)
+
+_4*"Ru(0),_12*'Rm(3)'",_2*'Rtn(true)',_80/'Rsel(v),Rd(0)'
+
+_4*"Ru^0,_12*'Rm^3'",_2*'Rtn⒯',_80*'Rsel^v,Rd^0'
 
 ]]

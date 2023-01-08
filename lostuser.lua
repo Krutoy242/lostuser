@@ -59,8 +59,9 @@ end
 
 local function localError(err)
   if computer then computer.beep(1800, 2) end
-  print(debug.traceback(err):sub(1, 200))
-  os.exit(1)
+  -- print(debug.traceback(err):sub(1, 200))
+  error(debug.traceback(err):sub(1, 200))
+  -- os.exit(1)
 end
 
 local function __truthy(a)
@@ -92,16 +93,23 @@ local function getKey(short, obj)
   return t[1]
 end
 
+local function isCallable(t)
+  local ty = type(t)
+  if ty == 'function' then return true end
+  if ty == 'table' then
+    local mt = getmetatable(t)
+    if mt and mt.__call then return true end
+  end
+  return false
+end
+
 --- Make call function
 ---@param f function
 ---@return function
 local function QFnc(f)
   return function(_, ...)
-    if type(f) == 'table' then
-      local mt =  getmetatable(f)
-      if not mt or not mt.__call then
-        error(debug.traceback('This table not callable: '..tostring(f)))
-      end
+    if not isCallable(f) then
+      error('This table not callable: '..tostring(f))
     end
     local result = table.pack(f(...))
     for k, v in pairs(result) do
@@ -114,16 +122,6 @@ end
 local function isQ(t)
   local succes, mt = pcall(getmetatable, t)
   return succes and mt and mt.__q
-end
-
-local function isCallable(t)
-  local ty = type(t)
-  if ty == 'function' then return true end
-  if ty == 'table' then
-    local mt = getmetatable(t)
-    if mt and mt.__call then return true end
-  end
-  return false
 end
 
 --- Generate safe function from lua code
@@ -245,6 +243,16 @@ local function reducer(t, f)
   return r
 end
 
+--- Create new table
+---@param length number length of new array
+---@param val? any value to fill array with
+---@return table
+local function newArray(length, val)
+  local arr={}
+  for i=1,length do arr[i] = val or i end
+  return arr
+end
+
 q = function(t)
   local qtype = type(t)
   local qIsCallable = isCallable(t)
@@ -277,11 +285,17 @@ q = function(t)
     if qtype == 'table' then if targetCallable
       -- Table x (Function or String)
       -- simple map, apply function or compiled string as function
+      -- {1,2,3} x f => {f(1), f(2), f(3)}
       then return packFor(t, targetFnc)
 
-      -- Table x Table
+      -- Table x Table of functions
       -- {a,b} x {c,d} => {{c(a), d(a)}, {c(b), d(b)}}
-      else return packFor(t, function(v,k) return packFor(target, v) end)
+      elseif type(target) == 'table' then
+        return packFor(t, function(v,k) return packFor(target, v) end)
+      
+      -- Table x Number|Boolean
+      -- {1,2,3} x n => {n,n,n}
+      else local r = {} for k in pairs(t) do r[k]=target end return q(r)
 
       end
     else
@@ -292,7 +306,12 @@ q = function(t)
 
       -- Function x Table
       -- f x {1,2,3} => {f(1), f(2), f(3)}
-      else return packFor(target, t)
+      elseif type(target) == 'table' then
+        return packFor(target, t)
+      
+      -- Function x Number|Boolean
+      -- f(...) x v => g(...) => f(v, ...)
+      else return q(function(...) return t(target, ...) end)
 
       end
     end
@@ -367,6 +386,13 @@ q = function(t)
   -----------------------------------------------------------------
 
   if qIsCallable then
+    -----------------------------------------------------------------
+    -- t ^ u
+    -- Call
+    -----------------------------------------------------------------
+    mt.__pow = QFnc(t)
+    
+    -----------------------------------------------------------------
     mt.__call = QFnc(t)
     return setmetatable({}, mt)
   end
@@ -386,11 +412,8 @@ q = function(t)
       -- Number: _8 create table {1,2,3,4,5,6,7,8}
       local subCommand = key:sub(2)
       local num = tonumber(subCommand)
-      if num then
-        local arr={}
-        for i=1,num do arr[i]=i end
-        v = arr
-      end
+      if num then v = newArray(num) end
+      -- TODO: add for _word
 
     -- Big letter shortand
     elseif key:match'^[A-Z]' then
@@ -464,10 +487,14 @@ end
 -- Simple replaces
 -----------------------------------------------------------------
 
-addMacro('`T', [[Tg!*'v.tr!']]) -- Trade all trades
-addMacro('`Z', [[a=`!a ;; ??`!Rm(3){ Rtn(a) c=`!Rm(3) Rtn(a) ??c{Rtn(a)Rm(3)} a=`!a}]]) -- Zig-Zag move
-addMacro('`&', ' and ')
-addMacro('`!', ' not ')
+-- addMacro('`T', "Tg!*'v.tr!'") -- Trade all trades
+-- addMacro('`Z', [[a=`!a ;; ??`!Rm(3){ Rtn(a) c=`!Rm(3) Rtn(a) ??c{Rtn(a)Rm(3)} a=`!a}]]) -- Zig-Zag move
+
+addMacro('ⓐ', ' and ')
+addMacro('ⓞ', ' or ')
+addMacro('ⓝ', ' not ')
+addMacro('⒯', '(true)')
+addMacro('⒡', '(false)')
 
 -- Syntax Sugar
 local WRD = '[_%a][_%a%d]*'
@@ -649,18 +676,21 @@ loadTranslated = function(text, chunkName)
   return res, err
 end
 
-local XTerminated = false
+__ENV.i = 0
+local XExitLoop = false
 run = function(input)
   local fnc, err = loadTranslated(input)
   local r
   while true do
+    -- TODO: Expose i as step index
     r = fnc()
     if isCallable(r) then r() end
-    if XTerminated then return end
+    if XExitLoop then return end
+    __ENV.i = __ENV.i + 1
   end
 end
 
-__ENV.X = function(...) XTerminated = true print(...) end
+__ENV.X = function(...) XExitLoop = true print(...) end
 __ENV.__truthy = __truthy
 
 __ENV.__number = function(a)
