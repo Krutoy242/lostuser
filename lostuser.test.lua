@@ -148,26 +148,44 @@ _G.T = {
 {name='n1', take=true, index=1},{name='n2'},{name='n3', take=0, index=3},
 exp=function(a,b) return a^b end,
 getTrades = function() return {
-  {trade=function()return 't1' end, isEnabled=function()return false end},
-  {trade=function()return 't2' end, isEnabled=function()return true end},
+  {trade=function()return 't','u' end, isEnabled=function()return false end},
+  {trade=function()return 'v','w' end, isEnabled=function()return true end},
 } end}
-test('   Map to function', shouldPrint(" X(Tg!*'v.t!')", '{"t1","t2"}'))
-test('     Map to number', shouldPrint(" X(T*2)", '{2,2,2,exp=2,getTrades=2}'))
-test('  Map Fnc x Number', shouldPrint(" X((Te*3)^4)", '81.0'))
-test('     Truthy Filter', shouldPrint(" X(T/'v.t'*'v.n')", '{"n1"}'))
-test('    No-null Filter', shouldPrint(" X(T//'v.t'*'v.n')", '{"n1","n3"}'))
-test('            Reduce', shouldPrint(" X(T*'v.i'/'v'%'a+b')", '4'))
-test('            Makros', shouldPrint(" X(⒯ⓐⓝ⒡ⓞ⒡)", 'true'))
-test('        Variable i', shouldPrint(" if i==2 then X()end pt(i)", '0\n1\n2'))
+test('Map:     Tbl x Fnc', shouldPrint(" X(Tg!*'v.t!')",             '{"t","v"}'))
+test('Map:     Tbl x Num', shouldPrint(" X(T*2)",                    '{2,2,2,exp=2,getTrades=2}'))
+test('Map:     Fnc x Num', shouldPrint(" X((Te*3)^4)",               '81.0'))
+test('Map:     Fnc x Tbl', shouldPrint(" X(Te*{4,5})",               '1024.0'))
+test('     Truthy Filter', shouldPrint(" X(T /'v.t'*'v.n')",         '{"n1"}'))
+test('    No-null Filter', shouldPrint(" X(T//'v.t'*'v.n')",         '{"n1",3="n3"}'))
+test('            Reduce', shouldPrint(" X(T*'v.i'/'v'%'a+b')",'4'))
+test('        Variable i', shouldPrint(" if i==2 then X! end pt(i)", '0\n1\n2'))
+test('            Macros', shouldPrint(" X(⒯ⓐⓝ⒡ⓞ⒡)",             'true'))
 
 --[[
 
 TODO: Some programs to test
 
-i++Dsw(0)Ds(0)Dp(0)Dm(1>>((i+1)%5),0,(-1)^(i//5))s(1)
 
-_4*"Ru(0),_12*'Rm(3)'",_2*'Rtn(true)',_80/'Rsel(v),Rd(0)'
+? Trade all trades
+Tg!*'v.tr!'
 
-_4*"Ru^0,_12*'Rm^3'",_2*'Rtn⒯',_80*'Rsel^v,Rd^0'
+? Suck 4 slots from top and bottom
+_8*'IsF(v--//4,v%4+1)'
+
+? Dump everything front
+_16/'Rsel^v,Rd^3'
+
+? Trader
+Tg!*'v.tr!',_16/'Rsel^v,Rd^3',_8*'IsF(v--//4,v%4+1)'
+
+
+! Other programs
+
+
+? Line farmer
+_4*"Ru^0,_12*'Rm^3'",_2*'Rtn⒯',_80*'Rsel^v,Rd^0',s^120
+
+? WIP zig-zag
+Dsw(0)Ds(0)Dp(0)Dm(1>>((i+1)%5),0,(-1)^(i//5))s(1)
 
 ]]

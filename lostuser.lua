@@ -57,8 +57,10 @@ end
 
 end
 
+--- Signal that we have error
+---@param err string
 local function localError(err)
-  if computer then computer.beep(1800, 2) end
+  if computer then computer.beep(1800, 1) end
   -- print(debug.traceback(err):sub(1, 200))
   error(debug.traceback(err):sub(1, 200))
   -- os.exit(1)
@@ -78,7 +80,7 @@ end
  ╚══▀▀═╝       ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚══════╝╚══════╝
 ]]
 
-local q -- q(x) to turn Function / Table into Q
+local q, Q -- q(x) to turn Function / Table into Q
 
 --- Get first object field key by shortand
 ---@param short string
@@ -107,16 +109,7 @@ end
 ---@param f function
 ---@return function
 local function QFnc(f)
-  return function(_, ...)
-    if not isCallable(f) then
-      error('This table not callable: '..tostring(f))
-    end
-    local result = table.pack(f(...))
-    for k, v in pairs(result) do
-      result[k] = q(v)
-    end
-    return table.unpack(result)
-  end
+  return function(_, ...) return Q(f(...)) end
 end
 
 local function isQ(t)
@@ -147,42 +140,35 @@ local function makeRunedFunction(txt, params)
   end
 end
 
---- For each t run f(v,k)
---- pack and return Qued result
+--- For each t run f(k,v)
+--- map({1,2,3}, (k,v)=>k,v*2) == {{1,2},{2,4},{3,6}}
 ---@param t table
----@param f function
-local function packFor(t, f)
-  local r,i = {},1
+---@param f function(k:integer, v:any): boolean
+---@return table<integer, table<any,any>> f(k,v) will be wrapped into table
+local function map(t, f)
+  local r = {}
   for k, v in pairs(t) do
-    -- local callable,f1,v1 = isCallable(f),f,v
-    -- if not callable then f1,v1=v1,f1 end
-    -- local resultTable = table.pack(f1(v1,k))
-    -- TODO: should not call q(v) on v instead pairs(t) should return Q
-    local resultTable = table.pack(f(q(v), k))
-    if resultTable.n > 1 then
-      resultTable.n = nil
-      r[i] = q(resultTable)
-    else
-      r[i] = q(resultTable[1])
-    end
-    i=i+1
+    -- r[k] = table.pack(f(k, v))
+    r[k] = f(k, v)
   end
-  return q(r)
+  return r
 end
 
 --- Generate helper functions
 ---@param target any Anything we targeting function to
 ---@param params string param names devided by comma
+---@return function, boolean, boolean
 local function getTarget(target, params)
-  local targetFnc, targetCallable
-  if type(target) == 'string' then
-    targetFnc = makeRunedFunction(target, params)
-    targetCallable = true
+  local trgFnc, trgCallable
+  local trgType = type(target)
+  if trgType == 'string' then
+    trgFnc = makeRunedFunction(target, params)
+    trgCallable = true
   else
-    targetFnc = target
-    targetCallable = isCallable(target)
+    trgFnc = target
+    trgCallable = isCallable(target)
   end
-  return targetFnc, targetCallable
+  return trgFnc, trgCallable, trgType == 'table'
 end
 
 --- Filter table.
@@ -195,7 +181,7 @@ end
 local function filter(t, f, checkNil)
   local r = {}
   for k, v in pairs(t) do
-    local res = f(q(v),k)
+    local res = f(k,q(v))
     if checkNil and res ~= nil or __truthy(res) then
       r[k] = v
     end
@@ -204,7 +190,7 @@ local function filter(t, f, checkNil)
 end
 
 local function buildFilter(t, isTable, target, checkNil)
-  local trgFnc, trgCallable = getTarget(target, 'v,k')
+  local trgFnc, trgCallable = getTarget(target, 'k,v')
 
   if isTable then if trgCallable
     -- Table x (Function or String)
@@ -212,22 +198,23 @@ local function buildFilter(t, isTable, target, checkNil)
 
     -- Table x Table
     -- TODO: implement Table x Table filtering
-    else return error('Could not Filter Table x Table')
+    -- else return error('Could not Filter Table x Table')
 
     end
-  else
+  -- else
 
-    if trgCallable
-    -- Function x (Function or String)
-    -- TODO: implement Function x Function filtering
-    then return error('Could not Filter Function x Function')
+  --   if trgCallable
+  --   -- Function x (Function or String)
+  --   -- TODO: implement Function x Function filtering
+  --   then return error('Could not Filter Function x Function')
 
-    -- Function x Table
-    -- TODO: implement Function x Table filtering
-    else return error('Could not Filter Function x Table')
+  --   -- Function x Table
+  --   -- TODO: implement Function x Table filtering
+  --   else return error('Could not Filter Function x Table')
 
-    end
+  --   end
   end
+  localError('Unsupported filter')
 end
 
 local function reducer(t, f)
@@ -261,6 +248,14 @@ end
 ██║ ╚═╝ ██║   ██║
 ╚═╝     ╚═╝   ╚═╝
 ]]
+
+--- Pack all parameters as q
+Q = function(...)
+  local r = {}
+  for k, v in pairs(table.pack(...)) do r[k] = q(v) end
+  return table.unpack(r)
+end
+
 --- Single value q(t)
 q = function(t)
   local qtype = type(t)
@@ -289,41 +284,50 @@ q = function(t)
   -- Map t into u(t)
   -----------------------------------------------------------------
   function mt:__mul(target)
-    local targetFnc, targetCallable = getTarget(target, 'v,k')
+    local trgFnc, trgCallable, trgTable = getTarget(target, 'k,v')
+    local r
 
-    if qtype == 'table' then if targetCallable
+    if qtype == 'table' then
       -- Table x (Function or String)
       -- simple map, apply function or compiled string as function
       -- {1,2,3} x f => {f(1), f(2), f(3)}
-      then return packFor(t, targetFnc)
+      if trgCallable then
+        r = map(self, trgFnc)
 
       -- Table x Table of functions
       -- {a,b} x {c,d} => {{c(a), d(a)}, {c(b), d(b)}}
-      elseif type(target) == 'table' then
-        return packFor(t, function(v,k) return packFor(target, v) end)
-      
+      elseif trgTable then
+        r = map(self, function(k,v) return map(target, v) end)
+
       -- Table x Number|Boolean
       -- {1,2,3} x n => {n,n,n}
-      else local r = {} for k in pairs(t) do r[k]=target end return q(r)
+      else
+        local u = {} for k in pairs(self) do u[k]=target end r = u
 
       end
     else
 
-      if targetCallable
       -- Function x (Function or String)
-      then return q(function(...) return targetFnc(t(...)) end)
+      -- Pipe
+      -- f x g => f(g())
+      if trgCallable then
+        r = function(...) return self(trgFnc(...)) end
 
       -- Function x Table
-      -- f x {1,2,3} => {f(1), f(2), f(3)}
-      elseif type(target) == 'table' then
-        return packFor(target, t)
-      
+      -- Unpack table
+      -- f x {1,2,3} => f(1,2,3)
+      elseif trgTable then
+        r = self(table.unpack(target))
+
       -- Function x Number|Boolean
+      -- Pipe
       -- f(...) x v => g(...) => f(v, ...)
-      else return q(function(...) return t(target, ...) end)
+      else
+        r = function(...) return self(target, ...) end
 
       end
     end
+    return q(r)
   end
 
   -----------------------------------------------------------------
@@ -455,10 +459,10 @@ q = function(t)
 end
 
 --[[
+████████╗██████╗  █████╗ ███╗   ██╗███████╗██╗      █████╗ ████████╗███████╗
+╚══██╔══╝██╔══██╗██╔══██╗████╗  ██║██╔════╝██║     ██╔══██╗╚══██╔══╝██╔════╝
    ██║   ██████╔╝███████║██╔██╗ ██║███████╗██║     ███████║   ██║   █████╗
    ██║   ██╔══██╗██╔══██║██║╚██╗██║╚════██║██║     ██╔══██║   ██║   ██╔══╝
-   ██║   ██████╔╝███████║██╔██╗ ██║███████╗██║     ███████║   ██║   █████╗  
-   ██║   ██╔══██╗██╔══██║██║╚██╗██║╚════██║██║     ██╔══██║   ██║   ██╔══╝  
    ██║   ██║  ██║██║  ██║██║ ╚████║███████║███████╗██║  ██║   ██║   ███████╗
    ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝╚══════╝╚═╝  ╚═╝   ╚═╝   ╚══════╝
 ]]
