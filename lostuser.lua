@@ -12,10 +12,10 @@ https://gist.githubusercontent.com/Krutoy242/1f18eaf6b262fb7ffb83c4666a93cbcc
 --[[
 ██╗███╗   ██╗██╗████████╗
 ██║████╗  ██║██║╚══██╔══╝
-██║██╔██╗ ██║██║   ██║   
-██║██║╚██╗██║██║   ██║   
-██║██║ ╚████║██║   ██║   
-╚═╝╚═╝  ╚═══╝╚═╝   ╚═╝   
+██║██╔██╗ ██║██║   ██║
+██║██║╚██╗██║██║   ██║
+██║██║ ╚████║██║   ██║
+╚═╝╚═╝  ╚═══╝╚═╝   ╚═╝
 ]]
 
 -- Forward declarations
@@ -72,8 +72,8 @@ end
 --[[
  ██████╗    ████████╗ █████╗ ██████╗ ██╗     ███████╗
 ██╔═══██╗   ╚══██╔══╝██╔══██╗██╔══██╗██║     ██╔════╝
-██║   ██║█████╗██║   ███████║██████╔╝██║     █████╗  
-██║▄▄ ██║╚════╝██║   ██╔══██║██╔══██╗██║     ██╔══╝  
+██║   ██║█████╗██║   ███████║██████╔╝██║     █████╗
+██║▄▄ ██║╚════╝██║   ██╔══██║██╔══██╗██║     ██╔══╝
 ╚██████╔╝      ██║   ██║  ██║██████╔╝███████╗███████╗
  ╚══▀▀═╝       ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚══════╝╚══════╝
 ]]
@@ -204,11 +204,11 @@ local function filter(t, f, checkNil)
 end
 
 local function buildFilter(t, isTable, target, checkNil)
-  local targetFnc, targetCallable = getTarget(target, 'v,k')
+  local trgFnc, trgCallable = getTarget(target, 'v,k')
 
-  if isTable then if targetCallable
+  if isTable then if trgCallable
     -- Table x (Function or String)
-    then return filter(t, targetFnc, checkNil)
+    then return filter(t, trgFnc, checkNil)
 
     -- Table x Table
     -- TODO: implement Table x Table filtering
@@ -217,7 +217,7 @@ local function buildFilter(t, isTable, target, checkNil)
     end
   else
 
-    if targetCallable
+    if trgCallable
     -- Function x (Function or String)
     -- TODO: implement Function x Function filtering
     then return error('Could not Filter Function x Function')
@@ -246,13 +246,22 @@ end
 --- Create new table
 ---@param length number length of new array
 ---@param val? any value to fill array with
----@return table
+---@return table<number, any>
 local function newArray(length, val)
   local arr={}
   for i=1,length do arr[i] = val or i end
   return arr
 end
 
+--[[
+███╗   ███╗████████╗
+████╗ ████║╚══██╔══╝
+██╔████╔██║   ██║
+██║╚██╔╝██║   ██║
+██║ ╚═╝ ██║   ██║
+╚═╝     ╚═╝   ╚═╝
+]]
+--- Single value q(t)
 q = function(t)
   local qtype = type(t)
   local qIsCallable = isCallable(t)
@@ -338,28 +347,28 @@ q = function(t)
   -- Reduce
   -----------------------------------------------------------------
   function mt:__mod(target)
-    local f, targetCallable = getTarget(target, 'a,b')
-  
-    if qtype == 'table' then if targetCallable
+    local f, trgCallable = getTarget(target, 'a,b')
+
+    if qtype == 'table' then if trgCallable
       -- Table x (Function or String)
       then return reducer(t, f)
-  
+
       -- Table x Table
       -- TODO: implement Table x Table
       else return error('Could not reduce Table x Table')
-  
+
       end
     else
-  
-      if targetCallable
+
+      if trgCallable
       -- Function x (Function or String)
       -- TODO: implement Function x Function
       then return error('Could not reduce Function x Function')
-  
+
       -- Function x Table
       -- TODO: implement Function x Table
       else return error('Could not reduce Function x Table')
-  
+
       end
     end
   end
@@ -391,7 +400,7 @@ q = function(t)
     -- Call
     -----------------------------------------------------------------
     mt.__pow = QFnc(t)
-    
+
     -----------------------------------------------------------------
     mt.__call = QFnc(t)
     return setmetatable({}, mt)
@@ -408,7 +417,7 @@ q = function(t)
       -- Empty: _ global return function that just print output
       -- TODO: add functionality for q{}._
       if #key == 1 then v = function(...) print(...) end end
-      
+
       -- Number: _8 create table {1,2,3,4,5,6,7,8}
       local subCommand = key:sub(2)
       local num = tonumber(subCommand)
@@ -432,6 +441,8 @@ q = function(t)
     return q(v)
   end
   mt.__newindex = t
+
+  -- When pairs, returned elements wrapped into q(v)
   function mt:__pairs()
     return function(self, k)
       local k, v = next(t, k)
@@ -444,8 +455,8 @@ q = function(t)
 end
 
 --[[
-████████╗██████╗  █████╗ ███╗   ██╗███████╗██╗      █████╗ ████████╗███████╗
-╚══██╔══╝██╔══██╗██╔══██╗████╗  ██║██╔════╝██║     ██╔══██╗╚══██╔══╝██╔════╝
+   ██║   ██████╔╝███████║██╔██╗ ██║███████╗██║     ███████║   ██║   █████╗
+   ██║   ██╔══██╗██╔══██║██║╚██╗██║╚════██║██║     ██╔══██║   ██║   ██╔══╝
    ██║   ██████╔╝███████║██╔██╗ ██║███████╗██║     ███████║   ██║   █████╗  
    ██║   ██╔══██╗██╔══██║██║╚██╗██║╚════██║██║     ██╔══██║   ██║   ██╔══╝  
    ██║   ██║  ██║██║  ██║██║ ╚████║███████║███████╗██║  ██║   ██║   ███████╗
@@ -467,9 +478,6 @@ local function translate(text)
   return result
 end
 
-local __id = 0
-local function nextID() __id=__id+1; return __id-1 end
-
 --[[
 ███╗   ███╗ █████╗  ██████╗██████╗  ██████╗ ███████╗
 ████╗ ████║██╔══██╗██╔════╝██╔══██╗██╔═══██╗██╔════╝
@@ -487,7 +495,6 @@ end
 -- Simple replaces
 -----------------------------------------------------------------
 
--- addMacro('`T', "Tg!*'v.tr!'") -- Trade all trades
 -- addMacro('`Z', [[a=`!a ;; ??`!Rm(3){ Rtn(a) c=`!Rm(3) Rtn(a) ??c{Rtn(a)Rm(3)} a=`!a}]]) -- Zig-Zag move
 
 addMacro('ⓐ', ' and ')
@@ -535,75 +542,6 @@ end
 addCaptureMacro('@', addMacro)
 
 -----------------------------------------------------------------
--- Conditionals
------------------------------------------------------------------
-
--- local function makeCondition(cond, body, checkFalsy)
---   return [[
-
--- local __if = (]].. cond ..[[)
--- if __if ]].. (checkFalsy and 'and __truthy(__if) ' or '') ..[[then
---   ]].. body ..[[
-
--- end
--- ]]
--- end
-
--- addCaptureMacro('?%?', makeCondition('HEAD', 'BODY', true)) -- Simple
-
--- -- Safe pointer
--- addCaptureMacro('?%.', [[
--- if type(HEAD)=='table' then
---     HEAD.BODY
--- end
--- ]])
-
--- -- Safe call
--- addCaptureMacro('?!', [[
--- local __p = HEAD
--- if type(__p)=='table' and (type(__p.BODY)=='table' or type(__p.BODY)=='function') then
---   HEAD.BODY()
--- end
--- ]])
-
------------------------------------------------------------------
--- Loops
------------------------------------------------------------------
-
--- local function replLetter(str, letter, to)
---   return str
---     :gsub('^'..letter..'([^_%a%d])', to..'%1')
---     :gsub('([^_%a%d])'..letter..'$', '%1'..to)
---     :gsub('([^_%a%d])'..letter..'([^_%a%d])', '%1'..to..'%2')
--- end
-
--- -- For Each inventory slot
--- addCaptureMacro('~#', function (head, body)
---   local i = 'i'..nextID()
---   body = replLetter(body, 'i', i)
---   head = replLetter(head, 'i', i)
---   local haveP = head ~= nil and not head:match"^%s*$"
---   return 'for '..i..'=1, (D or R).inventorySize() do\n'
---     ..(haveP and makeCondition(head, body, true) or body)
---     ..'\nend '
--- end)
-
--- -- Pairs
--- addCaptureMacro('~:', function (head, body)
---   local id = nextID()
---   body = replLetter(body, 'k', 'k'..id)
---   body = replLetter(body, 'v', 'v'..id)
---   return 'for k'..id..', v'..id..' in pairs('..head..') do\n'..body..'\nend '
--- end)
-
--- -- Loop
--- addCaptureMacro('~~', function (head, body)
---   local i = 'i'..nextID()
---   body = replLetter(body, 'i', i)
---   return 'for '..i..'='..head..', 1 do\n'..body..'\nend '
--- end)
-
------------------------------------------------------------------
 -- Lowest priority
 -----------------------------------------------------------------
 
@@ -623,20 +561,6 @@ addMacro('!', '()')
 --   return p, table.concat(t,'.')
 -- end
 
--- -- Global Shortand
--- local function globFnc(r)
---   local c = r:sub(1, 1)
---   if c:match'[A-Z]' and _G[c] ~= nil then
---     local res, way = api(r:sub(2), _G[c])
---     return res and c..'.'..way or r
---   end
---   local res, way = api(r)
---   return res and way or r
--- end
--- local globRgx = '%.('..WRD..('%.?[_%a%d]*'):rep(5)..')'
--- addMacro('^'..globRgx, globFnc)
--- addMacro('([^_%a%d%.])'..globRgx, function(p, r) return p..globFnc(r) end)
-
 -----------------------------------------------------------------
 -- Weird stuff
 -----------------------------------------------------------------
@@ -651,12 +575,12 @@ addMacro('(.+);;(.*)', function(once, rest)
 end)
 
 --[[
-██╗      ██████╗  █████╗ ██████╗ 
+██╗      ██████╗  █████╗ ██████╗
 ██║     ██╔═══██╗██╔══██╗██╔══██╗
 ██║     ██║   ██║███████║██║  ██║
 ██║     ██║   ██║██╔══██║██║  ██║
 ███████╗╚██████╔╝██║  ██║██████╔╝
-╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═════╝ 
+╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═════╝
 ]]
 
 -- Global environment inside loaded code
@@ -708,11 +632,10 @@ __ENV.proxy = proxy
 __ENV.sleep = sleep
 __ENV.api = api
 
--- Assemble --
 
--- Dump everything down and suck 4 slots from top then trade
--- ~#Rc*i{Rsel(i)Rd(0)}Rs(2)~~1,5{IsFS(1,i)`T}
--- ~#Rc*i{Rsel(i)Rd(0)}~~1,5{IsFS(1,i)}Rsk(3)~:Tg(){~~1,5{?!v{tr}}}
+-----------------------------------------------------------------
+-- Assemble
+-----------------------------------------------------------------
 
 local cmd, prog = ...
 local pointer = R or D
@@ -740,9 +663,5 @@ return run(prog)
 Some programs:
 Dm(tb.u(Nf(300)[a++%2+1].p))s(3)~#{Dsel(i)Dd(0)Dsu(0)}
 a++b=Nf(300)[a%2+1]Dm(tb.u(b.p))s(14)run(b.l)
-
-
-Tg!*'a1.tr!'
-~:Tg(){?!v{tr}}
 
 ]]
