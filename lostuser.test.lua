@@ -167,16 +167,16 @@ TODO: Some programs to test
 
 
 ? Trade all trades
-Tg!*'v.tr!'
+Tg!/'v.tr!'
 
 ? Suck 4 slots from top and bottom
-_8*'IsF(v--//4,v%4+1)'
+_8/'IsF(v--//4,v%4+1)'
 
 ? Dump everything front
 _16/'Rsel^v,Rd^3'
 
 ? Trader
-Tg!*'v.tr!',_16/'Rsel^v,Rd^3',_8*'IsF(v--//4,v%4+1)'
+Tg!/'v.tr!',_16/'Rsel^v,Rd^3',_8/'IsF(v--//4,v%4+1)'
 
 
 ! Other programs

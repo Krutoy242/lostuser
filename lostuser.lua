@@ -552,18 +552,18 @@ addCaptureMacro('@', addMacro)
 -- Exec
 addMacro('!', '()')
 
--- -- Get value from global
--- local function api(s, p)
---   if p==nil then p = _G end
---   local t,k = {}
---   for c in s:gmatch'[^.]+' do
---     if p==nil or type(p)=='function' then break end
---     k = getKey(c, p)
---     p = p[k]
---     t[#t+1] = k
---   end
---   return p, table.concat(t,'.')
--- end
+-- Get value from global
+local function api(s, p)
+  if p==nil then p = _G end
+  local t,k = {}
+  for c in s:gmatch'[^.]+' do
+    if p==nil or type(p)=='function' then break end
+    k = getKey(c, p)
+    p = p[k]
+    t[#t+1] = k
+  end
+  return table.concat(t,'.')
+end
 
 -----------------------------------------------------------------
 -- Weird stuff
