@@ -71,6 +71,13 @@ local function __truthy(a)
   return true
 end
 
+local function TONUMBER(a)
+  local t = type(a)
+  if t=='number' then return a end
+  if t=='string' then return tonumber(a) end
+  return __truthy(a) and 1 or 0
+end
+
 --[[
  ██████╗    ████████╗ █████╗ ██████╗ ██╗     ███████╗
 ██╔═══██╗   ╚══██╔══╝██╔══██╗██╔══██╗██║     ██╔════╝
@@ -268,12 +275,15 @@ q = function(t)
         elseif trgTable then
           -- {a,b} x {c,d} => {{c(a), d(a)}, {c(b), d(b)}}
           -- if     op=='map'    then r = map(self, function(k,v) return map(target, v) end)
+          if op=='lambda' then r = map(self, function(k,v) return function() return v(table.unpack(target)) end end)
           end
 
         --?-- Table x Number|Boolean
         else
           -- {1,2,3} x n => {n,n,n}
           if     op=='map'    then local u = {} for k in pairs(self) do u[k]=target end r = u
+          elseif op=='lambda' then r = map(self, function(k,v) return function(...) return v(target, ...) end end)
+          elseif op=='for'    then r = true for j=1, TONUMBER(target) do for k,v in pairs(self) do r = v(k,v) and r end end
           end
 
         end
@@ -283,6 +293,9 @@ q = function(t)
         if trgCallable then
           -- f x g => f(g()) (Pipe)
           if op=='map' then r = function(...) return self(trgFnc(...)) end
+
+          -- f x g => g(f()) (Reversed Pipe)
+          elseif op=='lambda' then r = function(...) return trgFnc(self(...)) end
           end
 
         --?-- Function x Table
@@ -307,10 +320,7 @@ q = function(t)
   --
   -- t & u
   -- make a lambda function
-  --
-  function mt:__band(arg)
-    return q(function(...) return t(arg, ...) end)
-  end
+  mt.__band = generic'lambda'
 
   -----------------------------------------------------------------
   -- t * u
@@ -336,6 +346,11 @@ q = function(t)
   -----------------------------------------------------------------
   mt.__idiv = generic'strict'
 
+  -----------------------------------------------------------------
+  -- t ~ u
+  -- For Each
+  -----------------------------------------------------------------
+  mt.__bxor = generic'for'
 
   -----------------------------------------------------------------
   --[[
@@ -470,7 +485,7 @@ addMacro('⒡', '(false)')
 -- Syntax Sugar
 local WRD = '[_%a][_%a%d]*'
 for _,c in pairs{'%+','%-'} do
-  local from, to = '('..WRD..'[%._%a%d]*)('..c..')'..c, '(function() %1=__number(%1)%21 return %1 end)'
+  local from, to = '('..WRD..'[%._%a%d]*)('..c..')'..c, '(function() %1=TONUMBER(%1)%21 return %1 end)'
   addMacro(from..c, to)
   addMacro(from, to..'()')
 end
@@ -581,12 +596,7 @@ end
 __ENV.X = function(...) XExitLoop = true print(...) end
 __ENV.__truthy = __truthy
 
-__ENV.__number = function(a)
-  local t = type(a)
-  if t=='number' then return a end
-  if t=='string' then return tonumber(a) end
-  return __ENV.__truthy(a) and 1 or 0
-end
+__ENV.TONUMBER = TONUMBER
 
 __ENV.run = function(text)
   return loadTranslated(text)()

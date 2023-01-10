@@ -161,6 +161,14 @@ test('            Reduce', shouldPrint(" X(T*'v.i'/'v'%'k+v')",      '4'))
 test('        Variable i', shouldPrint(" if i==2 then X! end pt(i)", '0\n1\n2'))
 test('            Macros', shouldPrint(" X(⒯ⓐⓝ⒡ⓞ⒡)",             'true'))
 
+
+_G.R = {   
+  move =function(n)print(({[0]='🡣','🡡','🡠','🡢'})[n]) return true end,
+  swing=function(n)print(({[0]='⇓','⇑','⇐','⇒'})[n]) return true end,
+}
+
+test('    Lambda and for', shouldPrint(" _{Rm,Rsw}&{3}~0.5*4,X()", '"🡢"\n"⇒"\n"🡢"\n"⇒"'))
+
 --[[
 
 TODO: Loops and conditions
@@ -178,6 +186,8 @@ _16/'Rsel^v,Rd^3'
 ? Trader
 Tg!/'v.tr!',_16/'Rsel^v,Rd^3',_8/'IsF(v--//4,v%4+1)'
 
+? Circular miner
+Gi!,_{Rm,Rsw}&{3}~i*3,Rtn⒯
 
 ! Other programs
 
