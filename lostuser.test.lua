@@ -157,13 +157,13 @@ test('Map:     Fnc x Num', shouldPrint(" X((Te*3)^4)",               '81.0'))
 test('Map:     Fnc x Tbl', shouldPrint(" X(Te*{4,5})",               '1024.0'))
 test('     Truthy Filter', shouldPrint(" X(T /'v.t'*'v.n')",         '{"n1"}'))
 test('    No-null Filter', shouldPrint(" X(T//'v.t'*'v.n')",         '{"n1",3="n3"}'))
-test('            Reduce', shouldPrint(" X(T*'v.i'/'v'%'a+b')",'4'))
+test('            Reduce', shouldPrint(" X(T*'v.i'/'v'%'k+v')",      '4'))
 test('        Variable i', shouldPrint(" if i==2 then X! end pt(i)", '0\n1\n2'))
 test('            Macros', shouldPrint(" X(⒯ⓐⓝ⒡ⓞ⒡)",             'true'))
 
 --[[
 
-TODO: Some programs to test
+TODO: Loops and conditions
 
 
 ? Trade all trades
@@ -187,5 +187,7 @@ _4*"Ru^0,_12*'Rm^3'",_2*'Rtn⒯',_80*'Rsel^v,Rd^0',s^120
 
 ? WIP zig-zag
 Dsw(0)Ds(0)Dp(0)Dm(1>>((i+1)%5),0,(-1)^(i//5))s(1)
+
+
 
 ]]

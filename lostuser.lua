@@ -62,7 +62,7 @@ end
 local function localError(err)
   if computer then computer.beep(1800, 1) end
   -- print(debug.traceback(err):sub(1, 200))
-  error(debug.traceback(err):sub(1, 200))
+  error(debug.traceback(err):gsub('[ \t]*/LostUser/lostuser.lua:',''):sub(1, 400))
   -- os.exit(1)
 end
 
@@ -189,42 +189,14 @@ local function filter(t, f, checkNil)
   return q(r)
 end
 
-local function buildFilter(t, isTable, target, checkNil)
-  local trgFnc, trgCallable = getTarget(target, 'k,v')
-
-  if isTable then if trgCallable
-    -- Table x (Function or String)
-    then return filter(t, trgFnc, checkNil)
-
-    -- Table x Table
-    -- TODO: implement Table x Table filtering
-    -- else return error('Could not Filter Table x Table')
-
-    end
-  -- else
-
-  --   if trgCallable
-  --   -- Function x (Function or String)
-  --   -- TODO: implement Function x Function filtering
-  --   then return error('Could not Filter Function x Function')
-
-  --   -- Function x Table
-  --   -- TODO: implement Function x Table filtering
-  --   else return error('Could not Filter Function x Table')
-
-  --   end
-  end
-  localError('Unsupported filter')
-end
-
 local function reducer(t, f)
   local pre,r
   for k, v in pairs(t) do
     if not pre then
-      r = q(v)
+      r = v
       pre = true
     else
-      r = q(f(r, q(v)))
+      r = f(q(r), q(v))
     end
   end
   return r
@@ -286,19 +258,22 @@ q = function(t)
         --?-- Table x Function|String
         if trgCallable then
           -- {1,2,3} x f => {f(1),f(2),f(3)}
-          if op=='map' then r = map(self, trgFnc)
+          if     op=='map'    then r = map(self, trgFnc)
+          elseif op=='reduce' then r = reducer(self, trgFnc)
+          elseif op=='filter' then r = filter(t, trgFnc, false)
+          elseif op=='strict' then r = filter(t, trgFnc, true)
           end
 
-        --?-- Table x Table of functions
+        --?-- Table x Table
         elseif trgTable then
           -- {a,b} x {c,d} => {{c(a), d(a)}, {c(b), d(b)}}
-          if op=='map' then r = map(self, function(k,v) return map(target, v) end)
+          -- if     op=='map'    then r = map(self, function(k,v) return map(target, v) end)
           end
 
         --?-- Table x Number|Boolean
         else
           -- {1,2,3} x n => {n,n,n}
-          if op=='map' then local u = {} for k in pairs(self) do u[k]=target end r = u
+          if     op=='map'    then local u = {} for k in pairs(self) do u[k]=target end r = u
           end
 
         end
@@ -319,7 +294,7 @@ q = function(t)
         --?-- Function x Number|Boolean
         else
           -- f(...) x v => g(...) => f(v, ...) (Pipe)
-          if op=='map' then r = function(...) return self(target, ...) end
+          if     op=='map'    then r = function(...) return self(target, ...) end
           end
 
         end
@@ -344,51 +319,23 @@ q = function(t)
   mt.__mul = generic'map'
 
   -----------------------------------------------------------------
+  -- t % u
+  -- Reduce
+  -----------------------------------------------------------------
+  mt.__mod = generic'reduce'
+
+  -----------------------------------------------------------------
   -- t / u
   -- Filter
   -----------------------------------------------------------------
-  function mt:__div(target)
-    return buildFilter(t, qtype == 'table', target, false)
-  end
+  mt.__div = generic'filter'
 
   -----------------------------------------------------------------
   -- t // u
   -- Filter strict
   -----------------------------------------------------------------
-  function mt:__idiv(target)
-    return buildFilter(t, qtype == 'table', target, true)
-  end
+  mt.__idiv = generic'strict'
 
-  -----------------------------------------------------------------
-  -- t % u
-  -- Reduce
-  -----------------------------------------------------------------
-  function mt:__mod(target)
-    local f, trgCallable = getTarget(target, 'a,b')
-
-    if qtype == 'table' then if trgCallable
-      -- Table x (Function or String)
-      then return reducer(t, f)
-
-      -- Table x Table
-      -- TODO: implement Table x Table
-      else return error('Could not reduce Table x Table')
-
-      end
-    else
-
-      if trgCallable
-      -- Function x (Function or String)
-      -- TODO: implement Function x Function
-      then return error('Could not reduce Function x Function')
-
-      -- Function x Table
-      -- TODO: implement Function x Table
-      else return error('Could not reduce Function x Table')
-
-      end
-    end
-  end
 
   -----------------------------------------------------------------
   --[[
