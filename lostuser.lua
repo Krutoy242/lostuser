@@ -418,14 +418,14 @@ q = function(t)
 
     -- Global key that started with _
     if key:sub(1,1) == '_' then
-      -- Empty: _ global return function that just print output
-      -- TODO: add functionality for q{}._
-      if #key == 1 then v = function(...) print(...) end end
+      -- Empty: _ is q()
+      if #key == 1 then return q end
 
       -- Number: _8 create table {1,2,3,4,5,6,7,8}
       local subCommand = key:sub(2)
       local num = tonumber(subCommand)
       if num then v = newArray(num) end
+      -- TODO: add functionality for q{}._
       -- TODO: add for _word
 
     -- Big letter shortand
