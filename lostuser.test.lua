@@ -5,7 +5,7 @@ Test file for LostUser program
 Author: Krutoy242
 
 Source and readme:
-https://gist.githubusercontent.com/Krutoy242/1f18eaf6b262fb7ffb83c4666a93cbcc
+https://github.com/Krutoy242/lostuser
 
 ]]
 
@@ -197,7 +197,7 @@ _4*"Ru^0,_12*'Rm^3'",_2*'Rtn⒯',_80*'Rsel^v,Rd^0',s^120
 
 ? WIP zig-zag
 Dsw(0)Ds(0)Dp(0)Dm(1>>((i+1)%5),0,(-1)^(i//5))s(1)
-
+a=`!a ;; ??`!Rm(3){ Rtn(a) c=`!Rm(3) Rtn(a) ??c{Rtn(a)Rm(3)} a=`!a}
 
 
 ]]

@@ -5,7 +5,7 @@ Lost User - simpliest robot
 Author: Krutoy242
 
 Source and readme:
-https://gist.githubusercontent.com/Krutoy242/1f18eaf6b262fb7ffb83c4666a93cbcc
+https://github.com/Krutoy242/lostuser
 
 ]]
 
@@ -245,11 +245,6 @@ q = function(t)
     return t
   end
 
-  local mt = {
-    __q = true,
-    __tostring = function() return '{q}'..(qIsCallable and tostring(t) or '#'..#t..': '..tostring(t)) end,
-  }
-
   --############################################################
   -- Generic operator
   --############################################################
@@ -317,40 +312,50 @@ q = function(t)
   end
   --############################################################
 
-  --
-  -- t & u
-  -- make a lambda function
-  mt.__band = generic'lambda'
+  local mt = {
+    __q = true,
+    __tostring = function() return '{q}'..(qIsCallable and tostring(t) or '#'..#t..': '..tostring(t)) end,
 
-  -----------------------------------------------------------------
-  -- t * u
-  -- Map t into u(t)
-  -----------------------------------------------------------------
-  mt.__mul = generic'map'
+  -- 1 --
+  -- [[ ^ ]] __pow = generic'??',
 
-  -----------------------------------------------------------------
-  -- t % u
-  -- Reduce
-  -----------------------------------------------------------------
-  mt.__mod = generic'reduce'
+  -- 2 --
+  -- [[ - ]] __unm = generic'??',
+  -- [[ ~ ]] __bnot = generic'??',
+  -- [[ # ]] __len = generic'??',
 
-  -----------------------------------------------------------------
-  -- t / u
-  -- Filter
-  -----------------------------------------------------------------
-  mt.__div = generic'filter'
+  -- 3 --
+  --[[ * ]] __mul = generic'map',
+  --[[ % ]] __mod = generic'reduce',
+  --[[ / ]] __div = generic'filter',
+  --[[// ]] __idiv = generic'strict',
 
-  -----------------------------------------------------------------
-  -- t // u
-  -- Filter strict
-  -----------------------------------------------------------------
-  mt.__idiv = generic'strict'
+  -- 4 --
+  -- [[ + ]] __add = generic'??',
+  -- [[ - ]] __sub = generic'??',
 
-  -----------------------------------------------------------------
-  -- t ~ u
-  -- For Each
-  -----------------------------------------------------------------
-  mt.__bxor = generic'for'
+  -- 5 --
+  -- [[ .. ]] __concat = generic'??',
+
+  -- 6 --
+  -- [[<< ]] __shl = generic'??',
+  -- [[>> ]] __shr = generic'??',
+
+  -- 7 --
+  --[[ & ]] __band = generic'lambda',
+
+  -- 8 --
+  --[[ ~ ]] __bxor = generic'for',
+
+  -- 9 --
+  -- [[ | ]] __bor = generic'??',
+
+  -- 10 --
+  -- [[== ]] __eq = generic'??',
+  -- [[ < ]] __lt = generic'??',
+  -- [[<= ]] __le = generic'??',
+
+  }
 
   -----------------------------------------------------------------
   --[[
@@ -358,18 +363,6 @@ q = function(t)
     - zip
     - compose
     - flat
-  ]]
-  --[[
-     <     >     <=    >=    ~=    ==
-     |
-     ~
-     &
-     <<    >>
-     ..
-     +     -
-     *     /     //    %
-     unary operators (not   #     -     ~)
-     ^
   ]]
   -----------------------------------------------------------------
 
@@ -474,8 +467,6 @@ end
 -- Simple replaces
 -----------------------------------------------------------------
 
--- addMacro('`Z', [[a=`!a ;; ??`!Rm(3){ Rtn(a) c=`!Rm(3) Rtn(a) ??c{Rtn(a)Rm(3)} a=`!a}]]) -- Zig-Zag move
-
 addMacro('ⓐ', ' and ')
 addMacro('ⓞ', ' or ')
 addMacro('ⓝ', ' not ')
@@ -527,31 +518,6 @@ addCaptureMacro('@', addMacro)
 -- Exec
 addMacro('!', '()')
 
--- Get value from global
-local function api(s, p)
-  if p==nil then p = _G end
-  local t,k = {}
-  for c in s:gmatch'[^.]+' do
-    if p==nil or type(p)=='function' then break end
-    k = getKey(c, p)
-    p = p[k]
-    t[#t+1] = k
-  end
-  return table.concat(t,'.')
-end
-
------------------------------------------------------------------
--- Weird stuff
------------------------------------------------------------------
-
--- Run only once
-local is_first_run = true
-function on_first_run(fnc)
-  if is_first_run then fnc() is_first_run = false end
-end
-addMacro('(.+);;(.*)', function(once, rest)
-  return 'on_first_run(function()\n  '..once..'\n  \nend)\n'..rest
-end)
 
 --[[
 ██╗      ██████╗  █████╗ ██████╗
@@ -585,7 +551,6 @@ run = function(input)
   local fnc, err = loadTranslated(input)
   local r
   while true do
-    -- TODO: Expose i as step index
     r = fnc()
     if isCallable(r) then r() end
     if XExitLoop then return end
@@ -604,8 +569,19 @@ end
 
 __ENV.proxy = proxy
 __ENV.sleep = sleep
-__ENV.api = api
 
+-- Get value from global
+__ENV.api = function(s, p)
+  if p==nil then p = _G end
+  local t,k = {}
+  for c in s:gmatch'[^.]+' do
+    if p==nil or type(p)=='function' then break end
+    k = getKey(c, p)
+    p = p[k]
+    t[#t+1] = k
+  end
+  return table.concat(t,'.')
+end
 
 -----------------------------------------------------------------
 -- Assemble
