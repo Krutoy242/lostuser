@@ -271,6 +271,64 @@ q = function(t)
     __tostring = function() return '{q}'..(qIsCallable and tostring(t) or '#'..#t..': '..tostring(t)) end,
   }
 
+  --############################################################
+  -- Generic operator
+  --############################################################
+  --- Compute operator result based on different targets
+  ---@param op string operator identifier
+  ---@return any
+  local function generic(op)
+    return function(self, target)
+      local trgFnc, trgCallable, trgTable = getTarget(target, 'k,v')
+      local r
+
+      if qtype == 'table' then
+        --?-- Table x Function|String
+        if trgCallable then
+          -- {1,2,3} x f => {f(1),f(2),f(3)}
+          if op=='map' then r = map(self, trgFnc)
+          end
+
+        --?-- Table x Table of functions
+        elseif trgTable then
+          -- {a,b} x {c,d} => {{c(a), d(a)}, {c(b), d(b)}}
+          if op=='map' then r = map(self, function(k,v) return map(target, v) end)
+          end
+
+        --?-- Table x Number|Boolean
+        else
+          -- {1,2,3} x n => {n,n,n}
+          if op=='map' then local u = {} for k in pairs(self) do u[k]=target end r = u
+          end
+
+        end
+      else
+
+        --?-- Function x Function|String
+        if trgCallable then
+          -- f x g => f(g()) (Pipe)
+          if op=='map' then r = function(...) return self(trgFnc(...)) end
+          end
+
+        --?-- Function x Table
+      elseif trgTable then
+          -- f x {1,2,3} => f(1,2,3) (Unpack table)
+          if op=='map' then r = self(table.unpack(target))
+          end
+
+        --?-- Function x Number|Boolean
+        else
+          -- f(...) x v => g(...) => f(v, ...) (Pipe)
+          if op=='map' then r = function(...) return self(target, ...) end
+          end
+
+        end
+      end
+      return q(r)
+    end
+  end
+  --############################################################
+
   --
   -- t & u
   -- make a lambda function
@@ -283,52 +341,7 @@ q = function(t)
   -- t * u
   -- Map t into u(t)
   -----------------------------------------------------------------
-  function mt:__mul(target)
-    local trgFnc, trgCallable, trgTable = getTarget(target, 'k,v')
-    local r
-
-    if qtype == 'table' then
-      -- Table x (Function or String)
-      -- simple map, apply function or compiled string as function
-      -- {1,2,3} x f => {f(1), f(2), f(3)}
-      if trgCallable then
-        r = map(self, trgFnc)
-
-      -- Table x Table of functions
-      -- {a,b} x {c,d} => {{c(a), d(a)}, {c(b), d(b)}}
-      elseif trgTable then
-        r = map(self, function(k,v) return map(target, v) end)
-
-      -- Table x Number|Boolean
-      -- {1,2,3} x n => {n,n,n}
-      else
-        local u = {} for k in pairs(self) do u[k]=target end r = u
-
-      end
-    else
-
-      -- Function x (Function or String)
-      -- Pipe
-      -- f x g => f(g())
-      if trgCallable then
-        r = function(...) return self(trgFnc(...)) end
-
-      -- Function x Table
-      -- Unpack table
-      -- f x {1,2,3} => f(1,2,3)
-      elseif trgTable then
-        r = self(table.unpack(target))
-
-      -- Function x Number|Boolean
-      -- Pipe
-      -- f(...) x v => g(...) => f(v, ...)
-      else
-        r = function(...) return self(target, ...) end
-
-      end
-    end
-    return q(r)
-  end
+  mt.__mul = generic'map'
 
   -----------------------------------------------------------------
   -- t / u
