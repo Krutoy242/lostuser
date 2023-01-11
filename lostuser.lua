@@ -19,7 +19,7 @@ https://github.com/Krutoy242/lostuser
 ]]
 
 -- Forward declarations
-local proxy, sleep, run, loadTranslated
+local proxy, sleep, run, loadTranslated, loadBody
 
 -- If we run from PC
 if not debug.upvalueid then
@@ -37,14 +37,13 @@ end
 
 -- Define all components as big letter global, long names first
 do
-  local cmpList = {}
-  for k, v in pairs(component.list()) do
-    cmpList[#cmpList+1] = {v, k}
-  end
-  table.sort(cmpList, function(a,b)return#a[1]<#b[1] end)
-  for _, v in pairs(cmpList) do
-    local c = v[1]:sub(1, 1):upper()
-    if _G[c]==nil then _G[c] = component.proxy(v[2]) end
+  local registered = {} -- Set of registered components
+  for address, name in pairs(component.list()) do
+    local c = name:sub(1, 1):upper()
+    if _G[c]==nil or (registered[c] and #registered[c] > #name) then
+      _G[c] = component.proxy(address)
+      registered[c] = name
+    end
   end
 end
 
@@ -62,7 +61,10 @@ end
 local function localError(err)
   if computer then computer.beep(1800, 1) end
   -- print(debug.traceback(err):sub(1, 200))
-  error(debug.traceback(err):gsub('[ \t]*/LostUser/lostuser.lua:',''):sub(1, 400))
+  error(debug.traceback(err)
+    :gsub('[ \t]*/LostUser/lostuser.lua:','')
+    :gsub("%d+: in upvalue 'localError'\n",'')
+    :sub(1, 400))
   -- os.exit(1)
 end
 
@@ -128,22 +130,17 @@ end
 ---@param txt string Lua code to load as function body
 ---@param params string param names devided by comma
 local function makeRunedFunction(txt, params)
-  local loaded, err = loadTranslated(
-    'function(...) local '.. params ..' = ... return '..txt..' end',
-    txt
+  local chunk = 'return function(...) local '.. params ..' = ... ## '.. txt ..' end'
+  local loaded, err = loadBody(
+    chunk:gsub('##','return'), chunk:gsub('##',''), txt
   )
-  if err then
-    localError(err)
-    return q{}
-  else
-    return function(...)
-      local safeResult = table.pack(pcall(loaded(), ...))
-      if not safeResult[1] then
-        localError(safeResult[2])
-        return nil
-      end
-      return table.unpack(safeResult, 2)
+  return function(...)
+    local safeResult = table.pack(pcall(loaded(), ...))
+    if not safeResult[1] then
+      localError(safeResult[2])
+      return nil
     end
+    return table.unpack(safeResult, 2)
   end
 end
 
@@ -166,16 +163,14 @@ end
 ---@param params string param names devided by comma
 ---@return function, boolean, boolean
 local function getTarget(target, params)
-  local trgFnc, trgCallable
-  local trgType = type(target)
-  if trgType == 'string' then
+  local tt = type(target)
+  local trgFnc
+  if tt == 'string' then
     trgFnc = makeRunedFunction(target, params)
-    trgCallable = true
-  else
+  elseif isCallable(target) then
     trgFnc = target
-    trgCallable = isCallable(target)
   end
-  return trgFnc, trgCallable, trgType == 'table'
+  return trgFnc, tt == 'table'
 end
 
 --- Filter table.
@@ -221,17 +216,20 @@ end
 
 --- Loop to function
 ---@param self table
----@param predicate function
+---@param trgFnc function
 ---@return boolean
--- local function loop(self, predicate)
---   local r,j = true,1
---   while predicate(j) do
---     for k,v in pairs(self) do
---       r = v(k,v) and r
---     end
---   end
---   return r
--- end
+local function loop(self, trgFnc)
+  local r
+  for j=1, math.maxinteger do
+    if not __truthy(trgFnc(j)) then
+      return r
+    end
+    for k,v in pairs(self) do
+      r = v(k,v) and r
+    end
+  end
+  return r
+end
 
 --[[
 ███╗   ███╗████████╗
@@ -267,18 +265,18 @@ q = function(t)
   ---@return any
   local function generic(op)
     return function(self, target)
-      local trgFnc, trgCallable, trgTable = getTarget(target, 'k,v')
+      local trgFnc, trgTable = getTarget(target, 'k,v')
       local r
 
       if qtype == 'table' then
         --?-- Table x Function|String
-        if trgCallable then
+        if trgFnc then
           -- {1,2,3} x f => {f(1),f(2),f(3)}
           if     op=='map'    then r = map(self, trgFnc)
           elseif op=='reduce' then r = reducer(self, trgFnc)
           elseif op=='filter' then r = filter(self, trgFnc, false)
           elseif op=='strict' then r = filter(self, trgFnc, true)
-          elseif op=='loop'   then for j=1, math.maxinteger do if not __truthy(trgFnc(j)) then return r end for k,v in pairs(self) do r = v(k,v) and r end end
+          elseif op=='loop'   then r = loop(self, trgFnc)
           end
 
         --?-- Table x Table
@@ -293,19 +291,20 @@ q = function(t)
           -- {1,2,3} x n => {n,n,n}
           if     op=='map'    then local u = {} for k in pairs(self) do u[k]=target end r = u
           elseif op=='lambda' then r = map(self, function(k,v) return function(...) return v(target, ...) end end)
-          elseif op=='loop'   then r = true for j=1, TONUMBER(target) do for k,v in pairs(self) do r = v(k,v) and r end end
+          elseif op=='loop'   then r = loop(self, function(j) return j <= TONUMBER(target) end) 
           end
 
         end
       else
 
         --?-- Function x Function|String
-        if trgCallable then
+        if trgFnc then
           -- f x g => f(g()) (Pipe)
           if op=='map' then r = function(...) return self(trgFnc(...)) end
 
           -- f x g => g(f()) (Reversed Pipe)
           elseif op=='lambda' then r = function(...) return trgFnc(self(...)) end
+          elseif op=='loop'   then r = loop({self}, trgFnc)
           end
 
         --?-- Function x Table
@@ -402,7 +401,7 @@ q = function(t)
     -- Global key that started with _
     if key:sub(1,1) == '_' then
       -- Empty: _ is q()
-      if #key == 1 then return q(q) end
+      -- if #key == 1 then return q(q) end
 
       -- Number: _8 create table {1,2,3,4,5,6,7,8}
       local subCommand = key:sub(2)
@@ -453,6 +452,8 @@ end
 local _MACROS = {}
 local tab = 0
 
+--- Replace all macroses
+---@param text string
 local function translate(text)
   tab = tab + 1
   local result = text
@@ -503,29 +504,36 @@ end
 -- Captures {}
 -----------------------------------------------------------------
 
-local function translateTabbed(str,from,to)
-  return translate(str:sub(from, to)):gsub('\n', '\n'..string.rep('  ',tab))
-end
+-- local function translateTabbed(str,from,to)
+--   return translate(str:sub(from, to)):gsub('\n', '\n'..string.rep('  ',tab))
+-- end
 
-local function captureGen(fnc)
-  return function (r)
-    local from,to = r:match'(){()'
-    if not from then return '' end
-    local head = r:sub(1, from-1)
-    local body = translateTabbed(r, to, -2)
-    if type(fnc)=='function' then return fnc(head, body) or ''
-    else
-      return fnc:gsub('HEAD', head):gsub('BODY', body)
-    end
+-- local function captureGen(fnc)
+--   return function (r)
+--     local from,to = r:match'(){()'
+--     if not from then return '' end
+--     local head = r:sub(1, from-1)
+--     local body = translateTabbed(r, to, -2)
+--     if type(fnc)=='function' then return fnc(head, body) or ''
+--     else
+--       return fnc:gsub('HEAD', head):gsub('BODY', body)
+--     end
+--   end
+-- end
+
+-- local function addCaptureMacro(prefix, fnc)
+--   addMacro(prefix..'(.-%b{})', captureGen(fnc))
+-- end
+
+-- -- Add Macros
+-- addCaptureMacro('@', addMacro)
+
+addMacro('(`.+`)', function (r)
+  for s in r:gmatch'[^`]+' do
+    addMacro(s:sub(1, 1), s:sub(2))
   end
-end
-
-local function addCaptureMacro(prefix, fnc)
-  addMacro(prefix..'(.-%b{})', captureGen(fnc))
-end
-
--- Add Macros
-addCaptureMacro('@', addMacro)
+  return ''
+end)
 
 -----------------------------------------------------------------
 -- Lowest priority
@@ -547,18 +555,23 @@ addMacro('!', '()')
 -- Global environment inside loaded code
 local __ENV = q(_G)
 
+loadBody = function(code1, code2, chunkName)
+  local       res, err = load(code1, chunkName, nil, __ENV)
+  if err then res, err = load(code2, chunkName, nil, __ENV) end
+  if err then localError(err) end
+  return res, err
+end
+
 loadTranslated = function(text, chunkName)
   local code = translate(text)
   if code == nil or code:match('^%s*$') then
     localError('Unable to translate: '..text)
     return nil
   end
+
+  -- Trim and Remove all tabulation
   code = code:gsub('[%s\n]*\n','\n'):gsub('^%s*',''):gsub('%s*$','')
-  -- print('Code:',code)
-  local res, err = load('return '..code, chunkName, nil, __ENV)
-  if err then res, err = load(code, chunkName, nil, __ENV) end
-  if err then localError(err) end
-  return res, err
+  return loadBody('return '..code, code, chunkName)
 end
 
 __ENV.i = 0
@@ -586,6 +599,12 @@ end
 
 __ENV.proxy = proxy
 __ENV.sleep = sleep
+
+--- Helper function
+__ENV._ = q(function(target)
+  local trgFnc, trgTable = getTarget(target, 'k,v')
+  return q(trgFnc or target)
+end)
 
 -- Get value from global
 __ENV.api = function(s, p)

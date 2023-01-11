@@ -27,7 +27,6 @@ wget -f https://raw.githubusercontent.com/Krutoy242/lostuser/main/lostuser.lua &
 
 -- for k,v in pairs(_G) do print(k,v)end
 
-local serpent = require("serpent/src/serpent")
 local lu
 
 print'\n< LostUser tests >\n'
@@ -159,15 +158,21 @@ test('     Truthy Filter', shouldPrint(" X(T /'v.t'*'v.n')",         '{"n1"}'))
 test('    No-null Filter', shouldPrint(" X(T//'v.t'*'v.n')",         '{"n1",3="n3"}'))
 test('            Reduce', shouldPrint(" X(T*'v.i'/'v'%'k+v')",      '4'))
 test('        Variable i', shouldPrint(" if i==2 then X! end pt(i)", '0\n1\n2'))
-test('            Macros', shouldPrint(" X(⒯ⓐⓝ⒡ⓞ⒡)",             'true'))
+test('          Replaces', shouldPrint(" X(⒯ⓐⓝ⒡ⓞ⒡)",             'true'))
+test('            Macros', shouldPrint(" `Z..i`T..(i+1)`X(''TZT)",   '"101"'))
 
 
+local mi = 3
 _G.R = {   
-  move =function(n)print(({[0]='🡣','🡡','🡠','🡢'})[n]) return true end,
+  move =function(n)print(({[0]='🡣','🡡','🡠','🡢'})[n]) mi=mi-1 return mi>0 end,
   swing=function(n)print(({[0]='⇓','⇑','⇐','⇒'})[n]) return true end,
 }
 
 test('    Lambda and for', shouldPrint(" _{Rm,Rsw}&{3}~0.5*4,X()", '"🡢"\n"⇒"\n"🡢"\n"⇒"'))
+
+mi = 3
+test('        While loop', shouldPrint(" _~'Rm(3)',X()", '"🡢"\n"🡢"\n"🡢"'))
+test('       Conditional', shouldPrint(" `SRsw(i)`MRm(3)` _'M,S'!ⓐ_'SS'!,X()", '"🡢"\n"⇓"'))
 
 --[[
 
@@ -199,8 +204,6 @@ _4*"Ru^0,_12*'Rm^3'",_2*'Rtn⒯',_80*'Rsel^v,Rd^0',s^120
 Dsw(0)Ds(0)Dp(0)Dm(1>>((i+1)%5),0,(-1)^(i//5))s(1)
 a=ⓝa ;; ??ⓝRm(3){ Rtn(a) c=ⓝRm(3) Rtn(a) ??c{ Rtn(a) Rm(3) } a=ⓝa }
 
-`TRtn(l)`MRm(3)`_~'M',T,'TM'~_'ⓝM,T'
-
-
+`TRtn(i%2>0)`MRm(3)`_~'M',T,_'M,T'()ⓞ_'TM'()
 
 ]]
