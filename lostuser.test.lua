@@ -197,7 +197,10 @@ _4*"Ru^0,_12*'Rm^3'",_2*'Rtn⒯',_80*'Rsel^v,Rd^0',s^120
 
 ? WIP zig-zag
 Dsw(0)Ds(0)Dp(0)Dm(1>>((i+1)%5),0,(-1)^(i//5))s(1)
-a=`!a ;; ??`!Rm(3){ Rtn(a) c=`!Rm(3) Rtn(a) ??c{Rtn(a)Rm(3)} a=`!a}
+a=ⓝa ;; ??ⓝRm(3){ Rtn(a) c=ⓝRm(3) Rtn(a) ??c{ Rtn(a) Rm(3) } a=ⓝa }
+
+`TRtn(l)`MRm(3)`_~'M',T,'TM'~_'ⓝM,T'
+
 
 
 ]]

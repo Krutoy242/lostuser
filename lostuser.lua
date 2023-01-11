@@ -188,7 +188,7 @@ end
 local function filter(t, f, checkNil)
   local r = {}
   for k, v in pairs(t) do
-    local res = f(k,q(v))
+    local res = f(k,v)
     if checkNil and res ~= nil or __truthy(res) then
       r[k] = v
     end
@@ -218,6 +218,20 @@ local function newArray(length, val)
   for i=1,length do arr[i] = val or i end
   return arr
 end
+
+--- Loop to function
+---@param self table
+---@param predicate function
+---@return boolean
+-- local function loop(self, predicate)
+--   local r,j = true,1
+--   while predicate(j) do
+--     for k,v in pairs(self) do
+--       r = v(k,v) and r
+--     end
+--   end
+--   return r
+-- end
 
 --[[
 ███╗   ███╗████████╗
@@ -262,8 +276,9 @@ q = function(t)
           -- {1,2,3} x f => {f(1),f(2),f(3)}
           if     op=='map'    then r = map(self, trgFnc)
           elseif op=='reduce' then r = reducer(self, trgFnc)
-          elseif op=='filter' then r = filter(t, trgFnc, false)
-          elseif op=='strict' then r = filter(t, trgFnc, true)
+          elseif op=='filter' then r = filter(self, trgFnc, false)
+          elseif op=='strict' then r = filter(self, trgFnc, true)
+          elseif op=='loop'   then for j=1, math.maxinteger do if not __truthy(trgFnc(j)) then return r end for k,v in pairs(self) do r = v(k,v) and r end end
           end
 
         --?-- Table x Table
@@ -278,7 +293,7 @@ q = function(t)
           -- {1,2,3} x n => {n,n,n}
           if     op=='map'    then local u = {} for k in pairs(self) do u[k]=target end r = u
           elseif op=='lambda' then r = map(self, function(k,v) return function(...) return v(target, ...) end end)
-          elseif op=='for'    then r = true for j=1, TONUMBER(target) do for k,v in pairs(self) do r = v(k,v) and r end end
+          elseif op=='loop'   then r = true for j=1, TONUMBER(target) do for k,v in pairs(self) do r = v(k,v) and r end end
           end
 
         end
@@ -345,7 +360,7 @@ q = function(t)
   --[[ & ]] __band = generic'lambda',
 
   -- 8 --
-  --[[ ~ ]] __bxor = generic'for',
+  --[[ ~ ]] __bxor = generic'loop',
 
   -- 9 --
   -- [[ | ]] __bor = generic'??',
@@ -387,7 +402,7 @@ q = function(t)
     -- Global key that started with _
     if key:sub(1,1) == '_' then
       -- Empty: _ is q()
-      if #key == 1 then return q end
+      if #key == 1 then return q(q) end
 
       -- Number: _8 create table {1,2,3,4,5,6,7,8}
       local subCommand = key:sub(2)
@@ -470,6 +485,7 @@ end
 addMacro('ⓐ', ' and ')
 addMacro('ⓞ', ' or ')
 addMacro('ⓝ', ' not ')
+addMacro('ⓡ', ' return ')
 addMacro('⒯', '(true)')
 addMacro('⒡', '(false)')
 
