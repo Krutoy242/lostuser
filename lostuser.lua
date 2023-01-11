@@ -546,19 +546,20 @@ loadTranslated = function(text, chunkName)
 end
 
 __ENV.i = 0
-local XExitLoop = false
+__ENV.l = true
+local XKeepLoop = true
 run = function(input)
   local fnc, err = loadTranslated(input)
   local r
-  while true do
+  while XKeepLoop do
     r = fnc()
     if isCallable(r) then r() end
-    if XExitLoop then return end
     __ENV.i = __ENV.i + 1
+    __ENV.l = not __ENV.l
   end
 end
 
-__ENV.X = function(...) XExitLoop = true print(...) end
+__ENV.X = function(...) XKeepLoop = false print(...) end
 __ENV.__truthy = __truthy
 
 __ENV.TONUMBER = TONUMBER
