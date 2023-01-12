@@ -49,7 +49,7 @@ end
 
 sleep = os and os.sleep or function(t)
   local u = computer.uptime
-  local d = u() + (t or 0)
+  local d = u() + (t or 1)
   repeat computer.pullSignal(d - u())
   until u() >= d
 end
