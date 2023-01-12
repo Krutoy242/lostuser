@@ -61,11 +61,18 @@ end
 local function localError(err)
   if computer then computer.beep(1800, 1) end
   -- print(debug.traceback(err):sub(1, 200))
-  error(debug.traceback(err)
-    :gsub('[ \t]*/LostUser/lostuser.lua:','')
-    :gsub("%d+: in upvalue 'localError'\n",'')
-    :sub(1, 400))
-  -- os.exit(1)
+  -- error(err)
+  error(
+    -- debug.traceback(err)
+    -- Fix FML error
+    -- [Client thread/ERROR] [FML]: Exception caught during firing event net.minecraftforge.client.event.ClientChatReceivedEvent@3e83e9ca:
+    -- net.minecraft.util.text.TextComponentTranslationFormatException: Error parsing
+    err:gsub('%%','%%%%')
+    -- :gsub('[ \t]*/LostUser/lostuser.lua:','')
+    -- :gsub("%d+: in upvalue 'localError'\n",'')
+    -- :sub(1, 400)
+    -- os.exit(1)
+  )
 end
 
 local function __truthy(a)
@@ -124,6 +131,12 @@ end
 local function isQ(t)
   local succes, mt = pcall(getmetatable, t)
   return succes and mt and mt.__q
+end
+
+local function safeCall(f, ...)
+  local safeResult = table.pack(pcall(f, ...))
+  if not safeResult[1] then localError(safeResult[2]) end
+  return table.unpack(safeResult, 2)
 end
 
 --- Generate safe function from lua code
@@ -578,11 +591,15 @@ __ENV.i = 0
 __ENV.l = true
 local XKeepLoop = true
 run = function(input)
-  local fnc, err = loadTranslated(input)
-  local r
+  local fnc = loadTranslated(input)
   while XKeepLoop do
-    r = fnc()
-    if isCallable(r) then r() end
+    -- Recursively call functions that returned
+    local function unfold(f)
+      for _,v in pairs({safeCall(f)}) do
+        if isCallable(v) then unfold(v) end
+      end
+    end
+    unfold(fnc)
     __ENV.i = __ENV.i + 1
     __ENV.l = not __ENV.l
   end
