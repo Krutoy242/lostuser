@@ -56,18 +56,20 @@ end
 
 end
 
+local function escape(s) return s:gsub('%%','%%%%') end
+
 --- Signal that we have error
 ---@param err string
 local function localError(err)
   if computer then computer.beep(1800, 1) end
-  -- print(debug.traceback(err):sub(1, 200))
-  -- error(err)
   error(
-    -- debug.traceback(err)
     -- Fix FML error
     -- [Client thread/ERROR] [FML]: Exception caught during firing event net.minecraftforge.client.event.ClientChatReceivedEvent@3e83e9ca:
     -- net.minecraft.util.text.TextComponentTranslationFormatException: Error parsing
-    err:gsub('%%','%%%%')
+    escape(
+      debug.traceback(err)
+    )
+    -- tostring(err)
     -- :gsub('[ \t]*/LostUser/lostuser.lua:','')
     -- :gsub("%d+: in upvalue 'localError'\n",'')
     -- :sub(1, 400)
@@ -75,8 +77,16 @@ local function localError(err)
   )
 end
 
-local function __truthy(a)
-  if not a or a == '' or a == 0 then return false end
+--- Check if value is truthy
+--- Falsy values is:
+--- empty string, zero, NaN, result of /0
+---@param a any
+local function TRUTHY(a)
+  if not a or a == '' or a == 0 or a ~= a then return false end
+  if type(a) == 'number' then
+    local s = tostring(a)
+    if s == 'inf' or s == '-inf' then return false end
+  end
   return true
 end
 
@@ -84,7 +94,7 @@ local function TONUMBER(a)
   local t = type(a)
   if t=='number' then return a end
   if t=='string' then return tonumber(a) end
-  return __truthy(a) and 1 or 0
+  return TRUTHY(a) and 1 or 0
 end
 
 --[[
@@ -144,17 +154,10 @@ end
 ---@param params string param names devided by comma
 local function makeRunedFunction(txt, params)
   local chunk = 'return function(...) local '.. params ..' = ... ## '.. txt ..' end'
-  local loaded, err = loadBody(
+  local loaded = loadBody(
     chunk:gsub('##','return'), chunk:gsub('##',''), txt
   )
-  return function(...)
-    local safeResult = table.pack(pcall(loaded(), ...))
-    if not safeResult[1] then
-      localError(safeResult[2])
-      return nil
-    end
-    return table.unpack(safeResult, 2)
-  end
+  return function(...) return safeCall(loaded(), ...) end
 end
 
 --- For each t run f(k,v)
@@ -165,7 +168,6 @@ end
 local function map(t, f)
   local r = {}
   for k, v in pairs(t) do
-    -- r[k] = table.pack(f(k, v))
     r[k] = f(k, v)
   end
   return r
@@ -197,7 +199,7 @@ local function filter(t, f, checkNil)
   local r = {}
   for k, v in pairs(t) do
     local res = f(k,v)
-    if checkNil and res ~= nil or __truthy(res) then
+    if checkNil and res ~= nil or TRUTHY(res) then
       r[k] = v
     end
   end
@@ -211,7 +213,7 @@ local function reducer(t, f)
       r = v
       pre = true
     else
-      r = f(q(r), q(v))
+      r = f(q(r), v)
     end
   end
   return r
@@ -234,7 +236,7 @@ end
 local function loop(self, trgFnc)
   local r
   for j=1, math.maxinteger do
-    if not __truthy(trgFnc(j)) then
+    if not TRUTHY(trgFnc(j)) then
       return r
     end
     for k,v in pairs(self) do
@@ -264,11 +266,7 @@ end
 q = function(t)
   local qtype = type(t)
   local qIsCallable = isCallable(t)
-  if qtype ~= 'table' and not qIsCallable then return t end
-  if isQ(t) then
-    -- error(debug.traceback('Trying to Q(t) when t is already Q'))
-    return t
-  end
+  if (qtype ~= 'table' and not qIsCallable) or isQ(t) then return t end
 
   --############################################################
   -- Generic operator
@@ -281,7 +279,7 @@ q = function(t)
       local trgFnc, trgTable = getTarget(target, 'k,v')
       local r
 
-      if qtype == 'table' then
+      if not qIsCallable then
         --?-- Table x Function|String
         if trgFnc then
           -- {1,2,3} x f => {f(1),f(2),f(3)}
@@ -296,7 +294,7 @@ q = function(t)
         elseif trgTable then
           -- {a,b} x {c,d} => {{c(a), d(a)}, {c(b), d(b)}}
           -- if     op=='map'    then r = map(self, function(k,v) return map(target, v) end)
-          if op=='lambda' then r = map(self, function(k,v) return function() return v(table.unpack(target)) end end)
+          if     op=='lambda' then r = map(self, function(k,v) return function() return v(table.unpack(target)) end end)
           end
 
         --?-- Table x Number|Boolean
@@ -304,7 +302,8 @@ q = function(t)
           -- {1,2,3} x n => {n,n,n}
           if     op=='map'    then local u = {} for k in pairs(self) do u[k]=target end r = u
           elseif op=='lambda' then r = map(self, function(k,v) return function(...) return v(target, ...) end end)
-          elseif op=='loop'   then r = loop(self, function(j) return j <= TONUMBER(target) end) 
+          -- TODO: Loop actually should call other function f(k,v), not call each element of Table
+          elseif op=='loop'   then r = loop(self, function(j) return j <= TONUMBER(target) end)
           end
 
         end
@@ -313,7 +312,7 @@ q = function(t)
         --?-- Function x Function|String
         if trgFnc then
           -- f x g => f(g()) (Pipe)
-          if op=='map' then r = function(...) return self(trgFnc(...)) end
+          if     op=='map'    then r = function(...) return self(trgFnc(...)) end
 
           -- f x g => g(f()) (Reversed Pipe)
           elseif op=='lambda' then r = function(...) return trgFnc(self(...)) end
@@ -323,13 +322,17 @@ q = function(t)
         --?-- Function x Table
       elseif trgTable then
           -- f x {1,2,3} => f(1,2,3) (Unpack table)
-          if op=='map' then r = self(table.unpack(target))
+          if     op=='map'    then r = self(table.unpack(target))
+          -- reversed map f x {a,b,c} => {f(a),f(b),f(c)}
+          elseif op=='lambda' then r = map(target, self)
           end
 
         --?-- Function x Number|Boolean
         else
-          -- f(...) x v => g(...) => f(v, ...) (Pipe)
-          if     op=='map'    then r = function(...) return self(target, ...) end
+          -- f*1 => f(1)
+          if     op=='map'    then r = QFnc(self)(self, target)
+          elseif op=='lambda' then r = function(...) return self(target, ...) end
+          elseif op=='loop'   then r = loop({self}, function(j) return j <= TONUMBER(target) end)
           end
 
         end
@@ -386,10 +389,10 @@ q = function(t)
 
   -----------------------------------------------------------------
   --[[
-    TODO: Possible need to implement
+    Possible need to implement:
     - zip
-    - compose
     - flat
+    - gsub
   ]]
   -----------------------------------------------------------------
 
@@ -439,7 +442,14 @@ q = function(t)
 
     return q(v)
   end
-  mt.__newindex = t
+
+  -- Possibilities for __newindex:
+  -- a.b='func(k,v)'
+  -- a._={}
+  -- _5='k,v'
+  function mt:__newindex(k, v)
+    rawset(t, k, q(v))
+  end
 
   -- When pairs, returned elements wrapped into q(v)
   function mt:__pairs()
@@ -502,6 +512,7 @@ addMacro('ⓝ', ' not ')
 addMacro('ⓡ', ' return ')
 addMacro('⒯', '(true)')
 addMacro('⒡', '(false)')
+addMacro('∅', ' TRASH=')
 
 -- Syntax Sugar
 local WRD = '[_%a][_%a%d]*'
@@ -543,7 +554,7 @@ end
 
 addMacro('(`.+`)', function (r)
   for s in r:gmatch'[^`]+' do
-    addMacro(s:sub(1, 1), s:sub(2))
+    addMacro(escape(s:sub(1, 1)), escape(s:sub(2)))
   end
   return ''
 end)
@@ -569,13 +580,15 @@ addMacro('!', '()')
 local __ENV = q(_G)
 
 loadBody = function(code1, code2, chunkName)
-  local       res, err = load(code1, chunkName, nil, __ENV)
-  if err then res, err = load(code2, chunkName, nil, __ENV) end
+  local res, err = load(code1, chunkName, nil, __ENV)
+  if err then
+    res, err = load(code2, chunkName, nil, __ENV)
+  end
   if err then localError(err) end
-  return res, err
+  return res
 end
 
-loadTranslated = function(text, chunkName)
+loadTranslated = function(text)
   local code = translate(text)
   if code == nil or code:match('^%s*$') then
     localError('Unable to translate: '..text)
@@ -583,8 +596,8 @@ loadTranslated = function(text, chunkName)
   end
 
   -- Trim and Remove all tabulation
-  code = code:gsub('[%s\n]*\n','\n'):gsub('^%s*',''):gsub('%s*$','')
-  return loadBody('return '..code, code, chunkName)
+  -- code = code:gsub('[%s\n]*\n','\n'):gsub('^%s*',''):gsub('%s*$','')
+  return loadBody('return '..code, code, text)
 end
 
 __ENV.i = 0
@@ -606,14 +619,8 @@ run = function(input)
 end
 
 __ENV.X = function(...) XKeepLoop = false print(...) end
-__ENV.__truthy = __truthy
-
+__ENV.TRUTHY = TRUTHY
 __ENV.TONUMBER = TONUMBER
-
-__ENV.run = function(text)
-  return loadTranslated(text)()
-end
-
 __ENV.proxy = proxy
 __ENV.sleep = sleep
 
@@ -649,12 +656,12 @@ if cmd then prog = cmd
 -- Program defined by Robot/Drone name
 elseif pointer and pointer.name then prog = pointer.name() end
 
-if not prog or prog=='' then error'No program defined' end
+if not prog or prog=='' then localError'No program defined' end
 
 -- Play music
 if prog:sub(1,1) ~= ' ' then
   for s in prog:sub(1,5):gmatch"%S" do
-    computer.beep(200 + s:byte() * 10, 0.05)
+    computer.beep(math.min(2000, 200 + s:byte() * 10), 0.05)
   end
 end
 
