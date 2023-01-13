@@ -28,7 +28,6 @@ if not debug.upvalueid then
 if require then
   component, computer = require'component', require'computer'
 end
-if not print then print = function(...)end end
 
 proxy = function(name)
   local p = component.list(name)()
@@ -193,7 +192,7 @@ end
 --- {1, '', 3, 0, foo = false, goo=true}  / 'a1' => {1, 3, goo=true}
 --- {1, '', 3, 0, foo = false, goo=true} // 'a1' => {goo=true}
 ---@param t table
----@param p function
+---@param f function
 ---@param checkNil boolean
 local function filter(t, f, checkNil)
   local r = {}
@@ -206,6 +205,9 @@ local function filter(t, f, checkNil)
   return q(r)
 end
 
+--- Turn table to one value
+---@param t table
+---@param f function
 local function reducer(t, f)
   local pre,r
   for k, v in pairs(t) do
@@ -512,7 +514,7 @@ addMacro('ⓝ', ' not ')
 addMacro('ⓡ', ' return ')
 addMacro('⒯', '(true)')
 addMacro('⒡', '(false)')
-addMacro('∅', ' TRASH=')
+addMacro('∅', ' __trash=')
 
 -- Syntax Sugar
 local WRD = '[_%a][_%a%d]*'
