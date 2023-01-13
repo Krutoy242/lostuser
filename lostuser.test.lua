@@ -142,8 +142,8 @@ lu = loadfile'lostuser.lua'
 -- test('        Empty name', shouldError('No program defined', ''))
 -- test('      Expose error', shouldError('^.+: Test Error', ' error"Test Error"'))
 -- test('   Global shortand', shouldError('^.+: Exit', ' e"Exit"'))
--- test('     Parsing error', shouldError('^.+: attempt to concat', ' X(c..d)'))
-test('  Should print msg', shouldPrint(" X'test'", 'test'))
+-- test('     Parsing error', shouldError('^.+: attempt to concat', ' w(c..d)'))
+test('  Should print msg', shouldPrint(" w'test'", 'test'))
 
 _G.T = {
 {name='n1', take=true, index=1},{name='n2'},{name='n3', take=0, index=3},
@@ -152,16 +152,16 @@ getTrades = function() return {
   {trade=function()return 't','u' end, isEnabled=function()return false end},
   {trade=function()return 'v','w' end, isEnabled=function()return true end},
 } end}
-test('Map:     Tbl x Fnc', shouldPrint(" X(Tg!*'v.t!')",             '{t,v}'))
-test('Map:     Tbl x Num', shouldPrint(" X(T*2)",                    '{2,2,2,exp=2,getTrades=2}'))
-test('Map:     Fnc x Num', shouldPrint(" X((Te&3)^4)",               '81.0'))
-test('Map:     Fnc x Tbl', shouldPrint(" X(Te*{4,5})",               '1024.0'))
-test('     Truthy Filter', shouldPrint(" X(T /'v.t'*'v.n')",         '{n1}'))
-test('    No-null Filter', shouldPrint(" X(T//'v.t'*'v.n')",         '{n1,3=n3}'))
-test('            Reduce', shouldPrint(" X(T*'v.i'/'v'%'k+v')",      '4'))
-test('        Variable i', shouldPrint(" if i==2 then X! end pt(i)", '012'))
-test('          Replaces', shouldPrint(" ∅X(⒯ⓐⓝ⒡ⓞ⒡)ⓡ",           'true'))
-test('            Macros', shouldPrint(" `Z..i`T..(i+1)`X(''TZT)",   '101'))
+test('Map:     Tbl x Fnc', shouldPrint(" w(Tg!*'v.t!')",             '{t,v}'))
+test('Map:     Tbl x Num', shouldPrint(" w(T*2)",                    '{2,2,2,exp=2,getTrades=2}'))
+test('Map:     Fnc x Num', shouldPrint(" w((Te&3)^4)",               '81.0'))
+test('Map:     Fnc x Tbl', shouldPrint(" w(Te*{4,5})",               '1024.0'))
+test('     Truthy Filter', shouldPrint(" w(T /'v.t'*'v.n')",         '{n1}'))
+test('    No-null Filter', shouldPrint(" w(T//'v.t'*'v.n')",         '{n1,3=n3}'))
+test('            Reduce', shouldPrint(" w(T*'v.i'/'v'%'k+v')",      '4'))
+test('        Variable i', shouldPrint(" if i==2 then w! end pt(i)", '012'))
+test('          Replaces', shouldPrint(" ∅wr(⒯ⓐⓝ⒡ⓞ⒡)ⓡ",           'true'))
+test('            Macros', shouldPrint(" `Z..i`T..(i+1)`w(''TZT)",   '101'))
 
 
 local mi = 3
@@ -170,11 +170,11 @@ _G.R = {
   swing=function(n)print(({[0]='⇓','⇑','⇐','⇒'})[n]) return true end,
 }
 
-test('    Lambda and for', shouldPrint(" _{Rm,Rsw}&{3}~0.5*4,X()", '🡢⇒🡢⇒'))
+test('    Lambda and for', shouldPrint(" _{Rm,Rsw}&{3}~0.5*4,w()", '🡢⇒🡢⇒'))
 
 mi = 3
-test('        While loop', shouldPrint(" _~'Rm(3)',X()", '🡢🡢🡢'))
-test('       Conditional', shouldPrint(" `SRsw(i)`MRm(3)` _'M,S'!ⓐ_'SS'!,X()", '🡢⇓'))
+test('        While loop', shouldPrint(" _~'Rm(3)',w()", '🡢🡢🡢'))
+test('       Conditional', shouldPrint(" `SRsw(i)`MRm(3)` _'M,S'!ⓐ_'SS'!,w()", '🡢⇓'))
 
 
 _G.G = {
@@ -189,7 +189,7 @@ _G.D = {
   place= function(side)print(string.format('place(%d)',side)) return false end,
 }
 test(' Sapling drone geo', shouldPrint(
-  " `x(i%8),`z(i%64//8))`_'Dm(x0,zs!Dp(0)Dm(-x0,-zs!'~(Gsn(xz[32]==0),i==3ⓐX()",
+  " `x(i%8),`z(i%64//8))`_'Dm(x0,zs!Dp(0)Dm(-x0,-zs!'~(Gsn(xz[32]==0),i==3ⓐwr()",
   'scan(0,0)scan(1,0)scan(2,0)move(2,0,0)place(0)move(-2,0,0)scan(3,0)'
 ))
 
@@ -216,8 +216,15 @@ Gi!,_{Rm,Rsw}&{3}~i*3,Rtn⒯
 ? Zig-Zag move
 `TRtn(i%2>0)`MRm(3)`_~'M',T,_'M,T'!ⓞ_'TM'!
 
-! Other programs
+? Zig-Zag and swing
+`TRtn(i%2>0)S`MRm(3)S`S,Rsw(3)`_~'M',T,_'M,T'!ⓞ_'T,M'!
 
+? Rune maker
+f='Rsel(v)Ie!Ru(3)Ie!'∅_7*f,s^7,Rm^1,Rd(3,1),Rm^0,_2*'v+14'*f
+`QIe()`URu(3)`SRsel(`Us(8)S15)QUQS16)QUQ
+
+! Other programs
+{Gd(3)}
 
 ? Line farmer
 _4*"Ru^0,_12*'Rm^3'",_2*'Rtn⒯',_80*'Rsel^v,Rd^0',s^120
@@ -233,5 +240,8 @@ t,u=t or Gsn(1,1,-1,8,8,1),l and {i%8,0,i/8} or u*'-v' TRASH=t[i]==0 and Dm*u s(
 
 ? Simple saplinger
 Ds(0)Dm(i%8,0,i%64//8)
+
+? Tree harvester
+Gsn(0,1)
 
 ]]

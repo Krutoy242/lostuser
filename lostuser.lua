@@ -19,19 +19,11 @@ https://github.com/Krutoy242/lostuser
 ]]
 
 -- Forward declarations
-local proxy, sleep, run, loadTranslated, loadBody
-
--- If we run from PC
-if not debug.upvalueid then
+local run, loadTranslated, loadBody
 
 -- If we run from OpenOS
 if require then
   component, computer = require'component', require'computer'
-end
-
-proxy = function(name)
-  local p = component.list(name)()
-  return p and component.proxy(p) or nil
 end
 
 -- Define all components as big letter global, long names first
@@ -46,34 +38,23 @@ do
   end
 end
 
-sleep = os and os.sleep or function(t)
-  local u = computer.uptime
-  local d = u() + (t or 1)
-  repeat computer.pullSignal(d - u())
-  until u() >= d
-end
-
-end
 
 local function escape(s) return s:gsub('%%','%%%%') end
 
 --- Signal that we have error
 ---@param err string
-local function localError(err)
+---@param skipTraceback? string
+local function localError(err, skipTraceback)
   if computer then computer.beep(1800, 1) end
   error(
     -- Fix FML error
     -- [Client thread/ERROR] [FML]: Exception caught during firing event net.minecraftforge.client.event.ClientChatReceivedEvent@3e83e9ca:
     -- net.minecraft.util.text.TextComponentTranslationFormatException: Error parsing
-    escape(
-      debug.traceback(err)
-    )
+    escape(tostring(err))
     -- tostring(err)
-    -- :gsub('[ \t]*/LostUser/lostuser.lua:','')
-    -- :gsub("%d+: in upvalue 'localError'\n",'')
     -- :sub(1, 400)
     -- os.exit(1)
-  )
+  , skipTraceback and 2 or 0)
 end
 
 --- Check if value is truthy
@@ -248,6 +229,16 @@ local function loop(self, trgFnc)
   return r
 end
 
+--- Serialize value table
+---@param t any
+---@return string
+local function serialize(t)
+  if type(t)~='table' then return tostring(t) end
+  local s=''
+  for k,v in pairs(t) do s=s..(s==''and''or',')..tostring(k)..'='..tostring(v)end
+  return s
+end
+
 --[[
 ███╗   ███╗████████╗
 ████╗ ████║╚══██╔══╝
@@ -346,7 +337,7 @@ q = function(t)
 
   local mt = {
     __q = true,
-    __tostring = function() return '{q}'..(qIsCallable and tostring(t) or '#'..#t..': '..tostring(t)) end,
+    __tostring = function() return '{q}'..(qIsCallable and tostring(t) or '{'..serialize(t)..'}') end,
 
   -- 1 --
   -- [[ ^ ]] __pow = generic'??',
@@ -620,11 +611,23 @@ run = function(input)
   end
 end
 
-__ENV.X = function(...) XKeepLoop = false print(...) end
+__ENV.write = function(...)
+  XKeepLoop = false
+  if print then return print(...) end
+  localError(tostring(q{...}), true)
+end
 __ENV.TRUTHY = TRUTHY
 __ENV.TONUMBER = TONUMBER
-__ENV.proxy = proxy
-__ENV.sleep = sleep
+__ENV.proxy = function(name)
+  local p = component.list(name)()
+  return p and component.proxy(p) or nil
+end
+__ENV.sleep = function(t)
+  local u = computer.uptime
+  local d = u() + (t or 1)
+  repeat computer.pullSignal(d - u())
+  until u() >= d
+end
 
 --- Helper function
 __ENV._ = q(function(target)
