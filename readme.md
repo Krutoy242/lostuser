@@ -2,6 +2,7 @@
 
 Robot (or drone!) BIOS program for Minecraft OpenComputers mod.
 
+⚠️ This readme is outdated!
 
 - [`Lost User` - simpliest robot](#lost-user---simpliest-robot)
   - [Why?](#why)
