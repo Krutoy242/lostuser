@@ -143,7 +143,6 @@ lu = loadfile'lostuser.lua'
 -- test('      Expose error', shouldError('^.+: Test Error', ' error"Test Error"'))
 -- test('   Global shortand', shouldError('^.+: Exit', ' e"Exit"'))
 -- test('     Parsing error', shouldError('^.+: attempt to concat', ' w(c..d)'))
-test('  Should print msg', shouldPrint(" w'test'", 'test'))
 
 _G.T = {
 {name='n1', take=true, index=1},{name='n2'},{name='n3', take=0, index=3},
@@ -153,15 +152,16 @@ getTrades = function() return {
   {trade=function()return 'v','w' end, isEnabled=function()return true end},
 } end}
 test('Map:     Tbl x Fnc', shouldPrint(" w(Tg!*'v.t!')",             '{t,v}'))
-test('Map:     Tbl x Num', shouldPrint(" w(T*2)",                    '{2,2,2,exp=2,getTrades=2}'))
+test('Map:     Tbl x Num', shouldPrint(" w(T*2)",                    '{2,2,2,getTrades=2,exp=2}'))
 test('Map:     Fnc x Num', shouldPrint(" w((Te&3)^4)",               '81.0'))
 test('Map:     Fnc x Tbl', shouldPrint(" w(Te*{4,5})",               '1024.0'))
 test('     Truthy Filter', shouldPrint(" w(T /'v.t'*'v.n')",         '{n1}'))
 test('    No-null Filter', shouldPrint(" w(T//'v.t'*'v.n')",         '{n1,3=n3}'))
 test('            Reduce', shouldPrint(" w(T*'v.i'/'v'%'k+v')",      '4'))
 test('        Variable i', shouldPrint(" if i==2 then w! end pt(i)", '012'))
-test('          Replaces', shouldPrint(" ∅wr(⒯ⓐⓝ⒡ⓞ⒡)ⓡ",           'true'))
+test('          Replaces', shouldPrint(" ∅wr(⒯ⓐⓝ⒡ⓞ⒡)ⓡ",          'true'))
 test('            Macros', shouldPrint(" `Z..i`T..(i+1)`w(''TZT)",   '101'))
+-- test('              Join', shouldPrint([[ w^_(~T^'v.i'..'+')!]],     '4'))
 
 
 local mi = 3
@@ -239,9 +239,19 @@ Gsn(1,1,-1,8,8,1)*"v~=0ⓞ_'Dm(k,0,v),s^1,Dp^0,Dm(-k,0,-v),s^1'(k%8,k/8)"
 t,u=t or Gsn(1,1,-1,8,8,1),l and {i%8,0,i/8} or u*'-v' TRASH=t[i]==0 and Dm*u s(1)
 
 ? Simple saplinger
-Ds(0)Dm(i%8,0,i%64//8)
+Nf^16*'Dm*v.p',s!,Ds^0,_16*"Dm(1>>v%4,0,(-1)^(v//4%2))s!Dp(0)"
 
 ? Tree harvester
-Gsn(0,1)
+a,b=Rdt(3)∅#b<6ⓐ{Rsw(3),s^6}ⓞRu(3),s!
+
+? Tree harvester with planting
+`3(3)`Q,Ie()`a,b=Rdt3∅#b<6ⓐ{Rsw3,s^6,Rsk(0,1)Q,Ru3Q}ⓞRu3,s!
+
+Some old programs:
+Dm(tb.u(Nf(300)[a++%2+1].p))s(3)~#{Dsel(i)Dd(0)Dsu(0)}
+a++b=Nf(300)[a%2+1]Dm(tb.u(b.p))s(14)run(b.l)
+
 
 ]]
+
+

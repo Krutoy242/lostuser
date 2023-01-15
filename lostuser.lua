@@ -19,14 +19,14 @@ https://github.com/Krutoy242/lostuser
 ]]
 
 -- Forward declarations
-local run, loadTranslated, loadBody
+local run, loadBody, q, Q
 
 -- If we run from OpenOS
 if require then
   component, computer = require'component', require'computer'
 end
 
--- Define all components as big letter global, long names first
+-- Define all components as big letter global, short names first
 do
   local registered = {} -- Set of registered components
   for address, name in pairs(component.list()) do
@@ -37,6 +37,12 @@ do
     end
   end
 end
+-- do
+--   -- Expose all components as globals
+--   for address, name in pairs(component.list()) do
+--     _G[name] = component.proxy(address)
+--   end
+-- end
 
 
 local function escape(s) return s:gsub('%%','%%%%') end
@@ -50,18 +56,20 @@ local function localError(err, skipTraceback)
     -- Fix FML error
     -- [Client thread/ERROR] [FML]: Exception caught during firing event net.minecraftforge.client.event.ClientChatReceivedEvent@3e83e9ca:
     -- net.minecraft.util.text.TextComponentTranslationFormatException: Error parsing
-    escape(tostring(err))
+    escape(
+      skipTraceback and tostring(err) or debug.traceback(err)
+    )
     -- tostring(err)
     -- :sub(1, 400)
     -- os.exit(1)
-  , skipTraceback and 2 or 0)
+  )
 end
 
 --- Check if value is truthy
 --- Falsy values is:
 --- empty string, zero, NaN, result of /0
 ---@param a any
-local function TRUTHY(a)
+local function truthy(a)
   if not a or a == '' or a == 0 or a ~= a then return false end
   if type(a) == 'number' then
     local s = tostring(a)
@@ -74,8 +82,98 @@ local function TONUMBER(a)
   local t = type(a)
   if t=='number' then return a end
   if t=='string' then return tonumber(a) end
-  return TRUTHY(a) and 1 or 0
+  return truthy(a) and 1 or 0
 end
+
+--- Serialize value table
+---@param t any
+---@return string
+local function serialize(t)
+  if type(t)~='table' then return tostring(t) end
+  local s=''
+  for k,v in pairs(t) do s=s..(s==''and''or',')..tostring(k)..'='..tostring(v)end
+  return s
+end
+
+--[[
+███████╗██╗   ██╗███╗   ██╗ ██████╗████████╗██╗ ██████╗ ███╗   ██╗ █████╗ ██╗
+██╔════╝██║   ██║████╗  ██║██╔════╝╚══██╔══╝██║██╔═══██╗████╗  ██║██╔══██╗██║
+█████╗  ██║   ██║██╔██╗ ██║██║        ██║   ██║██║   ██║██╔██╗ ██║███████║██║
+██╔══╝  ██║   ██║██║╚██╗██║██║        ██║   ██║██║   ██║██║╚██╗██║██╔══██║██║
+██║     ╚██████╔╝██║ ╚████║╚██████╗   ██║   ██║╚██████╔╝██║ ╚████║██║  ██║███████╗
+╚═╝      ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝   ╚═╝   ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝
+]]
+
+--- Create new table
+---@param length number length of new array
+---@param val? any value to fill array with
+---@return table<number, any>
+local function newArray(length, val)
+  local arr={}
+  for i=1,length do arr[i] = val or i end
+  return arr
+end
+
+--- For each t run f(k,v)
+--- map({1,2,3}, (k,v)=>k,v*2) == {{1,2},{2,4},{3,6}}
+---@param t table
+---@param f function(k:integer, v:any): boolean
+---@return table<integer, table<any,any>> f(k,v) will be wrapped into table
+local function map(t, f)
+  local r = {}
+  for k, v in pairs(t) do
+    r[k] = f(k, v)
+  end
+  return r
+end
+
+--- Filter table.
+--- Remove values for keys that not pass predicate
+--- {1, '', 3, 0, foo = false, goo=true}  / 'a1' => {1, 3, goo=true}
+--- {1, '', 3, 0, foo = false, goo=true} // 'a1' => {goo=true}
+---@param t table
+---@param f function
+---@param checkNil? boolean skip only if preducate returned nil
+local function filter(t, f, checkNil)
+  local r = {}
+  for k, v in pairs(t) do
+    local res = f(k,v)
+    if checkNil and res ~= nil or truthy(res) then
+      r[k] = v
+    end
+  end
+  return q(r)
+end
+
+--- Turn table to one value
+---@param t table
+---@param f function
+local function reduce(qt, f)
+  local n,t = pairs(qt)
+  local k1,r = n(t)
+  for k, v in n,t,k1 do
+    r = f(q(r), v)
+  end
+  return r
+end
+
+--- Loop to function
+---@param self table
+---@param trgFnc function
+---@return boolean
+local function loop(self, trgFnc)
+  local r
+  for j=1, math.maxinteger do
+    if not truthy(trgFnc(j)) then
+      return r
+    end
+    for k,v in pairs(self) do
+      r = v(k,v) and r
+    end
+  end
+  return r
+end
+
 
 --[[
  ██████╗    ████████╗ █████╗ ██████╗ ██╗     ███████╗
@@ -86,24 +184,8 @@ end
  ╚══▀▀═╝       ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚══════╝╚══════╝
 ]]
 
-local q, Q -- q(x) to turn Function / Table into Q
-
---- Get first object field key by shortand
----@param short string
----@param obj table
----@return string
-local function getKey(short, obj)
-  local t,rgx = {},'^'..short:gsub('.','%1.*')
-  for k in pairs(obj)do
-    if type(k)=='string' and k:match(rgx) then t[#t+1] = k end
-  end
-  table.sort(t, function(a,b)
-    local m,n=#a,#b
-    return m==n and a:upper() < b:upper() or m<n
-  end)
-  return t[1]
-end
-
+--- Does this variable can be called
+---@param t any
 local function isCallable(t)
   local ty = type(t)
   if ty == 'function' then return true end
@@ -114,11 +196,78 @@ local function isCallable(t)
   return false
 end
 
---- Make call function
----@param f function
----@return function
-local function QFnc(f)
-  return function(_, ...) return Q(f(...)) end
+--- Get first object field key by shortand
+---@param short string
+---@param obj table
+---@param onlyTables? boolean keep only table results
+---@return string
+local function getKey(short, obj, onlyTables)
+  local t,rgx = {},'^'..short:gsub('.','%1.*')
+  for k,v in pairs(obj) do
+    if type(k)=='string'
+      and (not onlyTables or type(v) == 'table')
+      and k:match(rgx)
+    then
+      t[#t+1] = k
+    end
+  end
+  table.sort(t, function(a,b)
+    local m,n=#a,#b
+    return m==n and a:upper() < b:upper() or m<n
+  end)
+  return t[1]
+end
+
+--- Find value by key in table
+---@param t table
+---@param keyFull string
+---@return any Queued value q(v)
+local function index(t, keyFull)
+  local exact = t[keyFull]
+  if exact ~= nil then return q(exact) end
+
+  local key,arg = keyFull:match'(.-)(%d*)$'
+
+  -- Key ends with number - probably function call
+  -- Ru3 => robot.use(3)
+  if arg ~= '' then
+    local f = index(t, key)
+    if isCallable(f) then
+      return Q(f(tonumber(arg)))
+    end
+  end
+
+  -- Global key that started with _
+  if key:sub(1,1) == '_' then
+    -- Number: _8 create table {1,2,3,4,5,6,7,8}
+    local subCommand = key:sub(2)
+    local num = tonumber(subCommand)
+    if num then return q(newArray(num)) end
+    -- TODO: add functionality for q{}._
+    -- TODO: add for _word
+
+  -- Big letter shortand Tg => T.g
+  elseif key:match'^[A-Z]' then
+    local c = key:sub(1,1)
+    local C = t[c]
+    if C then
+      return q(C[getKey(key:sub(2), C)])
+    end
+  end
+  -- elseif #key > 1 and key:match'^[A-Z]' then
+  --   local C, obj = key:sub(1,1)
+  --   if t[C] ~= nil then
+  --     obj = t[C]
+  --   else
+  --     obj = t[getKey(C:lower(), t, true)]
+  --   end
+  --   if obj then
+  --     return index(obj, key:sub(2))
+  --   end
+  -- end
+
+  -- Other cases
+  return q(t[getKey(key, t)])
 end
 
 local function isQ(t)
@@ -141,19 +290,6 @@ local function makeRunedFunction(txt, params)
   return function(...) return safeCall(loaded(), ...) end
 end
 
---- For each t run f(k,v)
---- map({1,2,3}, (k,v)=>k,v*2) == {{1,2},{2,4},{3,6}}
----@param t table
----@param f function(k:integer, v:any): boolean
----@return table<integer, table<any,any>> f(k,v) will be wrapped into table
-local function map(t, f)
-  local r = {}
-  for k, v in pairs(t) do
-    r[k] = f(k, v)
-  end
-  return r
-end
-
 --- Generate helper functions
 ---@param target any Anything we targeting function to
 ---@param params string param names devided by comma
@@ -169,70 +305,11 @@ local function getTarget(target, params)
   return trgFnc, tt == 'table'
 end
 
---- Filter table.
---- Remove values for keys that not pass predicate
---- {1, '', 3, 0, foo = false, goo=true}  / 'a1' => {1, 3, goo=true}
---- {1, '', 3, 0, foo = false, goo=true} // 'a1' => {goo=true}
----@param t table
+--- Make call function
 ---@param f function
----@param checkNil boolean
-local function filter(t, f, checkNil)
-  local r = {}
-  for k, v in pairs(t) do
-    local res = f(k,v)
-    if checkNil and res ~= nil or TRUTHY(res) then
-      r[k] = v
-    end
-  end
-  return q(r)
-end
-
---- Turn table to one value
----@param t table
----@param f function
-local function reduce(t, f)
-  local k1,r = next(t)
-  for k, v in next,t,k1 do
-    r = f(q(r), v)
-  end
-  return r
-end
-
---- Create new table
----@param length number length of new array
----@param val? any value to fill array with
----@return table<number, any>
-local function newArray(length, val)
-  local arr={}
-  for i=1,length do arr[i] = val or i end
-  return arr
-end
-
---- Loop to function
----@param self table
----@param trgFnc function
----@return boolean
-local function loop(self, trgFnc)
-  local r
-  for j=1, math.maxinteger do
-    if not TRUTHY(trgFnc(j)) then
-      return r
-    end
-    for k,v in pairs(self) do
-      r = v(k,v) and r
-    end
-  end
-  return r
-end
-
---- Serialize value table
----@param t any
----@return string
-local function serialize(t)
-  if type(t)~='table' then return tostring(t) end
-  local s=''
-  for k,v in pairs(t) do s=s..(s==''and''or',')..tostring(k)..'='..tostring(v)end
-  return s
+---@return function
+local function QFnc(f)
+  return function(_, ...) return Q(f(...)) end
 end
 
 --[[
@@ -271,8 +348,7 @@ q = function(t)
       if not qIsCallable then
         --?-- Table x Function|String
         if trgFnc then
-          -- {1,2,3} x f => {f(1),f(2),f(3)}
-          if     op=='map'    then r = map(self, trgFnc)
+          if     op=='map'    then r = map(self, trgFnc) -- {1,2,3} x f => {f(1),f(2),f(3)}
           elseif op=='reduce' then r = reduce(self, trgFnc)
           elseif op=='filter' then r = filter(self, trgFnc, false)
           elseif op=='strict' then r = filter(self, trgFnc, true)
@@ -281,45 +357,35 @@ q = function(t)
 
         --?-- Table x Table
         elseif trgTable then
-          -- {a,b} x {c,d} => {{c(a), d(a)}, {c(b), d(b)}}
-          -- if     op=='map'    then r = map(self, function(k,v) return map(target, v) end)
-          if     op=='lambda' then r = map(self, function(k,v) return function() return v(table.unpack(target)) end end)
+          if     op=='map'    then r = map(target, function(k,v) return self[v] end) -- {1,2,3} x {1,3} => {1,3}
+          elseif op=='lambda' then r = map(self, function(k,v) return function() return v(table.unpack(target)) end end)
           end
 
         --?-- Table x Number|Boolean
         else
-          -- {1,2,3} x n => {n,n,n}
-          if     op=='map'    then local u = {} for k in pairs(self) do u[k]=target end r = u
+          if     op=='map'    then local u = {} for k in pairs(self) do u[k]=target end r = u -- {1,2,3} x n => {n,n,n}
           elseif op=='lambda' then r = map(self, function(k,v) return function(...) return v(target, ...) end end)
-          -- TODO: Loop actually should call other function f(k,v), not call each element of Table
-          elseif op=='loop'   then r = loop(self, function(j) return j <= TONUMBER(target) end)
+          elseif op=='loop'   then r = loop(self, function(j) return j <= TONUMBER(target) end) -- TODO: Loop actually should call other function f(k,v), not call each element of Table
           end
 
         end
       else
-
         --?-- Function x Function|String
         if trgFnc then
-          -- f x g => f(g()) (Pipe)
-          if     op=='map'    then r = function(...) return self(trgFnc(...)) end
-
-          -- f x g => g(f()) (Reversed Pipe)
-          elseif op=='lambda' then r = function(...) return trgFnc(self(...)) end
+          if     op=='map'    then r = function(...) return self(trgFnc(...)) end -- f x g => f(g()) (Pipe)
+          elseif op=='lambda' then r = function(...) return trgFnc(self(...)) end -- f x g => g(f()) (Reversed Pipe)
           elseif op=='loop'   then r = loop({self}, trgFnc)
           end
 
         --?-- Function x Table
-      elseif trgTable then
-          -- f x {1,2,3} => f(1,2,3) (Unpack table)
-          if     op=='map'    then r = self(table.unpack(target))
-          -- reversed map f x {a,b,c} => {f(a),f(b),f(c)}
-          elseif op=='lambda' then r = map(target, self)
+        elseif trgTable then
+          if     op=='map'    then r = self(table.unpack(target)) -- f x {1,2,3} => f(1,2,3) (Unpack table)
+          elseif op=='lambda' then r = map(target, self) -- reversed map f x {a,b,c} => {f(a),f(b),f(c)}
           end
 
         --?-- Function x Number|Boolean
         else
-          -- f*1 => f(1)
-          if     op=='map'    then r = QFnc(self)(self, target)
+          if     op=='map'    then r = QFnc(self)(self, target) -- f*1 => f(1)
           elseif op=='lambda' then r = function(...) return self(target, ...) end
           elseif op=='loop'   then r = loop({self}, function(j) return j <= TONUMBER(target) end)
           end
@@ -339,9 +405,9 @@ q = function(t)
   -- [[ ^ ]] __pow = generic'??',
 
   -- 2 --
-  -- [[ - ]] __unm = generic'??',
-  -- [[ ~ ]] __bnot = generic'??',
-  -- [[ # ]] __len = generic'??',
+  -- [[ - ]] __unm = generic'??', -- Filter falsy
+  -- [[ ~ ]] __bnot = generic'??', -- Probably filter nulls
+  -- [[ # ]] __len = generic'??', -- Probably tostring()
 
   -- 3 --
   --[[ * ]] __mul = generic'map',
@@ -386,51 +452,13 @@ q = function(t)
   -----------------------------------------------------------------
 
   if qIsCallable then
-    -----------------------------------------------------------------
-    -- t ^ u
-    -- Call
-    -----------------------------------------------------------------
     mt.__pow = QFnc(t)
-
-    -----------------------------------------------------------------
     mt.__call = QFnc(t)
     return setmetatable({}, mt)
   end
 
   function mt:__index(key)
-    local exact = t[key]
-    if exact ~= nil then return q(exact) end
-
-    local v
-
-    -- Global key that started with _
-    if key:sub(1,1) == '_' then
-      -- Empty: _ is q()
-      -- if #key == 1 then return q(q) end
-
-      -- Number: _8 create table {1,2,3,4,5,6,7,8}
-      local subCommand = key:sub(2)
-      local num = tonumber(subCommand)
-      if num then v = newArray(num) end
-      -- TODO: add functionality for q{}._
-      -- TODO: add for _word
-
-    -- Big letter shortand
-    elseif key:match'^[A-Z]' then
-      local c = key:sub(1,1)
-      local C = t[c]
-      if C then
-        v = C[getKey(key:sub(2), C)]
-      end
-    end
-
-    -- Other cases
-    if v == nil then
-      -- TODO: number at end cause function Call `Ru3`
-      v = t[getKey(key, t)]
-    end
-
-    return q(v)
+    return index(t, key)
   end
 
   -- Possibilities for __newindex:
@@ -463,20 +491,26 @@ end
 ]]
 
 local _MACROS = {}
-local tab = 0
 
 --- Replace all macroses
 ---@param text string
 local function translate(text)
-  tab = tab + 1
   local result = text
   local i = 1
   while i <= #_MACROS do
     result = result:gsub(_MACROS[i][1], _MACROS[i][2])
     i=i+1
   end
-  tab = tab - 1
   return result
+end
+
+local function loadTranslated(text)
+  local code = translate(text)
+  if code == nil or code:match('^%s*$') then
+    localError('Unable to translate: '..text)
+    return nil
+  end
+  return loadBody('return '..code, code, text)
 end
 
 --[[
@@ -504,44 +538,19 @@ addMacro('⒯', '(true)')
 addMacro('⒡', '(false)')
 addMacro('∅', ' __trash=')
 
--- Syntax Sugar
-local WRD = '[_%a][_%a%d]*'
-for _,c in pairs{'%+','%-'} do
-  local from, to = '('..WRD..'[%._%a%d]*)('..c..')'..c, '(function() %1=TONUMBER(%1)%21 return %1 end)'
-  addMacro(from..c, to)
-  addMacro(from, to..'()')
-end
+-- -- Syntax Sugar
+-- local WRD = '[_%a][_%a%d]*'
+-- for _,c in pairs{'%+','%-'} do
+--   local from, to = '('..WRD..'[%._%a%d]*)('..c..')'..c, '(function() %1=TONUMBER(%1)%21 return %1 end)'
+--   addMacro(from..c, to)
+--   addMacro(from, to..'()')
+-- end
 
--- TODO: Add *= += and stuff
+-- -- TODO: Add *= += and stuff
 
 -----------------------------------------------------------------
 -- Captures {}
 -----------------------------------------------------------------
-
--- local function translateTabbed(str,from,to)
---   return translate(str:sub(from, to)):gsub('\n', '\n'..string.rep('  ',tab))
--- end
-
--- local function captureGen(fnc)
---   return function (r)
---     local from,to = r:match'(){()'
---     if not from then return '' end
---     local head = r:sub(1, from-1)
---     local body = translateTabbed(r, to, -2)
---     if type(fnc)=='function' then return fnc(head, body) or ''
---     else
---       return fnc:gsub('HEAD', head):gsub('BODY', body)
---     end
---   end
--- end
-
--- local function addCaptureMacro(prefix, fnc)
---   addMacro(prefix..'(.-%b{})', captureGen(fnc))
--- end
-
--- -- Add Macros
--- addCaptureMacro('@', addMacro)
-
 addMacro('(`.+`)', function (r)
   for s in r:gmatch'[^`]+' do
     addMacro(escape(s:sub(1, 1)), escape(s:sub(2)))
@@ -578,18 +587,6 @@ loadBody = function(code1, code2, chunkName)
   return res
 end
 
-loadTranslated = function(text)
-  local code = translate(text)
-  if code == nil or code:match('^%s*$') then
-    localError('Unable to translate: '..text)
-    return nil
-  end
-
-  -- Trim and Remove all tabulation
-  -- code = code:gsub('[%s\n]*\n','\n'):gsub('^%s*',''):gsub('%s*$','')
-  return loadBody('return '..code, code, text)
-end
-
 __ENV.i = 0
 __ENV.l = true
 local XKeepLoop = true
@@ -613,12 +610,12 @@ __ENV.write = function(...)
   if print then return print(...) end
   localError(tostring(q{...}), true)
 end
-__ENV.TRUTHY = TRUTHY
-__ENV.TONUMBER = TONUMBER
-__ENV.proxy = function(name)
-  local p = component.list(name)()
-  return p and component.proxy(p) or nil
-end
+-- __ENV.truthy = truthy
+-- __ENV.TONUMBER = TONUMBER
+-- __ENV.proxy = function(name)
+--   local p = component.list(name)()
+--   return p and component.proxy(p) or nil
+-- end
 __ENV.sleep = function(t)
   local u = computer.uptime
   local d = u() + (t or 1)
