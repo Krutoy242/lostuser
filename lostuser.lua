@@ -97,7 +97,10 @@ local function getKey(short, obj)
   for k in pairs(obj)do
     if type(k)=='string' and k:match(rgx) then t[#t+1] = k end
   end
-  table.sort(t, function(a,b)return#a<#b end)
+  table.sort(t, function(a,b)
+    local m,n=#a,#b
+    return m==n and a:upper() < b:upper() or m<n
+  end)
   return t[1]
 end
 
@@ -133,10 +136,8 @@ end
 ---@param txt string Lua code to load as function body
 ---@param params string param names devided by comma
 local function makeRunedFunction(txt, params)
-  local chunk = 'return function(...) local '.. params ..' = ... ## '.. txt ..' end'
-  local loaded = loadBody(
-    chunk:gsub('##','return'), chunk:gsub('##',''), txt
-  )
+  local p1,p2 = 'return function(...) local '.. params ..' = ... ',txt..' end'
+  local loaded = loadBody(p1..'return '..p2, p1..p2, txt)
   return function(...) return safeCall(loaded(), ...) end
 end
 
@@ -189,15 +190,10 @@ end
 --- Turn table to one value
 ---@param t table
 ---@param f function
-local function reducer(t, f)
-  local pre,r
-  for k, v in pairs(t) do
-    if not pre then
-      r = v
-      pre = true
-    else
-      r = f(q(r), v)
-    end
+local function reduce(t, f)
+  local k1,r = next(t)
+  for k, v in next,t,k1 do
+    r = f(q(r), v)
   end
   return r
 end
@@ -277,7 +273,7 @@ q = function(t)
         if trgFnc then
           -- {1,2,3} x f => {f(1),f(2),f(3)}
           if     op=='map'    then r = map(self, trgFnc)
-          elseif op=='reduce' then r = reducer(self, trgFnc)
+          elseif op=='reduce' then r = reduce(self, trgFnc)
           elseif op=='filter' then r = filter(self, trgFnc, false)
           elseif op=='strict' then r = filter(self, trgFnc, true)
           elseif op=='loop'   then r = loop(self, trgFnc)
@@ -430,6 +426,7 @@ q = function(t)
 
     -- Other cases
     if v == nil then
+      -- TODO: number at end cause function Call `Ru3`
       v = t[getKey(key, t)]
     end
 
@@ -671,12 +668,3 @@ if prog:sub(1,1) ~= ' ' then
 end
 
 return run(prog)
-
---[[
-
-
-Some programs:
-Dm(tb.u(Nf(300)[a++%2+1].p))s(3)~#{Dsel(i)Dd(0)Dsu(0)}
-a++b=Nf(300)[a%2+1]Dm(tb.u(b.p))s(14)run(b.l)
-
-]]
