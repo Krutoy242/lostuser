@@ -115,6 +115,15 @@ local function shouldPrint(command, message)
   end
 end
 
+local function shouldOutput(command, message)
+  return function()
+    local succes, result = pcall(lu, command, true)
+    local resultStr = tostring(result)
+    if not succes then return false, resultStr end
+    return resultStr == message, resultStr
+  end
+end
+
 local function toVisibleString(str)
   return tostring(str):gsub(' ', '·')--[[ :gsub('\n', '⤶') ]]
 end
@@ -145,23 +154,20 @@ lu = loadfile'lostuser.lua'
 -- test('     Parsing error', shouldError('^.+: attempt to concat', ' w(c..d)'))
 
 _G.T = {
-{name='n1', take=true, index=1},{name='n2'},{name='n3', take=0, index=3},
+{name='n1', index=1},{name='n2', take=true},{name='n3', take=0, index=3},
 exp=function(a,b) return a^b end,
 getTrades = function() return {
   {trade=function()return 't','u' end, isEnabled=function()return false end},
   {trade=function()return 'v','w' end, isEnabled=function()return true end},
 } end}
-test('Map:     Tbl x Fnc', shouldPrint(" w(Tg!*'v.t!')",             '{t,v}'))
-test('Map:     Tbl x Num', shouldPrint(" w(T*2)",                    '{2,2,2,getTrades=2,exp=2}'))
-test('Map:     Fnc x Num', shouldPrint(" w((Te&3)^4)",               '81.0'))
-test('Map:     Fnc x Tbl', shouldPrint(" w(Te*{4,5})",               '1024.0'))
-test('     Truthy Filter', shouldPrint(" w(T /'v.t'*'v.n')",         '{n1}'))
-test('    No-null Filter', shouldPrint(" w(T//'v.t'*'v.n')",         '{n1,3=n3}'))
-test('            Reduce', shouldPrint(" w(T*'v.i'/'v'%'k+v')",      '4'))
-test('        Variable i', shouldPrint(" if i==2 then w! end pt(i)", '012'))
-test('          Replaces', shouldPrint(" ∅wr(⒯ⓐⓝ⒡ⓞ⒡)ⓡ",          'true'))
-test('            Macros', shouldPrint(" `Z..i`T..(i+1)`w(''TZT)",   '101'))
--- test('              Join', shouldPrint([[ w^_(~T^'v.i'..'+')!]],     '4'))
+
+test('Map:     Tbl x Fnc', shouldOutput("Tg!^'v.t!'",             '{q}{1=t,2=v}'))
+test('Map:     Tbl x Num', shouldOutput("T^2",                    '{q}{1=2,2=2,3=2,exp=2,getTrades=2}'))
+test('Map:     Fnc x Num', shouldOutput("(Te&3)(4)",              '81.0'))
+test('Map:     Fnc x Tbl', shouldOutput("Te^{4,5}",               '1024.0'))
+test('     Truthy Filter', shouldOutput("(T-'v.t')^'v.n'",        '{q}{2=n2}'))
+test('          Replaces', shouldOutput("ⓡ⒯ⓐⓝ⒡ⓞ⒡",           'true'))
+test('            Macros', shouldOutput("`Z..i`T..(i+1)`''TZT",  '101'))
 
 
 local mi = 3
@@ -170,87 +176,73 @@ _G.R = {
   swing=function(n)print(({[0]='⇓','⇑','⇐','⇒'})[n]) return true end,
 }
 
-test('    Lambda and for', shouldPrint(" _{Rm,Rsw}&{3}~0.5*4,w()", '🡢⇒🡢⇒'))
+test('    Lambda and for', shouldPrint("_{Rm,Rsw}&{3}~2,w!", '🡢⇒🡢⇒'))
 
 mi = 3
-test('        While loop', shouldPrint(" _~'Rm(3)',w()", '🡢🡢🡢'))
-test('       Conditional', shouldPrint(" `SRsw(i)`MRm(3)` _'M,S'!ⓐ_'SS'!,w()", '🡢⇓'))
+test('        While loop', shouldPrint("_~'Rm3',w!", '🡢🡢🡢'))
+test('       Conditional', shouldPrint("`SRsw(i)`MRm(3)` _'M,S'!ⓐ_'SS'!,w!", '🡢⇓'))
 
 
 _G.G = {
   scan = function(x,z)
-    print(string.format('scan(%d,%d)',x,z))
+    print(string.format('s(%d,%d)',x,z))
     local t={}for i=1,64 do t[i]=(i+x+z)%4/4-0.5 end
     return t
   end,
 }
 _G.D = {
-  move = function(x,y,z)print(string.format('move(%g,%g,%g)',x,y,z)) end,
-  place= function(side)print(string.format('place(%d)',side)) return false end,
+  move = function(x,y,z)print(string.format('m(%g,%g,%g)',x,y,z)) end,
+  place= function(side)print(string.format('p(%d)',side)) return false end,
 }
 test(' Sapling drone geo', shouldPrint(
-  " `x(i%8),`z(i%64//8))`_'Dm(x0,zs!Dp(0)Dm(-x0,-zs!'~(Gsn(xz[32]==0),i==3ⓐwr()",
-  'scan(0,0)scan(1,0)scan(2,0)move(2,0,0)place(0)move(-2,0,0)scan(3,0)'
+  "`x(i%8)`z(i%64//8)`_'Dm(x,0,z)s!Dp(0)Dm(-x,0,-z)s!'~(Gsn(x,z)[32]==0),i>2ⓐw!",
+  's(0,0)s(1,0)s(2,0)m(2,0,0)p(0)m(-2,0,0)s(3,0)'
 ))
 
 --[[
 
-TODO: Error handling when wrong translation
-
-
 ? Trade all trades
-Tg!/'v.tr!'
+Tg0-'Vtr0'
 
 ? Suck 4 slots from top and bottom
-_8/'IsF(v--//4,v%4+1)'
+_08-'IsF(v//4,v%4+1)'
 
 ? Dump everything front
-_16/'Rsel^v,Rd^3'
+_'Rsel(k)Rd3'~16
 
 ? Trader
-Tg!/'v.tr!',_16/'Rsel^v,Rd^3',_8/'IsF(v--//4,v%4+1)'
+Tg0-'Vtr0',_'Rsel(k)Rd3'~16,_08-'IsF(v//4,v%4+1)'
 
 ? Circular miner
 Gi!,_{Rm,Rsw}&{3}~i*3,Rtn⒯
 
 ? Zig-Zag move
-`TRtn(i%2>0)`MRm(3)`_~'M',T,_'M,T'!ⓞ_'TM'!
+`TRtn(i%2>0)`MRm3`_~'M',T,_'M,T'!ⓞ_'T,M'
 
-? Zig-Zag and swing
-`TRtn(i%2>0)S`MRm(3)S`S,Rsw(3)`_~'M',T,_'M,T'!ⓞ_'T,M'!
+? Zig-Zag and swing forward
+`TRtn(i%2>0)S`MRm3S`S,Rsw3`_~'M',T,_'M,T'!ⓞ_'T,M'
 
 ? Rune maker
-f='Rsel(v)Ie!Ru(3)Ie!'∅_7*f,s^7,Rm^1,Rd(3,1),Rm^0,_2*'v+14'*f
-`QIe()`URu(3)`SRsel(`Us(8)S15)QUQS16)QUQ
+f='Rsel(v)Ie!Ru(3)Ie!'∅_7*f,s7,Rm1,Rd(3,1),Rm0,_2*'v+14'*f
+
+? Travel between two waypoints and run its label
+v=Nf300[i%2+1]∅Dm^v.p,s&1~'Dg!>1',_(v.l)!
 
 ! Other programs
-{Gd(3)}
 
 ? Line farmer
 _4*"Ru^0,_12*'Rm^3'",_2*'Rtn⒯',_80*'Rsel^v,Rd^0',s^120
 
 ? Drone sapling planter
-`Xi%8,`Zi%64//8)`_'Dm(X0,Zs!Dp(0)Dm(-X0,-Zs!'~0/Gsn(XZ[32]
-u={i%8,i%64//8}∅(Gsn*u)[32]==0ⓐ_'Dm(v[1],0,v[2]),s!,Dp*0'&{u,u*'-v'}
-x,z=i%8,i%64//8 u={x,0,z}∅_"_'Dm*u,s!,Dp*0'&{u,u*'-v'}"~'Gsn(x,z)[32]'
-u={i%8,0,i%64//8,1,1,1}x,y,z=t.u*u∅_"_'Dm*u,s!,Dp*0'&{u,u*'-v'}"~'(Gsn*u)[1]'
-u={i%8,0,i%64//8}x,y,z=t.u*u∅Gsn(x,z)[32]==0ⓐ_'Dm(v[1],0,v[2]),s!,Dp*0'&{u,u*'-v'}
-Gsn(1,1,-1,8,8,1)*"v~=0ⓞ_'Dm(k,0,v),s^1,Dp^0,Dm(-k,0,-v),s^1'(k%8,k/8)"
-t,u=t or Gsn(1,1,-1,8,8,1),l and {i%8,0,i/8} or u*'-v' TRASH=t[i]==0 and Dm*u s(1)
+x,z=i%8,i%64//8 u={x,0,z} -- Coords base on `i` variable
+Gsn(x,z)[32]==0 -- Is air 1 layer down
+_'Dm(v[1],0,v[2]),s!,Dp0'&{u,u*'-v'} -- Move to point, place, and come back
 
-? Simple saplinger
-Nf^16*'Dm*v.p',s!,Ds^0,_16*"Dm(1>>v%4,0,(-1)^(v//4%2))s!Dp(0)"
-
-? Tree harvester
-a,b=Rdt(3)∅#b<6ⓐ{Rsw(3),s^6}ⓞRu(3),s!
+x,z=i%8,i%64//8 u={x,0,z}∅_"_'Dm*u,s!,Dp0'&{u,u*'-v'}"~'Gsn(x,z)[32]'
+Gsn(1,1,-1,8,8,1)*"v~=0ⓞ_'Dm(k,0,v)s!Dp(0)Dm(-k,0,-v)s!'(k%8,k/8)"
 
 ? Tree harvester with planting
-`3(3)`Q,Ie()`a,b=Rdt3∅#b<6ⓐ{Rsw3,s^6,Rsk(0,1)Q,Ru3Q}ⓞRu3,s!
-
-Some old programs:
-Dm(tb.u(Nf(300)[a++%2+1].p))s(3)~#{Dsel(i)Dd(0)Dsu(0)}
-a++b=Nf(300)[a%2+1]Dm(tb.u(b.p))s(14)run(b.l)
-
+a,b=Rdt3∅#b<6ⓐ{Rsw3,s^6,Rsk(0,1),Ie!,Ru3,Ie!}ⓞRu3,s!
 
 ]]
 

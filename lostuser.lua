@@ -19,7 +19,7 @@ https://github.com/Krutoy242/lostuser
 ]]
 
 -- Forward declarations
-local run, loadBody, q, Q
+local pack, unpack, run, loadBody, q, Q = table.pack, table.unpack
 
 -- If we run from OpenOS
 if require then
@@ -30,10 +30,11 @@ end
 do
   local registered = {} -- Set of registered components
   for address, name in pairs(component.list()) do
-    local c = name:sub(1, 1):upper()
-    if _G[c]==nil or (registered[c] and #registered[c] > #name) then
-      _G[c] = component.proxy(address)
-      registered[c] = name
+    local C,p = name:sub(1, 1):upper(),component.proxy(address)
+    _G[name] = _G[name] or p
+    if _G[C]==nil or (registered[C] and #registered[C] > #name) then
+      _G[C] = p
+      registered[C] = name
     end
   end
 end
@@ -105,12 +106,13 @@ end
 ]]
 
 --- Create new table
----@param length number length of new array
+---@param from integer first value
+---@param to integer length of new array
 ---@param val? any value to fill array with
----@return table<number, any>
-local function newArray(length, val)
+---@return table<integer, any>
+local function newArray(from, to, val)
   local arr={}
-  for i=1,length do arr[i] = val or i end
+  for i=from,to-1+from do arr[i] = val or i end
   return arr
 end
 
@@ -158,20 +160,22 @@ local function reduce(qt, f)
 end
 
 --- Loop to function
----@param self table
+---@param self any Function or table of functions
+---@param isTbl boolean if `self` is table
 ---@param trgFnc function
 ---@return boolean
-local function loop(self, trgFnc)
+local function loop(self, isTbl, trgFnc)
   local r
   for j=1, math.maxinteger do
-    if not truthy(trgFnc(j)) then
-      return r
-    end
-    for k,v in pairs(self) do
-      r = v(k,v) and r
+    if not truthy(trgFnc(j)) then return r end
+    if isTbl then
+      for k,v in pairs(self) do
+        r = v(k,v)
+      end
+    else
+      r = self(j)
     end
   end
-  return r
 end
 
 
@@ -240,31 +244,31 @@ local function index(t, keyFull)
   -- Global key that started with _
   if key:sub(1,1) == '_' then
     -- Number: _8 create table {1,2,3,4,5,6,7,8}
-    local subCommand = key:sub(2)
-    local num = tonumber(subCommand)
-    if num then return q(newArray(num)) end
+    local numStr = key:sub(2)
+    local num = tonumber(numStr)
+    if num then return q(newArray(numStr:sub(1,1)=='0' and 0 or 1, num)) end
     -- TODO: add functionality for q{}._
     -- TODO: add for _word
 
-  -- Big letter shortand Tg => T.g
-  elseif key:match'^[A-Z]' then
-    local c = key:sub(1,1)
-    local C = t[c]
-    if C then
-      return q(C[getKey(key:sub(2), C)])
-    end
-  end
-  -- elseif #key > 1 and key:match'^[A-Z]' then
-  --   local C, obj = key:sub(1,1)
-  --   if t[C] ~= nil then
-  --     obj = t[C]
-  --   else
-  --     obj = t[getKey(C:lower(), t, true)]
-  --   end
-  --   if obj then
-  --     return index(obj, key:sub(2))
+  -- -- Big letter shortand Tg => T.g
+  -- elseif key:match'^[A-Z]' then
+  --   local c = key:sub(1,1)
+  --   local C = t[c]
+  --   if C then
+  --     return q(C[getKey(key:sub(2), C)])
   --   end
   -- end
+  elseif key:match'^[A-Z]' then
+    local C, obj = key:sub(1,1)
+    if t[C] ~= nil then
+      obj = t[C]
+    else
+      obj = t[getKey(C:lower(), t, true)]
+    end
+    if obj then
+      return #key == 1 and q(obj) or index(obj, key:sub(2))
+    end
+  end
 
   -- Other cases
   return q(t[getKey(key, t)])
@@ -276,9 +280,9 @@ local function isQ(t)
 end
 
 local function safeCall(f, ...)
-  local safeResult = table.pack(pcall(f, ...))
+  local safeResult = pack(pcall(f, ...))
   if not safeResult[1] then localError(safeResult[2]) end
-  return table.unpack(safeResult, 2)
+  return unpack(safeResult, 2)
 end
 
 --- Generate safe function from lua code
@@ -324,8 +328,8 @@ end
 --- Pack all parameters as q
 Q = function(...)
   local r = {}
-  for k, v in pairs(table.pack(...)) do r[k] = q(v) end
-  return table.unpack(r)
+  for k, v in pairs(pack(...)) do r[k] = q(v) end
+  return unpack(r)
 end
 
 --- Single value q(t)
@@ -349,23 +353,22 @@ q = function(t)
         --?-- Table x Function|String
         if trgFnc then
           if     op=='map'    then r = map(self, trgFnc) -- {1,2,3} x f => {f(1),f(2),f(3)}
-          elseif op=='reduce' then r = reduce(self, trgFnc)
+          -- elseif op=='reduce' then r = reduce(self, trgFnc)
           elseif op=='filter' then r = filter(self, trgFnc, false)
-          elseif op=='strict' then r = filter(self, trgFnc, true)
-          elseif op=='loop'   then r = loop(self, trgFnc)
+          elseif op=='loop'   then r = loop(self, true, trgFnc)
           end
 
         --?-- Table x Table
         elseif trgTable then
           if     op=='map'    then r = map(target, function(k,v) return self[v] end) -- {1,2,3} x {1,3} => {1,3}
-          elseif op=='lambda' then r = map(self, function(k,v) return function() return v(table.unpack(target)) end end)
+          elseif op=='lambda' then r = map(self, function(k,v) return function() return v(unpack(target)) end end)
           end
 
         --?-- Table x Number|Boolean
         else
           if     op=='map'    then local u = {} for k in pairs(self) do u[k]=target end r = u -- {1,2,3} x n => {n,n,n}
           elseif op=='lambda' then r = map(self, function(k,v) return function(...) return v(target, ...) end end)
-          elseif op=='loop'   then r = loop(self, function(j) return j <= TONUMBER(target) end) -- TODO: Loop actually should call other function f(k,v), not call each element of Table
+          elseif op=='loop'   then r = loop(self, true, function(j) return j <= TONUMBER(target) end) -- TODO: Loop actually should call other function f(k,v), not call each element of Table
           end
 
         end
@@ -374,12 +377,12 @@ q = function(t)
         if trgFnc then
           if     op=='map'    then r = function(...) return self(trgFnc(...)) end -- f x g => f(g()) (Pipe)
           elseif op=='lambda' then r = function(...) return trgFnc(self(...)) end -- f x g => g(f()) (Reversed Pipe)
-          elseif op=='loop'   then r = loop({self}, trgFnc)
+          elseif op=='loop'   then r = loop(self, false, trgFnc)
           end
 
         --?-- Function x Table
         elseif trgTable then
-          if     op=='map'    then r = self(table.unpack(target)) -- f x {1,2,3} => f(1,2,3) (Unpack table)
+          if     op=='map'    then r = self(unpack(target)) -- f x {1,2,3} => f(1,2,3) (Unpack table)
           elseif op=='lambda' then r = map(target, self) -- reversed map f x {a,b,c} => {f(a),f(b),f(c)}
           end
 
@@ -387,7 +390,7 @@ q = function(t)
         else
           if     op=='map'    then r = QFnc(self)(self, target) -- f*1 => f(1)
           elseif op=='lambda' then r = function(...) return self(target, ...) end
-          elseif op=='loop'   then r = loop({self}, function(j) return j <= TONUMBER(target) end)
+          elseif op=='loop'   then r = loop(self, false, function(j) return j <= TONUMBER(target) end)
           end
 
         end
@@ -402,22 +405,22 @@ q = function(t)
     __tostring = function() return '{q}'..(qIsCallable and tostring(t) or '{'..serialize(t)..'}') end,
 
   -- 1 --
-  -- [[ ^ ]] __pow = generic'??',
+  --[[ ^ ]] __pow = generic'map',
 
   -- 2 --
   -- [[ - ]] __unm = generic'??', -- Filter falsy
-  -- [[ ~ ]] __bnot = generic'??', -- Probably filter nulls
-  -- [[ # ]] __len = generic'??', -- Probably tostring()
+  -- [[ ~ ]] __bnot = generic'??', -- Probably do while truthy
+  -- [[ # ]] __len = generic'??', -- Probably `tostring()` OR `flat()`
 
   -- 3 --
-  --[[ * ]] __mul = generic'map',
-  --[[ % ]] __mod = generic'reduce',
-  --[[ / ]] __div = generic'filter',
-  --[[// ]] __idiv = generic'strict',
+  -- [[ * ]] __mul = generic'map',
+  -- [[ % ]] __mod = generic'reduce',
+  -- [[ / ]] __div = generic'filter',
+  -- [[// ]] __idiv = generic'strict',
 
   -- 4 --
   -- [[ + ]] __add = generic'??',
-  -- [[ - ]] __sub = generic'??',
+  --[[ - ]] __sub = generic'filter',
 
   -- 5 --
   -- [[ .. ]] __concat = generic'??',
@@ -452,7 +455,7 @@ q = function(t)
   -----------------------------------------------------------------
 
   if qIsCallable then
-    mt.__pow = QFnc(t)
+    -- mt.__pow = QFnc(t)
     mt.__call = QFnc(t)
     return setmetatable({}, mt)
   end
@@ -589,25 +592,27 @@ end
 
 __ENV.i = 0
 __ENV.l = true
-local XKeepLoop = true
+local runOnce
 run = function(input)
   local fnc = loadTranslated(input)
-  while XKeepLoop do
+  while true do
     -- Recursively call functions that returned
     local function unfold(f)
-      for _,v in pairs({safeCall(f)}) do
+      local r = pack(safeCall(f))
+      for _,v in pairs(r) do
         if isCallable(v) then unfold(v) end
       end
+      return r
     end
-    unfold(fnc)
+    local r = unfold(fnc)
+    if runOnce then return unpack(r) end
     __ENV.i = __ENV.i + 1
     __ENV.l = not __ENV.l
   end
 end
 
 __ENV.write = function(...)
-  XKeepLoop = false
-  if print then return print(...) end
+  if print then runOnce = true return print(...) end
   localError(tostring(q{...}), true)
 end
 -- __ENV.truthy = truthy
@@ -646,11 +651,11 @@ end
 -- Assemble
 -----------------------------------------------------------------
 
-local cmd, prog = ...
-local pointer = R or D
+local pointer, shellArg, prog = R or D
+shellArg, runOnce = ...
 
 -- Program is called from shell
-if cmd then prog = cmd
+if shellArg then prog = shellArg
 
 -- Program defined by Robot/Drone name
 elseif pointer and pointer.name then prog = pointer.name() end
@@ -658,7 +663,7 @@ elseif pointer and pointer.name then prog = pointer.name() end
 if not prog or prog=='' then localError'No program defined' end
 
 -- Play music
-if prog:sub(1,1) ~= ' ' then
+if not shellArg and prog:sub(1,1) ~= ' ' then
   for s in prog:sub(1,5):gmatch"%S" do
     computer.beep(math.min(2000, 200 + s:byte() * 10), 0.05)
   end
