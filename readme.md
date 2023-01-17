@@ -17,9 +17,8 @@ Robot (or drone!) BIOS program for Minecraft OpenComputers mod.
   - [Lodash `_`](#lodash-_)
   - [Functional Programming](#functional-programming)
     - [Map `^`](#map-)
-    - [Lambda `&`](#lambda-)
+    - [Lambda `/`](#lambda-)
     - [Loop `~`](#loop-)
-    - [Filter `-`](#filter--)
     - [Truthy](#truthy)
   - [Macros](#macros)
   - [Examples](#examples)
@@ -276,7 +275,7 @@ f^1 -- f(1)
 </td></tr>
 </table>
 
-### Lambda `&`
+### Lambda `/`
 
 <table>
 <tr>
@@ -286,14 +285,17 @@ f^1 -- f(1)
 <tr>
   <td rowspan=3>Table</td><td>Function</td><td>
 
-Not yet implemented
+Keep only if value is [Truthy](#Truthy)
+```lua
+_{4,5,6,7}/'v%2' -- {5,7}
+```
 
 </td></tr>
 <tr><td>Table</td><td>
 
 Unpack map
 ```lua
-_{f,g}&{0,1} -- {f(0,1),g(0,1)}
+_{f,g}/{0,1} -- {f(0,1),g(0,1)}
 ```
 
 </td></tr>
@@ -301,7 +303,7 @@ _{f,g}&{0,1} -- {f(0,1),g(0,1)}
 
 Fill with value
 ```lua
-_{f,g}&n -- {(...)=>f(n, ...), (...)=>g(n, ...)}
+_{f,g}/n -- {(...)=>f(n, ...), (...)=>g(n, ...)}
 ```
 
 </td></tr>
@@ -309,7 +311,7 @@ _{f,g}&n -- {(...)=>f(n, ...), (...)=>g(n, ...)}
 
 Reversed composition
 ```lua
-f&g -- (...)=>g(f(...))
+f/g -- (...)=>g(f(...))
 ```
 
 </td></tr>
@@ -317,7 +319,7 @@ f&g -- (...)=>g(f(...))
 
 Reversed map
 ```lua
-f&{a,b} => {f(a),f(b)}
+f/{a,b} => {f(a),f(b)}
 ```
 
 </td></tr>
@@ -325,7 +327,7 @@ f&{a,b} => {f(a),f(b)}
 
 Composition
 ```lua
-f&1 -- (...)=>f(1,...)
+f/1 -- (...)=>f(1,...)
 ```
 
 </td></tr>
@@ -379,49 +381,6 @@ For loop
 ```lua
 f~n -- for 1,n do f() end
 ```
-
-</td></tr>
-</table>
-
-### Filter `-`
-
-<table>
-<tr>
-  <th>Left</th><th>Right</th><th>Result</th>
-</tr>
-
-<tr>
-  <td rowspan=3>Table</td><td>Function</td><td>
-
-Keep only if value is [Truthy](#Truthy)
-```lua
-_{4,5,6,7}-'v%2' -- {5,7}
-```
-
-</td></tr>
-<tr><td>Table</td><td>
-
-Not yet implemented
-
-</td></tr>
-<tr><td>other</td><td>
-
-Not yet implemented
-
-</td></tr>
-<tr><td rowspan=3>Function</td><td>Function</td><td>
-
-Not yet implemented
-
-</td></tr>
-<tr><td>Table</td><td>
-
-Not yet implemented
-
-</td></tr>
-<tr><td>other</td><td>
-
-Not yet implemented
 
 </td></tr>
 </table>

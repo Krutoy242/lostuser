@@ -163,9 +163,9 @@ getTrades = function() return {
 
 test('Map:     Tbl x Fnc', shouldOutput("Tg!^'v.t!'",             '{q}{1=t,2=v}'))
 test('Map:     Tbl x Num', shouldOutput("T^2",                    '{q}{1=2,2=2,3=2,exp=2,getTrades=2}'))
-test('Map:     Fnc x Num', shouldOutput("(Te&3)(4)",              '81.0'))
+test('Map:     Fnc x Num', shouldOutput("(Te/3)(4)",              '81.0'))
 test('Map:     Fnc x Tbl', shouldOutput("Te^{4,5}",               '1024.0'))
-test('     Truthy Filter', shouldOutput("(T-'v.t')^'v.n'",        '{q}{2=n2}'))
+test('     Truthy Filter', shouldOutput("(T/'v.t')^'v.n'",        '{q}{2=n2}'))
 test('          Replaces', shouldOutput("ⓡ⒯ⓐⓝ⒡ⓞ⒡",           'true'))
 test('            Macros', shouldOutput("`Z..i`T..(i+1)`''TZT",  '101'))
 
@@ -176,7 +176,7 @@ _G.R = {
   swing=function(n)print(({[0]='⇓','⇑','⇐','⇒'})[n]) return true end,
 }
 
-test('    Lambda and for', shouldPrint("_{Rm,Rsw}&{3}~2,w!", '🡢⇒🡢⇒'))
+test('    Lambda and for', shouldPrint("_{Rm,Rsw}/{3}~2,w!", '🡢⇒🡢⇒'))
 
 mi = 3
 test('        While loop', shouldPrint("_~'Rm3',w!", '🡢🡢🡢'))
@@ -202,19 +202,19 @@ test(' Sapling drone geo', shouldPrint(
 --[[
 
 ? Trade all trades
-Tg0-'Vtr0'
+Tg0/'Vtr0'
 
 ? Suck 4 slots from top and bottom
-_08-'IsF(v//4,v%4+1)'
+_08/'IsF(v//4,v%4+1)'
 
 ? Dump everything front
 _'Rsel(k)Rd3'~16
 
 ? Trader
-Tg0-'Vtr0',_'Rsel(k)Rd3'~16,_08-'IsF(v//4,v%4+1)'
+Tg0/'Vtr0',_'Rsel(k)Rd3'~16,_08/'IsF(v//4,v%4+1)'
 
 ? Circular miner
-Gi!,_{Rm,Rsw}&{3}~i*3,Rtn⒯
+Gi!,_{Rm,Rsw}/{3}~i*3,Rtn⒯
 
 ? Zig-Zag move
 `TRtn(i%2>0)`MRm3`_~'M',T,_'M,T'!ⓞ_'T,M'
@@ -226,7 +226,7 @@ Gi!,_{Rm,Rsw}&{3}~i*3,Rtn⒯
 f='Rsel(v)Ie!Ru(3)Ie!'∅_7*f,s7,Rm1,Rd(3,1),Rm0,_2*'v+14'*f
 
 ? Travel between two waypoints and run its label
-v=Nf300[i%2+1]∅Dm^v.p,s&1~'Dg!>1',_(v.l)!
+v=Nf300[i%2+1]∅Dm^v.p,s/1~'Dg!>1',_(v.l)!
 
 ! Other programs
 
@@ -236,9 +236,9 @@ _4*"Ru^0,_12*'Rm^3'",_2*'Rtn⒯',_80*'Rsel^v,Rd^0',s^120
 ? Drone sapling planter
 x,z=i%8,i%64//8 u={x,0,z} -- Coords base on `i` variable
 Gsn(x,z)[32]==0 -- Is air 1 layer down
-_'Dm(v[1],0,v[2]),s!,Dp0'&{u,u*'-v'} -- Move to point, place, and come back
+_'Dm(v[1],0,v[2]),s!,Dp0'/{u,u*'-v'} -- Move to point, place, and come back
 
-x,z=i%8,i%64//8 u={x,0,z}∅_"_'Dm*u,s!,Dp0'&{u,u*'-v'}"~'Gsn(x,z)[32]'
+x,z=i%8,i%64//8 u={x,0,z}∅_"_'Dm*u,s!,Dp0'/{u,u*'-v'}"~'Gsn(x,z)[32]'
 Gsn(1,1,-1,8,8,1)*"v~=0ⓞ_'Dm(k,0,v)s!Dp(0)Dm(-k,0,-v)s!'(k%8,k/8)"
 
 ? Tree harvester with planting

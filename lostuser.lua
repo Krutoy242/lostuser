@@ -353,8 +353,7 @@ q = function(t)
         --?-- Table x Function|String
         if trgFnc then
           if     op=='map'    then r = map(self, trgFnc) -- {1,2,3} x f => {f(1),f(2),f(3)}
-          -- elseif op=='reduce' then r = reduce(self, trgFnc)
-          elseif op=='filter' then r = filter(self, trgFnc, false)
+          elseif op=='lambda' then r = filter(self, trgFnc, false)
           elseif op=='loop'   then r = loop(self, true, trgFnc)
           end
 
@@ -415,12 +414,12 @@ q = function(t)
   -- 3 --
   -- [[ * ]] __mul = generic'map',
   -- [[ % ]] __mod = generic'reduce',
-  -- [[ / ]] __div = generic'filter',
+  --[[ / ]] __div = generic'lambda',
   -- [[// ]] __idiv = generic'strict',
 
   -- 4 --
   -- [[ + ]] __add = generic'??',
-  --[[ - ]] __sub = generic'filter',
+  -- [[ - ]] __sub = generic'filter',
 
   -- 5 --
   -- [[ .. ]] __concat = generic'??',
@@ -430,7 +429,7 @@ q = function(t)
   -- [[>> ]] __shr = generic'??',
 
   -- 7 --
-  --[[ & ]] __band = generic'lambda',
+  -- [[ & ]] __band = generic'lambda',
 
   -- 8 --
   --[[ ~ ]] __bxor = generic'loop',
