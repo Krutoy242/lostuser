@@ -107,12 +107,11 @@ end
 
 --- Create new table
 ---@param from integer first value
----@param to integer length of new array
----@param val? any value to fill array with
+---@param length integer length of new array
 ---@return table<integer, any>
-local function newArray(from, to, val)
+local function newArray(from, length)
   local arr={}
-  for i=from,to-1+from do arr[i] = val or i end
+  for i=1,length do arr[i] = i-1+from end
   return arr
 end
 
@@ -230,6 +229,18 @@ local function index(t, keyFull)
   local exact = t[keyFull]
   if exact ~= nil then return q(exact) end
 
+  -- Global key that started with _
+  if keyFull:sub(1,1) == '_' then
+    -- Number: _8 create table {1,2,3,4,5,6,7,8}
+    local numStr = keyFull:sub(2)
+    local num = tonumber(numStr)
+    if num then
+      return q(newArray((numStr:sub(1,1)=='0') and 0 or 1, num))
+    end
+    -- TODO: add functionality for q{}._
+    -- TODO: add for _word
+  end
+
   local key,arg = keyFull:match'(.-)(%d*)$'
 
   -- Key ends with number - probably function call
@@ -239,16 +250,6 @@ local function index(t, keyFull)
     if isCallable(f) then
       return Q(f(tonumber(arg)))
     end
-  end
-
-  -- Global key that started with _
-  if key:sub(1,1) == '_' then
-    -- Number: _8 create table {1,2,3,4,5,6,7,8}
-    local numStr = key:sub(2)
-    local num = tonumber(numStr)
-    if num then return q(newArray(numStr:sub(1,1)=='0' and 0 or 1, num)) end
-    -- TODO: add functionality for q{}._
-    -- TODO: add for _word
 
   -- -- Big letter shortand Tg => T.g
   -- elseif key:match'^[A-Z]' then

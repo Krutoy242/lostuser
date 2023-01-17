@@ -161,6 +161,7 @@ getTrades = function() return {
   {trade=function()return 'v','w' end, isEnabled=function()return true end},
 } end}
 
+test('      Shortand _03', shouldOutput("_03",                    '{q}{1=0,2=1,3=2}'))
 test('Map:     Tbl x Fnc', shouldOutput("Tg!^'v.t!'",             '{q}{1=t,2=v}'))
 test('Map:     Tbl x Num', shouldOutput("T^2",                    '{q}{1=2,2=2,3=2,exp=2,getTrades=2}'))
 test('Map:     Fnc x Num', shouldOutput("(Te/3)(4)",              '81.0'))
@@ -201,32 +202,9 @@ test(' Sapling drone geo', shouldPrint(
 
 --[[
 
-? Trade all trades
-Tg0/'Vtr0'
-
-? Suck 4 slots from top and bottom
-_08/'IsF(v//4,v%4+1)'
-
-? Dump everything front
-_'Rsel(k)Rd3'~16
-
-? Trader
-Tg0/'Vtr0',_'Rsel(k)Rd3'~16,_08/'IsF(v//4,v%4+1)'
 
 ? Circular miner
 Gi!,_{Rm,Rsw}/{3}~i*3,Rtn⒯
-
-? Zig-Zag move
-`TRtn(i%2>0)`MRm3`_~'M',T,_'M,T'!ⓞ_'T,M'
-
-? Zig-Zag and swing forward
-`TRtn(i%2>0)S`MRm3S`S,Rsw3`_~'M',T,_'M,T'!ⓞ_'T,M'
-
-? Rune maker
-f='Rsel(v)Ie!Ru(3)Ie!'∅_7*f,s7,Rm1,Rd(3,1),Rm0,_2*'v+14'*f
-
-? Travel between two waypoints and run its label
-v=Nf300[i%2+1]∅Dm^v.p,s/1~'Dg!>1',_(v.l)!
 
 ! Other programs
 
@@ -241,8 +219,6 @@ _'Dm(v[1],0,v[2]),s!,Dp0'/{u,u*'-v'} -- Move to point, place, and come back
 x,z=i%8,i%64//8 u={x,0,z}∅_"_'Dm*u,s!,Dp0'/{u,u*'-v'}"~'Gsn(x,z)[32]'
 Gsn(1,1,-1,8,8,1)*"v~=0ⓞ_'Dm(k,0,v)s!Dp(0)Dm(-k,0,-v)s!'(k%8,k/8)"
 
-? Tree harvester with planting
-a,b=Rdt3∅#b<6ⓐ{Rsw3,s^6,Rsk(0,1),Ie!,Ru3,Ie!}ⓞRu3,s!
 
 ]]
 

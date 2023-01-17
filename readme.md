@@ -402,6 +402,7 @@ Value considered as `truthy` if its not `falthy`.
 Program have several predefined macroses - symbols, that will be replaced everywhere with another text.
 
 ```js
+! => '()'
 ⓐ => ' and '
 ⓞ => ' or '
 ⓝ => ' not '
@@ -425,7 +426,92 @@ Example:
 
 ## Examples
 
-...
+- **Travel between two waypoints and run its label**
+
+  > Required upgrades: *Inventory*, *Navigation*
+  
+  ![](https://i.imgur.com/36HdGzO.gif)
+  
+  Drone name:
+  ```lua
+  v=Nf300[i%2+1]∅Dm^v.p,s/1~'Dg!>1',_(v.l)!
+  ```
+  * `v=Nf300[i%2+1]`: run `navigation.findWaypoints(300)` and save even or uneven waypoint. `i` is index of current `while` loop.
+  * `∅`: `∅` used to be able using *expression* after *statement*.
+  * `Dm^v.p`: calling `drone.move(table.unpack(v))`
+  * `s/1~'Dg!>1'` => `while drone.getOffset() > 1 do sleep(1) end`
+  * `_(v.l)!`: load label and Lua code and execute it
+
+  Waypoints labels. First one just suck from bottom, second one iterate over 4 slots and drop down.
+  ```lua
+  _'Dsk0'~4
+  _'Dsel(k)Dd(0)'~4
+  ```
+
+- **Zig-Zag + Use Down, userful for farms**
+
+  > Required upgrades: none
+  
+  ![](https://i.imgur.com/YTd5idO.gif)
+  
+  Robot name:
+  ```lua
+  `TRtn(i%2>0)`MRm3,Ru0`_~'M',T,_'M,T'!ⓞ_'T,M'
+  ```
+  * `TRtn(i%2>0)`: add macros `T` that would turned into `Rtn(i%2>0)`. Makes robot turn sometimes left, sometimes right.
+  * `MRm3,Ru0`: add macros `M` that would turned into `Rm3,Ru0`. This would make robot move and use item down.
+  * `_~'M'`: Makes robot move forward until it cant move.
+  * `_'M,T'!ⓞ_'T,M'`: Move and turn. If cant move, turn and move again.
+
+- **Trader bot**
+
+  > Required upgrades: *Trading*, *Inventory*, *Inventory Controller*
+  
+  ![](https://i.imgur.com/72eLfym.png)
+
+  Robot name:
+  ```lua
+  Tg0/'v.tr0',_'Rsel(k)Rd(3)'~16,_08/'IsF(v//4,v%4+1)'
+  ```
+  * `Tg0/'v.tr0'`: Trade all trades
+  * `_08/'IsF(v//4,v%4+1)'`: Suck 4 slots from top and bottom
+  * `_'Rsel(k)Rd(3)'~16`: Dump everything front
+
+- **Rune maker**
+
+  > Required upgrades: *Inventory*, *Inventory Controller*
+
+  Place ingredients in first 6 slots of Robot. Living Rock in 7th, wand in 8th.
+  
+  <img src="https://i.imgur.com/OXRuYs3.png" width=25%>
+  <img src="https://i.imgur.com/KqlJqMw.gif">
+
+  Robot name:
+  ```lua
+  _8/'Rsel^v,v==7ⓐ{s3,Rm1,Rd(3,1),Rm0}ⓞ{Ie!,Ru3,Ie!}'
+  ```
+  * `Rsel^v`: Select iterated slot
+  * `v==7ⓐ{s3,Rm1,Rd(3,1),Rm0}`: if its 7th slot with Living Rock, wait 3 seconds until craft finished, then drop Rock on top.
+  * `Ie!,Ru3,Ie!`: Other slots - just right-click with item
+
+- **Single tree farm**
+
+  > Required upgrades: *Inventory*, *Inventory Controller*
+
+  This robot intended to use with Forestry saplings, that usually can't be placed as blocks, but need to be right-clicked instead.  
+  Also, robot need *unbreakable* Broad Axe from TCon with *Global Traveler* trait. Also, my Axe have *Fertilizing* trait - right click to fertilize.
+  
+  <img src="https://i.imgur.com/I9W39B0.gif">
+
+  Robot name:
+  ```lua
+  a,b=Rdt(3)ⓡ#b<6ⓐ{Rsw3,s^2,Rsk(0,1),Ie!,Ru3,Ie!}ⓞRu3,s
+  ```
+  * `a,b=Rdt(3)`: Detect block in front. Note that `Rdt3` would not work, since it return only 1 value
+  * `#b<6`: trick to determine if block is solid
+  * `Rsw3,s^2`: Cut whole tree
+  * `Rsk(0,1),Ie!,Ru3,Ie!`: Plant 1 sapling
+  * `Ru3,s`: Fertilize sapling
 
 
 ## Links
