@@ -175,6 +175,7 @@ local function loop(self, isTbl, trgFnc)
       r = self(j)
     end
   end
+  return r
 end
 
 
