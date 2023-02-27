@@ -189,13 +189,34 @@ _G.G = {
     return t
   end,
 }
+local offset = 2
 _G.D = {
-  move = function(x,y,z)print(string.format('m(%g,%g,%g)',x,y,z)) end,
+  move = function(x,y,z)print(string.format('m(%g,%g,%g)',x,y,z))offset=2 end,
   place= function(side)print(string.format('p(%d)',side)) return false end,
+  suck = function(n)print(({[0]='⮋','⮉','⮈','⮊'})[n]) return true end,
+  drop = function(n)print(({[0]='⤓','⤒','⇤','⇥'})[n]) return true end,
+  select=function(n)print(string.format('sel(%d)',n)) end,
+  getOffset=function()print(string.format('Ô',n)) offset=offset-0.5 return offset end,
 }
 test(' Sapling drone geo', shouldPrint(
   "`x(i%8)`z(i%64//8)`_'Dm(x,0,z)s(0.05)Dp(0)Dm(-x,0,-z)s(0.05)'~(Gsn(x,z)[32]==0),i>2ⓐw!",
   's(0,0)s(1,0)s(2,0)m(2,0,0)p(0)m(-2,0,0)s(3,0)'
+))
+
+_G.N = {
+  findWaypoints = function(dist)print(string.format('find(%g)',dist))return {
+    {position={10,0,0}, redstone=0 , label="Dsk/0~4"},
+    {position={20,1,0}, redstone=0 , label="Dsk/0~4"},
+    {position={30,2,0}, redstone=15, label="_'Dsel(k)Dd(0)'~4"},
+  } end,
+}
+test(' Drone waypoints', shouldPrint(
+     "∅i>2ⓐw! P=i/Nf300ⓡDm^Pp,s/0~Dg,_(Pl)",
+  -- "P=i/Nf300ⓡDm^Pp,       _(Pl),i>4ⓐw!",
+  'find(300)m(10,0,0)ÔÔÔÔ⮋⮋⮋⮋'..
+  'find(300)m(20,1,0)ÔÔÔÔ⮋⮋⮋⮋'..
+  'find(300)m(30,2,0)ÔÔÔÔsel(1)⤓sel(2)⤓sel(3)⤓sel(4)⤓'..
+  'find(300)m(10,0,0)ÔÔÔÔ⮋⮋⮋⮋'
 ))
 
 --[[
