@@ -331,6 +331,24 @@ f/1 -- (...)=>f(1,...)
 ```
 
 </td></tr>
+<tr><td>Number</td><td rowspan=3>Table</td><td>
+
+Get by modulus
+```lua
+i/t -- t[i % #t + 1]
+```
+
+</td></tr>
+<tr><td>Boolean</td><td>
+
+<sub>Not yet implemented</sub>
+
+</td></tr>
+<tr><td>String</td><td>
+
+<sub>Not yet implemented</sub>
+
+</td></tr>
 </table>
 
 ### Loop `~`
@@ -434,13 +452,15 @@ Example:
   
   Drone name:
   ```lua
-  v=Nf300[i%2+1]∅Dm^v.p,s/1~'Dg!>1',_(v.l)!
+  P=i/Nf300ⓡDm^Pp,s/1~'Dg!>1',_(Pl)
   ```
-  * `v=Nf300[i%2+1]`: run `navigation.findWaypoints(300)` and save even or uneven waypoint. `i` is index of current `while` loop.
-  * `∅`: `∅` used to be able using *expression* after *statement*.
-  * `Dm^v.p`: calling `drone.move(table.unpack(v))`
-  * `s/1~'Dg!>1'` => `while drone.getOffset() > 1 do sleep(1) end`
-  * `_(v.l)!`: load label and Lua code and execute it
+  * `Nf300`: Run `navigation.findWaypoints(300)`.
+  * `i/Nf300`: `i` is index of script execution. `i / table` is "Get by index modulus" `t[i % #t + 1]`.
+  * `P=i/Nf300`: Write into global variable `P` a different waypoint each script cycle.
+  * `ⓡ`: will be replaced by ` return `
+  * `Dm^Pp`: calling `drone.move(table.unpack(P.position))`.
+  * `s/1~'Dg!>1'` => `while drone.getOffset() > 1 do sleep(1) end`.
+  * `_(Pl)`: Load `P.label` as Lua code. This loaded function would be [returned and executed](#return).
 
   Waypoints labels. First one just suck from bottom, second one iterate over 4 slots and drop down.
   ```lua

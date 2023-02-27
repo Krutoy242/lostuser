@@ -348,6 +348,14 @@ q = function(t)
   ---@return any
   local function generic(op)
     return function(source, target)
+
+      -- Determine sides
+      local swap
+      if type(source) ~= 'table' then
+        source, target = target, source
+        swap = true
+      end
+
       local trgFnc, trgTable = getTarget(target, 'k,v')
       local r
 
@@ -372,7 +380,11 @@ q = function(t)
             local u = {} for k in pairs(source) do u[k]=target end r = u -- {1,2,3} x n => {n,n,n}
 
           elseif op=='lambda' then
-            r = map(source, function(k,v) return function(...) return v(target, ...) end end)
+            if swap then
+              r = source[target % #source + 1]
+            else
+              r = map(source, function(k,v) return function(...) return v(target, ...) end end)
+            end
 
           elseif op=='loop'   then
             r = loop(source, true, function(j) return j <= TONUMBER(target) end) -- TODO: Loop actually should call other function f(k,v), not call each element of Table
