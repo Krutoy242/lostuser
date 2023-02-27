@@ -25,8 +25,6 @@ wget -f https://raw.githubusercontent.com/Krutoy242/lostuser/main/lostuser.lua &
 
 ]]
 
--- for k,v in pairs(_G) do print(k,v)end
-
 local lu
 
 print'\n< LostUser tests >\n'
@@ -196,7 +194,7 @@ _G.D = {
   place= function(side)print(string.format('p(%d)',side)) return false end,
 }
 test(' Sapling drone geo', shouldPrint(
-  "`x(i%8)`z(i%64//8)`_'Dm(x,0,z)s!Dp(0)Dm(-x,0,-z)s!'~(Gsn(x,z)[32]==0),i>2ⓐw!",
+  "`x(i%8)`z(i%64//8)`_'Dm(x,0,z)s(0.05)Dp(0)Dm(-x,0,-z)s(0.05)'~(Gsn(x,z)[32]==0),i>2ⓐw!",
   's(0,0)s(1,0)s(2,0)m(2,0,0)p(0)m(-2,0,0)s(3,0)'
 ))
 
