@@ -12,6 +12,8 @@ Robot (or drone!) BIOS program for Minecraft OpenComputers mod.
   - [Usage](#usage)
   - [Syntax](#syntax)
     - [Statements and Expressions](#statements-and-expressions)
+      - [Execution](#execution)
+      - [Return](#return)
     - [Globals](#globals)
   - [Shortening](#shortening)
   - [Lodash `_`](#lodash-_)
@@ -92,6 +94,8 @@ If you don't want to learn Lua and you need the robot to right/left click, a few
 
 ### Statements and Expressions
 
+#### Execution
+
 Robot will execute it's name as Lua code in `while true` loop.
 
 Code could be run in any variation - `statement` or `expressions`, but still must follow Lua code flow rules.
@@ -111,11 +115,15 @@ Code could be run in any variation - `statement` or `expressions`, but still mus
 > a = robot.move(3) return a and robot.use(0)
 > ```
 
+#### Return
+
 If expression return one or many functions, they would be executed recursively.
+
+Note that all return values are calculated first, and only then will the functions be called.
 
 > Calling `robot.use(3)`, and then `sleep()`
 > ```lua
-> robot.use(3), sleep
+> function() return sleep end, robot.use(3)
 > ```
 
 ### Globals
@@ -176,6 +184,14 @@ Shortening rules:
     > s10 -- sleep(10)
     > ```
 
+6. Locals can't be shortened
+    > ```lua
+    > local query = {len=4}
+    > q.l -- Exception: q is nil
+    > query.l -- l is nil
+    > query.len -- 4
+    > ```
+
 ## Lodash `_`
 
 Low dash `_` is special helper function.
@@ -191,8 +207,9 @@ Low dash `_` is special helper function.
 - **Using `_` on string**  
   Will load code inside this string and return it as function.
   > ```lua
-  > _'Rm,s2'()(0) -- call `robot.move(0),sleep(2)`
+  > _'Rm,s2'()(0) -- call `sleep(2),robot.move(0)`
   > ```
+  > Note that in this example, the `_` function returns two values - the `robot.move` function and the result `sleep(2)`. Only when we call the returned values a second time, `robot.move(0)` called
 
 - **Using `_` on *table* or *function***  
   Will convert them into `{q}` table or `{q}` function to use with [Functional Programming](#functional-programming)
@@ -216,6 +233,15 @@ Simple example - fill all values of array with `1`:
 **Operators** behave differently depending or left and right side of operator.
 
 Note that whenever `string` would be detected in right side, it would be loaded and converted to function in manner of `_'fnc'`.
+
+<!--
+███╗   ███╗ █████╗ ██████╗ 
+████╗ ████║██╔══██╗██╔══██╗
+██╔████╔██║███████║██████╔╝
+██║╚██╔╝██║██╔══██║██╔═══╝ 
+██║ ╚═╝ ██║██║  ██║██║     
+╚═╝     ╚═╝╚═╝  ╚═╝╚═╝     
+-->
 
 ### Map `^`
 
@@ -241,7 +267,7 @@ _{4,5,6}^{3,1} -- {6,4}
 ```
 
 </td></tr>
-<tr><td>other</td><td>
+<tr><td>Number, Boolean</td><td>
 
 Fill with value
 ```lua
@@ -265,7 +291,7 @@ f^{1,2,3} -- f(1,2,3)
 ```
 
 </td></tr>
-<tr><td>other</td><td>
+<tr><td>Number, Boolean</td><td>
 
 Simple call
 ```lua
@@ -274,6 +300,15 @@ f^1 -- f(1)
 
 </td></tr>
 </table>
+
+<!--
+██╗      █████╗ ███╗   ███╗██████╗ ██████╗  █████╗ 
+██║     ██╔══██╗████╗ ████║██╔══██╗██╔══██╗██╔══██╗
+██║     ███████║██╔████╔██║██████╔╝██║  ██║███████║
+██║     ██╔══██║██║╚██╔╝██║██╔══██╗██║  ██║██╔══██║
+███████╗██║  ██║██║ ╚═╝ ██║██████╔╝██████╔╝██║  ██║
+╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝╚═════╝ ╚═════╝ ╚═╝  ╚═╝
+-->
 
 ### Lambda `/`
 
@@ -285,7 +320,7 @@ f^1 -- f(1)
 <tr>
   <td rowspan=3>Table</td><td>Function</td><td>
 
-Keep only if value is [Truthy](#Truthy)
+Filter, keep only if value is [Truthy](#Truthy)
 ```lua
 _{4,5,6,7}/'v%2' -- {5,7}
 ```
@@ -299,9 +334,9 @@ _{f,g}/{0,1} -- {f(0,1),g(0,1)}
 ```
 
 </td></tr>
-<tr><td>other</td><td>
+<tr><td>Number, Boolean</td><td>
 
-Fill with value
+Fill with compositions
 ```lua
 _{f,g}/n -- {(...)=>f(n, ...), (...)=>g(n, ...)}
 ```
@@ -319,11 +354,11 @@ f/g -- (...)=>g(f(...))
 
 Reversed map
 ```lua
-f/{a,b} => {f(a),f(b)}
+f/{a,b} -- {f(a),f(b)}
 ```
 
 </td></tr>
-<tr><td>other</td><td>
+<tr><td>Number, Boolean</td><td>
 
 Composition
 ```lua
@@ -351,6 +386,15 @@ i/t -- t[i % #t + 1]
 </td></tr>
 </table>
 
+<!--
+██╗      ██████╗  ██████╗ ██████╗ 
+██║     ██╔═══██╗██╔═══██╗██╔══██╗
+██║     ██║   ██║██║   ██║██████╔╝
+██║     ██║   ██║██║   ██║██╔═══╝ 
+███████╗╚██████╔╝╚██████╔╝██║     
+╚══════╝ ╚═════╝  ╚═════╝ ╚═╝     
+-->
+
 ### Loop `~`
 
 <table>
@@ -369,10 +413,10 @@ _{f,g}~h -- while truthy(h(j++)) do f()g() end
 </td></tr>
 <tr><td>Table</td><td>
 
-Not yet implemented
+<sub>Not yet implemented</sub>
 
 </td></tr>
-<tr><td>other</td><td>
+<tr><td>Number, Boolean</td><td>
 
 For loop
 ```lua
@@ -390,14 +434,14 @@ f~g -- while truthy(g(j++)) do f() end
 </td></tr>
 <tr><td>Table</td><td>
 
-Not yet implemented
+<sub>Not yet implemented</sub>
 
 </td></tr>
-<tr><td>other</td><td>
+<tr><td>Number, Boolean</td><td>
 
 For loop
 ```lua
-f~n -- for 1,n do f() end
+f~n -- for j=1,TONUMBER(n) do f() end
 ```
 
 </td></tr>
