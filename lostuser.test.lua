@@ -238,6 +238,97 @@ _'Dm(v[1],0,v[2]),s!,Dp0'/{u,u*'-v'} -- Move to point, place, and come back
 x,z=i%8,i%64//8 u={x,0,z}∅_"_'Dm*u,s!,Dp0'/{u,u*'-v'}"~'Gsn(x,z)[32]'
 Gsn(1,1,-1,8,8,1)*"v~=0ⓞ_'Dm(k,0,v)s!Dp(0)Dm(-k,0,-v)s!'(k%8,k/8)"
 
+? Robot sorting mob drop
+_'O=IgSI(0,k)IsF(0,k)Rd((OⓐOmDⓐOmD>0)ⓐ1ⓞ3)'~IgvS0
+
+? Compressing bot
+Cc0
+
+?========================================================
+
+Igv3 // Number of slots in front
+IsF(3,k) // Suck from slot
+Igk(3,k) // Get Stack in slot
+
+Q={}O=Igk(3,k)Q[O]
+
+IgA3.g0 // Get all stacks
+
+// getSlotStackSize glz
+ⓡIgA3.g0/'Q[v.n]=k'
+
+
+Iglz(3,k)>9ⓐ_'n=IsF(3,k)Rsl1,_"RtT(v*4/3,n/9)"~9' // Craft this slot
+n=IsF(3,k)Rsl1,_"RtT(v*4/3,n/9)"~9 // Pull and spread
+RtT(i*4/3,1) // Spread items
+
+i*4/3 // Formula of iterating through crafting slots when i = [1-9]
+
+_'RtT(v*4/3,n/9)'~IsF/3/k // Pull and spread
+
+(IsF/3/'RtT(v*4/3,k/9)')(k)
+
+(IsF/3/())(k)
+
+// Possible spread. Need new operator
+// T~F (for each, need for lower priority)
+// N/F (rotated composition)
+// T/N (remove index)
+_11/8/4~k/9/RtT // F(k) k: number of items in selected slot
+
+// F(k) Suck and spread items
+// k: external slot
+IsF/3/'_11/8/4~k/9/RtT'
+
+// Suck and spread each i
+IsF/3/'_11/8/4~k/9/RtT'/(i%Igv3+1)
+IsF/3/'_11/8/4~k/9/RtT'/Igv3_i // xx_i new modulus
+
+equip
+store
+dropIntoSlot
+suckFromSlot
+compareStacks
+storeInternal
+getStackInSlot
+getInventorySize
+getSlotStackSize
+compareToDatabase
+getSlotMaxStackSize
+getStackInInternalSlot
+
+use
+drop
+fill
+move
+name
+suck
+turn
+count
+drain
+place
+space
+swing
+detect
+select
+compare
+compareTo
+item_used
+tankCount
+tankLevel
+tankSpace
+durability
+selectTank
+transferTo
+item_placed
+compareFluid
+getLightColor
+inventorySize
+setLightColor
+compareFluidTo
+block_activated
+item_interacted
+transferFluidTo
 
 ]]
 

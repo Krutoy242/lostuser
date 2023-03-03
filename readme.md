@@ -18,6 +18,7 @@ Robot (or drone!) BIOS program for Minecraft OpenComputers mod.
   - [Shortening](#shortening)
   - [Lodash `_`](#lodash-_)
   - [Functional Programming](#functional-programming)
+    - [Precedence](#precedence)
     - [Map `^`](#map-)
     - [Lambda `/`](#lambda-)
     - [Loop `~`](#loop-)
@@ -234,6 +235,23 @@ Simple example - fill all values of array with `1`:
 
 Note that whenever `string` would be detected in right side, it would be loaded and converted to function in manner of `_'fnc'`.
 
+### Precedence
+
+Operator precedence in Lua follows the table below, from higher to lower priority:
+
+1. `^`
+2. unary `not` `#` `-` `~`
+3. `*` `/` `//` `%`
+4. `+` `-`
+5. `..`
+6. `<<` `>>`
+7. `&`
+8. `~`
+9. `|`
+10. `<` `>` `<=` `>=` `~=` `==`
+11. `and`
+12. `or`
+
 <!--
 ███╗   ███╗ █████╗ ██████╗ 
 ████╗ ████║██╔══██╗██╔══██╗
@@ -244,6 +262,8 @@ Note that whenever `string` would be detected in right side, it would be loaded 
 -->
 
 ### Map `^`
+
+Note, that `^` is right associative. This means, right side will be computed first.
 
 <table>
 <tr>
@@ -407,7 +427,7 @@ i/t -- t[i % #t + 1]
 
 While truthy do
 ```lua
-_{f,g}~h -- while truthy(h(j++)) do f()g() end
+_{f,g}~h -- while truthy(h(j++)) do f(j)g(j) end
 ```
 
 </td></tr>
@@ -420,7 +440,7 @@ _{f,g}~h -- while truthy(h(j++)) do f()g() end
 
 For loop
 ```lua
-_{f,g}~n -- for 1,n do f()g() end
+_{f,g}~n -- for j=1,n do f(j)g(j) end
 ```
 
 </td></tr>
@@ -428,7 +448,7 @@ _{f,g}~n -- for 1,n do f()g() end
 
 While truthy do
 ```lua
-f~g -- while truthy(g(j++)) do f() end
+f~g -- while truthy(g(j++)) do f(j) end
 ```
 
 </td></tr>
@@ -441,7 +461,7 @@ f~g -- while truthy(g(j++)) do f() end
 
 For loop
 ```lua
-f~n -- for j=1,TONUMBER(n) do f() end
+f~n -- for j=1,TONUMBER(n) do f(j) end
 ```
 
 </td></tr>
@@ -449,9 +469,9 @@ f~n -- for j=1,TONUMBER(n) do f() end
 
 ### Truthy
 
-Value considered as `truthy` if its not `falthy`.
+Value considered as `truthy` if its not `falsy`.
 
-`falthy` values is:
+`falsy` values is:
 
 1. `false` or `nil`
 2. `''` empty string
