@@ -58,12 +58,13 @@ local function localError(err, skipTraceback)
     -- [Client thread/ERROR] [FML]: Exception caught during firing event net.minecraftforge.client.event.ClientChatReceivedEvent@3e83e9ca:
     -- net.minecraft.util.text.TextComponentTranslationFormatException: Error parsing
     escape(
-      skipTraceback and tostring(err) or debug.traceback(err)
+      tostring(err)
+      -- skipTraceback and tostring(err) or debug.traceback(err)
     )
     -- tostring(err)
     -- :sub(1, 400)
     -- os.exit(1)
-  )
+  , 1)
 end
 
 --- Check if value is truthy
@@ -660,6 +661,7 @@ run = function(input)
     if runOnce then return unpack(r) end
     __ENV.i = __ENV.i + 1
     __ENV.l = not __ENV.l
+    if __ENV.i % 100 == 99 then __ENV.sleep(0.05) end
   end
 end
 

@@ -247,24 +247,24 @@ Cc0
 
 ?========================================================
 
-// Possible spread. Need new operators:
-//? N/F (rotated composition)
-//? T/N (remove index)
-_11/8/4&k/9/RtT // F(k) k: number of items in selected slot
+// Spread
+_11/8/4&Rc!/9/RtT // F(k) k: number of items in selected slot
 
 // F(k) Suck and spread items
 // k: external slot
-IsF/3/'_11/8/4&k/9/RtT'
+IsF/3/'_11/8/4&Rc!/9/RtT'
 
-Igv3 // Number of slots in front
+Igz3 // Number of slots in front
 IsF(3,k) // Suck from slot
 
 // Suck and spread each i
-IsF/3/'_11/8/4&k/9/RtT'/(i%Igv3+1)
+IsF/3/'_11/8/4&Rc!/9/RtT'/(i%Igz3+1)
 
-_16/Rc/'Rse^k,Rd3' // Select non-empty slots and dump them
+_16/Rc/'Rsel^k,Rd3' // Select non-empty slots and dump them
 
-_16/Rc/'Rse^k,Rd3',IsF/3/'_11/8/4&k/9/RtT'/(i%Igv3+1),Cc // dump, Suck, spread, craft
+_16/Rc/'Rsel^k,Rd3',IsF/3/'_11/8/4&Rc!/9/RtT'/(i%Igz3+1),Cc // dump, suck, spread, craft
+
+? inventory_controller:
 
 equip
 store
@@ -279,11 +279,14 @@ compareToDatabase
 getSlotMaxStackSize
 getStackInInternalSlot
 
+? robot:
+
 use
 drop
 fill
 move
 name
+slot
 suck
 turn
 count
