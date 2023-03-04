@@ -19,9 +19,9 @@ Robot (or drone!) BIOS program for Minecraft OpenComputers mod.
   - [Lodash `_`](#lodash-_)
   - [Functional Programming](#functional-programming)
     - [Precedence](#precedence)
-    - [Map `^`](#map-)
-    - [Lambda `/`](#lambda-)
-    - [Loop `~`](#loop-)
+    - [Map `^` or `&`](#map--or-)
+    - [Lambda `-` `/` `|`](#lambda----)
+    - [Loop `~` or `..`](#loop--or-)
     - [Truthy](#truthy)
   - [Macros](#macros)
   - [Examples](#examples)
@@ -261,7 +261,9 @@ Operator precedence in Lua follows the table below, from higher to lower priorit
 ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝     
 -->
 
-### Map `^`
+### Map `^` or `&`
+
+`^` and `&` operators do the same. There is two of them only to managing precedence.
 
 Note, that `^` is right associative. This means, right side will be computed first.
 
@@ -330,7 +332,7 @@ f^1 -- f(1)
 ╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝╚═════╝ ╚═════╝ ╚═╝  ╚═╝
 -->
 
-### Lambda `/`
+### Lambda `-` `/` `|`
 
 <table>
 <tr>
@@ -356,9 +358,9 @@ _{f,g}/{0,1} -- {f(0,1),g(0,1)}
 </td></tr>
 <tr><td>Number, Boolean</td><td>
 
-Fill with compositions
+Remove index
 ```lua
-_{f,g}/n -- {(...)=>f(n, ...), (...)=>g(n, ...)}
+_3/2 -- {1=1,3=3}
 ```
 
 </td></tr>
@@ -386,7 +388,7 @@ f/1 -- (...)=>f(1,...)
 ```
 
 </td></tr>
-<tr><td>Number</td><td rowspan=3>Table</td><td>
+<tr><td rowspan=2>Number, Boolean</td><td>Table</td><td>
 
 Get by modulus
 ```lua
@@ -394,14 +396,12 @@ i/t -- t[i % #t + 1]
 ```
 
 </td></tr>
-<tr><td>Boolean</td><td>
+<tr><td>Function</td><td>
 
-<sub>Not yet implemented</sub>
-
-</td></tr>
-<tr><td>String</td><td>
-
-<sub>Not yet implemented</sub>
+Rotated composition
+```lua
+2/f -- (...)=>f(..., 2)
+```
 
 </td></tr>
 </table>
@@ -415,7 +415,7 @@ i/t -- t[i % #t + 1]
 ╚══════╝ ╚═════╝  ╚═════╝ ╚═╝     
 -->
 
-### Loop `~`
+### Loop `~` or `..`
 
 <table>
 <tr>

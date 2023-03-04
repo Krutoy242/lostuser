@@ -162,7 +162,7 @@ getTrades = function() return {
 test('      Shortand _03', shouldOutput("_03",                    '{q}{1=0,2=1,3=2}'))
 test('Map:     Tbl x Fnc', shouldOutput("Tg!^'v.t!'",             '{q}{1=t,2=v}'))
 test('Map:     Tbl x Num', shouldOutput("T^2",                    '{q}{1=2,2=2,3=2,exp=2,getTrades=2}'))
-test('Map:     Fnc x Num', shouldOutput("(Te/3)(4)",              '81.0'))
+test('Map:     Fnc x Num', shouldOutput("Te/3&4",                 '81.0'))
 test('Map:     Fnc x Tbl', shouldOutput("Te^{4,5}",               '1024.0'))
 test('     Truthy Filter', shouldOutput("(T/'v.t')^'v.n'",        '{q}{2=n2}'))
 test('          Replaces', shouldOutput("ⓡ⒯ⓐⓝ⒡ⓞ⒡",           'true'))
@@ -175,10 +175,11 @@ _G.R = {
   swing=function(n)print(({[0]='⇓','⇑','⇐','⇒'})[n]) return true end,
 }
 
-test('    Lambda and for', shouldPrint("_{Rm,Rsw}/{3}~2,w!", '🡢⇒🡢⇒'))
+test('Lambda:      T x T', shouldPrint("_{Rm,Rsw}/{3}~2,w!", '🡢⇒🡢⇒'))
+test('Lambda:      T x N', shouldOutput("_3-2"             , '{q}{1=1,3=3}'))
 
 mi = 3
-test('        While loop', shouldPrint("_~'Rm3',w!", '🡢🡢🡢'))
+test('        While loop', shouldPrint("_..'Rm3',w!", '🡢🡢🡢'))
 test('       Conditional', shouldPrint("`SRsw(i)`MRm(3)` _'M,S'!ⓐ_'SS'!,w!", '🡢⇓'))
 
 
@@ -210,13 +211,13 @@ _G.N = {
     {position={30,2,0}, redstone=15, label="_'Dsel(k)Dd(0)'~4"},
   } end,
 }
-test(' Drone waypoints', shouldPrint(
-     "∅i>2ⓐw! P=i/Nf300ⓡDm^Pp,s/0~Dg,_(Pl)",
+test('   Drone waypoints', shouldPrint(
+     "∅i>2ⓐw! P=i/Nf300ⓡDm^Pp,s/0~'Dg!>1',_(Pl)",
   -- "P=i/Nf300ⓡDm^Pp,       _(Pl),i>4ⓐw!",
-  'find(300)m(10,0,0)ÔÔÔÔ⮋⮋⮋⮋'..
-  'find(300)m(20,1,0)ÔÔÔÔ⮋⮋⮋⮋'..
-  'find(300)m(30,2,0)ÔÔÔÔsel(1)⤓sel(2)⤓sel(3)⤓sel(4)⤓'..
-  'find(300)m(10,0,0)ÔÔÔÔ⮋⮋⮋⮋'
+  'find(300)m(10,0,0)ÔÔ⮋⮋⮋⮋'..
+  'find(300)m(20,1,0)ÔÔ⮋⮋⮋⮋'..
+  'find(300)m(30,2,0)ÔÔsel(1)⤓sel(2)⤓sel(3)⤓sel(4)⤓'..
+  'find(300)m(10,0,0)ÔÔ⮋⮋⮋⮋'
 ))
 
 --[[
@@ -246,43 +247,24 @@ Cc0
 
 ?========================================================
 
-Igv3 // Number of slots in front
-IsF(3,k) // Suck from slot
-Igk(3,k) // Get Stack in slot
-
-Q={}O=Igk(3,k)Q[O]
-
-IgA3.g0 // Get all stacks
-
-// getSlotStackSize glz
-ⓡIgA3.g0/'Q[v.n]=k'
-
-
-Iglz(3,k)>9ⓐ_'n=IsF(3,k)Rsl1,_"RtT(v*4/3,n/9)"~9' // Craft this slot
-n=IsF(3,k)Rsl1,_"RtT(v*4/3,n/9)"~9 // Pull and spread
-RtT(i*4/3,1) // Spread items
-
-i*4/3 // Formula of iterating through crafting slots when i = [1-9]
-
-_'RtT(v*4/3,n/9)'~IsF/3/k // Pull and spread
-
-(IsF/3/'RtT(v*4/3,k/9)')(k)
-
-(IsF/3/())(k)
-
-// Possible spread. Need new operator
-// T~F (for each, need for lower priority)
-// N/F (rotated composition)
-// T/N (remove index)
-_11/8/4~k/9/RtT // F(k) k: number of items in selected slot
+// Possible spread. Need new operators:
+//? N/F (rotated composition)
+//? T/N (remove index)
+_11/8/4&k/9/RtT // F(k) k: number of items in selected slot
 
 // F(k) Suck and spread items
 // k: external slot
-IsF/3/'_11/8/4~k/9/RtT'
+IsF/3/'_11/8/4&k/9/RtT'
+
+Igv3 // Number of slots in front
+IsF(3,k) // Suck from slot
 
 // Suck and spread each i
-IsF/3/'_11/8/4~k/9/RtT'/(i%Igv3+1)
-IsF/3/'_11/8/4~k/9/RtT'/Igv3_i // xx_i new modulus
+IsF/3/'_11/8/4&k/9/RtT'/(i%Igv3+1)
+
+_16/Rc/'Rse^k,Rd3' // Select non-empty slots and dump them
+
+_16/Rc/'Rse^k,Rd3',IsF/3/'_11/8/4&k/9/RtT'/(i%Igv3+1),Cc // dump, Suck, spread, craft
 
 equip
 store

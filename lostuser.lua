@@ -394,7 +394,7 @@ q = function(t)
             if swap then
               r = source[target % #source + 1]
             else
-              r = map(source, function(k,v) return function(...) return v(target, ...) end end)
+              source[target] = nil; r = source
             end
 
           elseif op=='loop' then
@@ -435,7 +435,11 @@ q = function(t)
             r = QFnc(source)(source, target) -- f*1 => f(1)
 
           elseif op=='lambda' then
-            r = function(...) return source(target, ...) end
+            if swap then
+              r = function(...) return source(..., target) end
+            else
+              r = function(...) return source(target, ...) end
+            end
 
           elseif op=='loop' then
             r = loop(source, false, function(j) return j <= TONUMBER(target) end)
@@ -452,47 +456,46 @@ q = function(t)
   local mt = {
     __q = true,
     __tostring = function() return '{q}'..(qIsCallable and tostring(t) or '{'..serialize(t)..'}') end,
+  }
 
   -- 1 --
-  --[[ ^ ]] __pow = generic'map',
+  --[[ ^ ]] mt.__pow = generic'map'
 
   -- 2 --
-  -- [[ - ]] __unm = generic'??', -- Filter falsy
-  -- [[ ~ ]] __bnot = generic'??', -- Probably do while truthy, `sortBy`
-  -- [[ # ]] __len = generic'??', -- Probably `tostring()` OR `flat()`
+  -- [[ - ]] mt.__unm = generic'??', -- Filter falsy
+  -- [[ ~ ]] mt.__bnot = generic'??', -- Probably do while truthy, `sortBy`
+  -- [[ # ]] mt.__len = generic'??', -- Probably `tostring()` OR `flat()`
 
   -- 3 --
-  -- [[ * ]] __mul = generic'map',
-  -- [[ % ]] __mod = generic'reduce',
-  --[[ / ]] __div = generic'lambda',
-  -- [[// ]] __idiv = generic'strict',
+  -- [[ * ]] mt.__mul = generic'??'
+  -- [[ % ]] mt.__mod = generic'??'
+  --[[ / ]] mt.__div = generic'lambda'
+  -- [[// ]] mt.__idiv = generic'??'
 
   -- 4 --
-  -- [[ + ]] __add = generic'??',
-  -- [[ - ]] __sub = generic'filter',
+  -- [[ + ]] mt.__add = generic'??'
+  --[[ - ]] mt.__sub = mt.__div -- lambda
 
   -- 5 --
-  -- [[ .. ]] __concat = generic'??',
+  --[[ .. ]] mt.__concat = generic'loop'
 
   -- 6 --
-  -- [[<< ]] __shl = generic'??',
-  -- [[>> ]] __shr = generic'??',
+  -- [[<< ]] mt.__shl = generic'??'
+  -- [[>> ]] mt.__shr = generic'??'
 
   -- 7 --
-  -- [[ & ]] __band = generic'lambda',
+  --[[ & ]] mt.__band = mt.__pow -- map
 
   -- 8 --
-  --[[ ~ ]] __bxor = generic'loop',
+  --[[ ~ ]] mt.__bxor = mt.__concat -- loop
 
   -- 9 --
-  -- [[ | ]] __bor = generic'??',
+  --[[ | ]] mt.__bor = mt.__div -- lambda
 
   -- 10 --
-  -- [[== ]] __eq = generic'??',
-  -- [[ < ]] __lt = generic'??',
-  -- [[<= ]] __le = generic'??',
-
-  }
+  -- [[ < ]] mt.__lt = generic'??'
+  -- [[<= ]] mt.__le = generic'??'
+  -- [[== ]] mt.__eq = generic'??'
 
   -----------------------------------------------------------------
   --[[
