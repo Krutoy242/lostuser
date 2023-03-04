@@ -362,21 +362,32 @@ q = function(t)
       if not qIsCallable then
         --?-- Table x Function|String
         if trgFnc then
-          if     op=='map'    then r = map(source, trgFnc) -- {1,2,3} x f => {f(1),f(2),f(3)}
-          elseif op=='lambda' then r = filter(source, trgFnc, false)
-          elseif op=='loop'   then r = loop(source, true, trgFnc)
+          if op=='map' then
+            r = map(source, trgFnc) -- {1,2,3} x f => {f(1),f(2),f(3)}
+
+          elseif op=='lambda' then
+            r = filter(source, trgFnc, false)
+
+          elseif op=='loop' then
+            r = loop(source, true, trgFnc)
+
           end
 
         --?-- Table x Table
         elseif trgTable then
-          if     op=='map'    then r = map(target, function(k,v) return source[v] end) -- _{4,5,6}^{3,1} -- {6,4}
-          elseif op=='lambda' then r = map(source, function(k,v) return function() return v(unpack(target)) end end)
-          --elseif op=='loop'   then r = -- TODO: Implement, probably {f,g}~{1,2} => {f(1), g(2)}
+          if op=='map' then
+            r = map(target, function(k,v) return source[v] end) -- _{4,5,6}^{3,1} -- {6,4}
+
+          elseif op=='lambda' then
+            r = map(source, function(k,v) return function() return v(unpack(target)) end end)
+
+          --elseif op=='loop' then r = nil -- TODO: Implement, probably {f,g}~{1,2} => {f(1), g(2)}
+
         end
 
         --?-- Table x Number|Boolean
         else
-          if     op=='map'    then
+          if op=='map' then
             local u = {} for k in pairs(source) do u[k]=target end r = u -- {1,2,3} x n => {n,n,n}
 
           elseif op=='lambda' then
@@ -386,7 +397,7 @@ q = function(t)
               r = map(source, function(k,v) return function(...) return v(target, ...) end end)
             end
 
-          elseif op=='loop'   then
+          elseif op=='loop' then
             r = loop(source, true, function(j) return j <= TONUMBER(target) end) -- TODO: Loop actually should call other function f(k,v), not call each element of Table
 
           end
@@ -395,23 +406,40 @@ q = function(t)
       else
         --?-- Function x Function|String
         if trgFnc then
-          if     op=='map'    then r = function(...) return source(trgFnc(...)) end -- f x g => f(g()) (Pipe)
-          elseif op=='lambda' then r = function(...) return trgFnc(source(...)) end -- f x g => g(f()) (Reversed Pipe)
-          elseif op=='loop'   then r = loop(source, false, trgFnc)
+          if op=='map' then
+            r = function(...) return source(trgFnc(...)) end -- f x g => f(g()) (Pipe)
+
+          elseif op=='lambda' then
+            r = function(...) return trgFnc(source(...)) end -- f x g => g(f()) (Reversed Pipe)
+
+          elseif op=='loop' then
+            r = loop(source, false, trgFnc)
+
           end
 
         --?-- Function x Table
         elseif trgTable then
-          if     op=='map'    then r = source(unpack(target)) -- f x {1,2,3} => f(1,2,3) (Unpack table)
-          elseif op=='lambda' then r = map(target, source) -- reversed map f x {a,b,c} => {f(a),f(b),f(c)}
-          --elseif op=='loop'   then r = -- TODO: Implement
+          if op=='map' then
+            r = source(unpack(target)) -- f x {1,2,3} => f(1,2,3) (Unpack table)
+
+          elseif op=='lambda' then
+            r = map(target, source) -- reversed map f x {a,b,c} => {f(a),f(b),f(c)}
+
+          --elseif op=='loop' then r = nil -- TODO: Implement
+
           end
 
         --?-- Function x Number|Boolean
         else
-          if     op=='map'    then r = QFnc(source)(source, target) -- f*1 => f(1)
-          elseif op=='lambda' then r = function(...) return source(target, ...) end
-          elseif op=='loop'   then r = loop(source, false, function(j) return j <= TONUMBER(target) end)
+          if op=='map' then
+            r = QFnc(source)(source, target) -- f*1 => f(1)
+
+          elseif op=='lambda' then
+            r = function(...) return source(target, ...) end
+
+          elseif op=='loop' then
+            r = loop(source, false, function(j) return j <= TONUMBER(target) end)
+
           end
 
         end
