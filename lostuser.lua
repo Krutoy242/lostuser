@@ -116,45 +116,25 @@ local function newArray(from, length)
   return arr
 end
 
---- For each t run f(k,v)
---- map({1,2,3}, (k,v)=>k,v*2) == {{1,2},{2,4},{3,6}}
----@param t table
----@param f function(k:integer, v:any): boolean
----@return table<integer, table<any,any>> f(k,v) will be wrapped into table
-local function map(t, f)
-  local r = {}
-  for k, v in pairs(t) do
-    r[k] = f(k, v)
-  end
-  return r
-end
-
 --- Filter table.
 --- Remove values for keys that not pass predicate
 --- {1, '', 3, 0, foo = false, goo=true}  / 'a1' => {1, 3, goo=true}
 --- {1, '', 3, 0, foo = false, goo=true} // 'a1' => {goo=true}
+--- For each t run f(k,v)
+--- map({1,2,3}, (k,v)=>k,v*2) == {{1,2},{2,4},{3,6}}
 ---@param t table
----@param f function
----@param checkNil? boolean skip only if preducate returned nil
-local function filter(t, f, checkNil)
+---@param f function(k:integer, v:any): boolean
+---@param isFilter? boolean filter instead of map
+---@return table<any, any> f(k,v) will be wrapped into table
+local function map(t, f, isFilter)
   local r = {}
   for k, v in pairs(t) do
     local res = f(k,v)
-    if checkNil and res ~= nil or truthy(res) then
-      r[k] = v
+    if isFilter then
+      if truthy(res) then r[k] = v end
+    else
+      r[k] = res
     end
-  end
-  return q(r)
-end
-
---- Turn table to one value
----@param t table
----@param f function
-local function reduce(qt, f)
-  local n,t = pairs(qt)
-  local k1,r = n(t)
-  for k, v in n,t,k1 do
-    r = f(q(r), v)
   end
   return r
 end
@@ -178,7 +158,6 @@ local function loop(self, isTbl, trgFnc)
   end
   return r
 end
-
 
 --[[
  ██████╗    ████████╗ █████╗ ██████╗ ██╗     ███████╗
@@ -299,13 +278,13 @@ end
 
 --- Generate helper functions
 ---@param target any Anything we targeting function to
----@param params string param names devided by comma
+---@param params? string param names devided by comma
 ---@return function, boolean
 local function getTarget(target, params)
   local tt = type(target)
   local trgFnc
   if tt == 'string' then
-    trgFnc = makeRunedFunction(target, params)
+    trgFnc = makeRunedFunction(target, params or 'k,v')
   elseif isCallable(target) then
     trgFnc = target
   end
@@ -357,7 +336,7 @@ q = function(t)
         swap = true
       end
 
-      local trgFnc, trgTable = getTarget(target, 'k,v')
+      local trgFnc, trgTable = getTarget(target)
       local r
 
       if not qIsCallable then
@@ -367,7 +346,7 @@ q = function(t)
             r = map(source, trgFnc) -- {1,2,3} x f => {f(1),f(2),f(3)}
 
           elseif op=='lambda' then
-            r = filter(source, trgFnc, false)
+            r = map(source, trgFnc, true)
 
           elseif op=='loop' then
             r = loop(source, true, trgFnc)
@@ -508,7 +487,6 @@ q = function(t)
   -----------------------------------------------------------------
 
   if qIsCallable then
-    -- mt.__pow = QFnc(t)
     mt.__call = QFnc(t)
     return setmetatable({}, mt)
   end
@@ -594,16 +572,6 @@ addMacro('⒯', '(true)')
 addMacro('⒡', '(false)')
 addMacro('∅', ' __trash=')
 
--- -- Syntax Sugar
--- local WRD = '[_%a][_%a%d]*'
--- for _,c in pairs{'%+','%-'} do
---   local from, to = '('..WRD..'[%._%a%d]*)('..c..')'..c, '(function() %1=TONUMBER(%1)%21 return %1 end)'
---   addMacro(from..c, to)
---   addMacro(from, to..'()')
--- end
-
--- -- TODO: Add *= += and stuff
-
 -----------------------------------------------------------------
 -- Captures {}
 -----------------------------------------------------------------
@@ -644,23 +612,23 @@ loadBody = function(code1, code2, chunkName)
 end
 
 __ENV.i = 0
-__ENV.l = true
+
+-- Recursively call functions that returned
+local function unfold(f)
+  local r = pack(safeCall(f))
+  for _,v in pairs(r) do
+    if isCallable(v) then unfold(v) end
+  end
+  return r
+end
+
 local runOnce
 run = function(input)
   local fnc = loadTranslated(input)
   while true do
-    -- Recursively call functions that returned
-    local function unfold(f)
-      local r = pack(safeCall(f))
-      for _,v in pairs(r) do
-        if isCallable(v) then unfold(v) end
-      end
-      return r
-    end
     local r = unfold(fnc)
     if runOnce then return unpack(r) end
     __ENV.i = __ENV.i + 1
-    __ENV.l = not __ENV.l
     if __ENV.i % 100 == 99 then __ENV.sleep(0.05) end
   end
 end
@@ -669,12 +637,7 @@ __ENV.write = function(...)
   if print then runOnce = true return print(...) end
   localError(tostring(q{...}), true)
 end
--- __ENV.truthy = truthy
--- __ENV.TONUMBER = TONUMBER
--- __ENV.proxy = function(name)
---   local p = component.list(name)()
---   return p and component.proxy(p) or nil
--- end
+
 __ENV.sleep = function(t)
   local u = computer.uptime
   local d = u() + (t or 1)
@@ -684,7 +647,7 @@ end
 
 --- Helper function
 __ENV._ = q(function(target)
-  local trgFnc, trgTable = getTarget(target, 'k,v')
+  local trgFnc, trgTable = getTarget(target)
   return q(trgFnc or target)
 end)
 
