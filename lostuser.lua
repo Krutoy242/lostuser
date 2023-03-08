@@ -112,7 +112,7 @@ end
 ---@return table<integer, any>
 local function newArray(from, length)
   local arr={}
-  for i=1,length do arr[i] = i-1+from end
+  for i=from,length-(1-from) do arr[i] = i end
   return arr
 end
 
