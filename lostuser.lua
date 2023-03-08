@@ -180,6 +180,22 @@ local function isCallable(t)
   return false
 end
 
+--- Turn table of tables into table [[1,2],[3,4]] => [1,2,3,4]
+---@param t table
+local function flatten(t)
+  local r = {}
+  for k, v in pairs(t) do
+    if type(v) == 'table' and not isCallable(v) then
+      for k, v in pairs(v) do
+        r[#r+1] = v
+      end
+    else
+      r[#r+1] = v
+    end
+  end
+  return r
+end
+
 --- Get first object field key by shortand
 ---@param short string
 ---@param obj table
@@ -431,6 +447,31 @@ q = function(t)
       return q(r)
     end
   end
+
+  --- Compute unary operator result based on different targets
+  ---@param op string operator identifier
+  ---@return any
+  local function unary(op)
+    return function(source)
+
+      local r
+
+      if not qIsCallable then
+        --?-- Table
+        if op=='lambda' then
+          r = flatten(t)
+        -- elseif op=='map' then
+        --   r = map(t, function(k,v)return truthy(v) end, true)
+        end
+      else
+        --?-- Function
+        if op=='lambda' then
+          repeat until not truthy(source())
+        end
+      end
+      return q(r)
+    end
+  end
   --############################################################
 
   local mt = {
@@ -442,9 +483,9 @@ q = function(t)
   --[[ ^ ]] mt.__pow = generic'map'
 
   -- 2 --
-  -- [[ - ]] mt.__unm = generic'??', -- Filter falsy
-  -- [[ ~ ]] mt.__bnot = generic'??', -- Probably do while truthy, `sortBy`
-  -- [[ # ]] mt.__len = generic'??', -- Probably `tostring()` OR `flat()`
+  -- [[ - ]] mt.__unm = generic'map'
+  --[[ ~ ]] mt.__bnot = unary'lambda'
+  -- [[ # ]] mt.__len = generic'??' -- Probably `tostring()` OR `flat()`
 
   -- 3 --
   -- [[ * ]] mt.__mul = generic'??'

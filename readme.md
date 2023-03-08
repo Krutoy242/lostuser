@@ -22,6 +22,7 @@ Robot (or drone!) BIOS program for Minecraft OpenComputers mod.
     - [Map `^` or `&`](#map--or-)
     - [Lambda `-` `/` `|`](#lambda----)
     - [Loop `~` or `..`](#loop--or-)
+    - [Unary](#unary)
     - [Truthy](#truthy)
   - [Macros](#macros)
   - [Examples](#examples)
@@ -202,7 +203,7 @@ Low dash `_` is special helper function.
   If first digit is `0` - table will be zero-based
   > ```lua
   > _8  -- return {1,2,3,4,5,6,7,8}
-  > _08 -- return {0,1,2,3,4,5,6,7}
+  > _08 -- return {[0]=0,1,2,3,4,5,6,7}
   > ```
 
 - **Using `_` on string**  
@@ -467,6 +468,49 @@ f~n -- for j=1,TONUMBER(n) do f(j) end
 </td></tr>
 </table>
 
+<!--
+██╗   ██╗███╗   ██╗ █████╗ ██████╗ ██╗   ██╗
+██║   ██║████╗  ██║██╔══██╗██╔══██╗╚██╗ ██╔╝
+██║   ██║██╔██╗ ██║███████║██████╔╝ ╚████╔╝ 
+██║   ██║██║╚██╗██║██╔══██║██╔══██╗  ╚██╔╝  
+╚██████╔╝██║ ╚████║██║  ██║██║  ██║   ██║   
+ ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   
+-->
+
+### Unary
+
+<table>
+<tr>
+  <th>Unary</th><th>Object</th><th>Result</th>
+</tr>
+
+<tr><td rowspan=2>
+
+`~`</td><td>Function</td><td>
+
+While truthy do
+```lua
+~f -- repeat until not truthy(f())
+```
+
+</td></tr>
+<tr><td>Table</td><td>
+
+Flatten table, using numerical indexes.
+
+> - Order of elements can be different
+> - All keys of table would be converted to inexed
+> - Only 1 level of flattening
+
+```lua
+~_{1,{2,3},{4,a=5,b={6,c=7}}}
+-- {1,2,3,4,5,{6,c=7}}
+```
+
+</td></tr>
+
+</table>
+
 ### Truthy
 
 Value considered as `truthy` if its not `falsy`.
@@ -476,7 +520,7 @@ Value considered as `truthy` if its not `falsy`.
 1. `false` or `nil`
 2. `''` empty string
 3. `0` number zero
-4. `nan` not a number (`v~=v`)
+4. `nan` not a number (`n~=n`)
 5. `inf` or `-inf` (result of `1/0` or `-1/0`)
 
 ## Macros
@@ -555,11 +599,12 @@ Example:
 
   Robot name:
   ```lua
-  Tg0/'v.tr0',_'Rsel(k)Rd(3)'~16,_08/'IsF(v//4,v%4+1)'
+  Tg0/'~v.tr',Rsel-Rd/3/q~16,_08/'IsF(k//4,k%4+2)'
   ```
-  * `Tg0/'v.tr0'`: Trade all trades
-  * `_08/'IsF(v//4,v%4+1)'`: Suck 4 slots from top and bottom
-  * `_'Rsel(k)Rd(3)'~16`: Dump everything front
+  * `~v.tr`: Call `trade()` while it returns true.
+  * `Tg0/'_~v.tr'`: Trade all trades.
+  * `_08/'IsF(v//4,v%4+2)'`: Suck 4 slots from top and bottom. Note that 2x2 drawers accessible slots is 2 - 5.
+  * `Rsel-Rd/3/q~16`: Select each slot and dump front
 
 - **Rune maker**
 

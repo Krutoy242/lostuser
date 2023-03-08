@@ -42,9 +42,7 @@ local function serialize(val, name)
 
   if name then s = s .. name .. "=" end
 
-  --[[ if type(val) == "table" and getmetatable(val).__call then
-    tmp = tmp .. 'f()'
-  else ]]if type(val) == "table" then
+  if type(val) == "table" then
     s = s .. "{"
 
     local i = 1
@@ -159,7 +157,8 @@ getTrades = function() return {
   {trade=function()return 'v','w' end, isEnabled=function()return true end},
 } end}
 
-test('      Shortand _03', shouldOutput("_03",                    '{q}{1=0,2=1,3=2}'))
+test('      Shortand  _3', shouldOutput("_3",                     '{q}{1=1,2=2,3=3}'))
+test('      Shortand _03', shouldOutput("_03",                    '{q}{1=1,2=2,0=0}'))
 test('Map:     Tbl x Fnc', shouldOutput("Tg!^'v.t!'",             '{q}{1=t,2=v}'))
 test('Map:     Tbl x Num', shouldOutput("T^2",                    '{q}{1=2,2=2,3=2,exp=2,getTrades=2}'))
 test('Map:     Fnc x Num', shouldOutput("Te/3&4",                 '81.0'))
@@ -167,6 +166,8 @@ test('Map:     Fnc x Tbl', shouldOutput("Te^{4,5}",               '1024.0'))
 test('     Truthy Filter', shouldOutput("(T/'v.t')^'v.n'",        '{q}{2=n2}'))
 test('          Replaces', shouldOutput("ⓡ⒯ⓐⓝ⒡ⓞ⒡",           'true'))
 test('            Macros', shouldOutput("`Z..i`T..(i+1)`''TZT",  '101'))
+test('          Unary ~T', shouldOutput("~_{1,{2,3},{4,a=5,b=_{6,c=7}}}", '{q}{1=1,2=2,3=3,4=4,5=5,6={q}{1=6,c=7}}'))
+test('          Unary ~F', shouldPrint("~_'i=i+1ⓡi<3',w(i)", '3'))
 
 
 local mi = 3
@@ -233,17 +234,20 @@ _4*"Ru^0,_12*'Rm^3'",_2*'Rtn⒯',_80*'Rsel^v,Rd^0',s^120
 
 ? Drone sapling planter
 x,z=i%8,i%64//8 u={x,0,z} -- Coords base on `i` variable
-Gsn(x,z)[32]==0 -- Is air 1 layer down
+Gs(x,z)[32]==0 -- Is air 1 layer down
 _'Dm(v[1],0,v[2]),s!,Dp0'/{u,u*'-v'} -- Move to point, place, and come back
 
-x,z=i%8,i%64//8 u={x,0,z}∅_"_'Dm*u,s!,Dp0'/{u,u*'-v'}"~'Gsn(x,z)[32]'
-Gsn(1,1,-1,8,8,1)*"v~=0ⓞ_'Dm(k,0,v)s!Dp(0)Dm(-k,0,-v)s!'(k%8,k/8)"
+x,z=i%8,i%64//8 u={x,0,z}∅_"_'Dm*u,s!,Dp0'/{u,u*'-v'}"~'Gs(x,z)[32]'
+Gs(1,1,-1,8,8,1)*"v~=0ⓞ_'Dm(k,0,v)s!Dp(0)Dm(-k,0,-v)s!'(k%8,k/8)"
 
 ? Robot sorting mob drop
-_'O=IgSI(0,k)IsF(0,k)Rd((OⓐOmDⓐOmD>0)ⓐ1ⓞ3)'~IgvS0
+_'O=IgSI(0,k)IsF(0,k)Rd((OⓐOmDⓐOmD>0)ⓐ1ⓞ3)'~Igz0
+
+? Cat opener
+Rsk(3,16)ⓐIe!,_~'Ru0',Rsel-Rd/3/q~16
 
 ? Compressing bot
-Cc0
+Rsel-Rd/3/q~16,IsF/3/'_11/8/4&Rc!/9/RtT'/(i%Igz3+1),Cc // dump, suck, spread, craft
 
 ?========================================================
 
@@ -260,15 +264,17 @@ IsF(3,k) // Suck from slot
 // Suck and spread each i
 IsF/3/'_11/8/4&Rc!/9/RtT'/(i%Igz3+1)
 
-_16/Rc/'Rsel^k,Rd3' // Select non-empty slots and dump them
-
-_16/Rc/'Rsel^k,Rd3',IsF/3/'_11/8/4&Rc!/9/RtT'/(i%Igz3+1),Cc // dump, suck, spread, craft
+? New trader
+o[IgI(3,k).n]ⓐIsF/3&k // If we need this item - suck it
+Tg0^'_{v.g!}^"o[v.n]=⒯"' // List of all required item names
+Tg0^'_{v.g!}^"o[v.n]=⒯"',_'o[IgI(3,k).n]ⓐIsF/3&k'~Igz3,Tg0/'~v.tr',Rsel-Rd/3/q~16
 
 ? inventory_controller:
 
 equip
 store
 dropIntoSlot
+getAllStacks
 suckFromSlot
 compareStacks
 storeInternal
@@ -314,6 +320,15 @@ compareFluidTo
 block_activated
 item_interacted
 transferFluidTo
+
+? geolyzer
+
+scan
+store
+detect
+analyze
+canSeeSky
+isSunVisible
 
 ]]
 
