@@ -599,12 +599,15 @@ Example:
 
   Robot name:
   ```lua
-  Tg0/'~v.tr',Rsel-Rd/3/q~16,_08/'IsF(k//4,k%4+2)'
+  Rsel-Rd/0/q~RiS0,IsF/0~Igz0,Tg0/'~tr'
   ```
-  * `~v.tr`: Call `trade()` while it returns true.
-  * `Tg0/'_~v.tr'`: Trade all trades.
-  * `_08/'IsF(v//4,v%4+2)'`: Suck 4 slots from top and bottom. Note that 2x2 drawers accessible slots is 2 - 5.
-  * `Rsel-Rd/3/q~16`: Select each slot and dump front
+  * `Rsel-Rd/0/q~RiS0`: Select each slot and dump bottom
+    > - `Rd/0/q`: is a function that would call `robot.drop(0, q)` when executed. Note that there is a trick: `q` is undefined global that we used an shortand for `nil`
+    > - `RiS0`: is shortand for `robot.inventorySize(0)`. Note that this function not using any arguments so we could call it with `0`
+    > - `Rsel`: `robot.select` shortand. Note that we used `-` operator here, that is same as `/` but have lower precedence
+  * `IsF/0~Igz0`: For each slot of inventory on the bottom `inventory_controller.getInventorySize(0)` call `inventory_controller.suckFromSlot(0, k)`
+  * `Tg0/'~tr'`: Trade all trades.
+    > - `~tr`: Call `trade()` while it returns true. Note that inside this function, all arguments exposed as global, so we could acces `trade` as global (actually, its `upvalue`)
 
 - **Rune maker**
 
