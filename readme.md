@@ -214,7 +214,7 @@ Low dash `_` is special helper function.
   > Note that in this example, the `_` function returns two values - the `robot.move` function and the result `sleep(2)`. Only when we call the returned values a second time, `robot.move(0)` called
 
 - **Using `_` on *table* or *function***  
-  Will convert them into `{q}` table or `{q}` function to use with [Functional Programming](#functional-programming)
+  Will convert them into `_{}` table or `_''` function to use with [Functional Programming](#functional-programming)
   > ```lua
   >  {1,2}^1 -- would error
   > _{1,2}^1 -- would return {1,1} (see Functional Programming)
@@ -222,7 +222,7 @@ Low dash `_` is special helper function.
 
 ## Functional Programming
 
-Any table or function that you can get from a global will be converted into special `{q}` table. 
+Any table or function that you can get from a global will be converted into special `_{}` table. 
 
 This table enchanced with additional operator metamethods that helps with functional-style programming.
 

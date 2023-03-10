@@ -92,8 +92,10 @@ end
 ---@return string
 local function serialize(t)
   if type(t)~='table' then return tostring(t) end
-  local s=''
-  for k,v in pairs(t) do s=s..(s==''and''or',')..tostring(k)..'='..tostring(v)end
+  local s,keys='',{}
+  local function append(l) s=s..(s==''and''or',')..l end
+  for i=1,#t do append(tostring(t[i]))keys[i]=true end
+  for k,v in pairs(t) do if not keys[k] then append(tostring(k)..'='..tostring(v)) end end
   return s
 end
 
@@ -476,7 +478,7 @@ q = function(t)
 
   local mt = {
     __q = true,
-    __tostring = function() return '{q}'..(qIsCallable and tostring(t) or '{'..serialize(t)..'}') end,
+    __tostring = function() return '_'..(qIsCallable and tostring(t) or '{'..serialize(t)..'}') end,
   }
 
   -- 1 --
