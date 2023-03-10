@@ -22,9 +22,11 @@ https://github.com/Krutoy242/lostuser
 local pack, unpack, run, loadBody, q, Q = table.pack, table.unpack
 
 -- If we run from OpenOS
+---MINIFY{{
 if require then
   component, computer = require'component', require'computer'
 end
+---}}
 
 -- Define all components as big letter global, short names first
 do
@@ -46,25 +48,20 @@ end
 -- end
 
 
+--- Remove `%` symbol from chat log since its cause an error FML error
+--- [Client thread/ERROR] [FML]: Exception caught during firing event net.minecraftforge.client.event.ClientChatReceivedEvent@3e83e9ca:
+--- net.minecraft.util.text.TextComponentTranslationFormatException: Error parsing
 local function escape(s) return s:gsub('%%','%%%%') end
 
 --- Signal that we have error
 ---@param err string
 ---@param skipTraceback? string
 local function localError(err, skipTraceback)
-  if computer then computer.beep(1800, 1) end
-  error(
-    -- Fix FML error
-    -- [Client thread/ERROR] [FML]: Exception caught during firing event net.minecraftforge.client.event.ClientChatReceivedEvent@3e83e9ca:
-    -- net.minecraft.util.text.TextComponentTranslationFormatException: Error parsing
-    escape(
-      tostring(err)
-      -- skipTraceback and tostring(err) or debug.traceback(err)
-    )
-    -- tostring(err)
-    -- :sub(1, 400)
-    -- os.exit(1)
-  , 1)
+  if computer then computer.beep(1800, 0.5) end
+  error(escape(
+    tostring(err)
+    -- skipTraceback and tostring(err) or debug.traceback(err)
+  ), 1)
 end
 
 --- Check if value is truthy
@@ -82,8 +79,7 @@ end
 
 local function TONUMBER(a)
   local t = type(a)
-  if t=='number' then return a end
-  if t=='string' then return tonumber(a) end
+  if t=='number' or t=='string' then return tonumber(a) end
   return truthy(a) and 1 or 0
 end
 
@@ -598,10 +594,10 @@ end
 
 local function loadTranslated(text)
   local code = translate(text)
-  if code == nil or code:match('^%s*$') then
-    localError('Unable to translate: '..text)
-    return nil
-  end
+  -- if code == nil or code:match('^%s*$') then
+  --   localError('Unable to translate: '..text)
+  --   return nil
+  -- end
   return loadBody('return '..code, code, text)
 end
 
@@ -696,8 +692,8 @@ __ENV.i = 0
 -- Recursively call functions that returned
 local function unfold(f)
   local r = pack(safeCall(f))
-  for _,v in pairs(r) do
-    if isCallable(v) then unfold(v) end
+  for i=1,r.n do
+    if r[i] and isCallable(r[i]) then unfold(r[i]) end
   end
   return r
 end
@@ -726,10 +722,10 @@ __ENV.sleep = function(t)
 end
 
 --- Helper function
-__ENV._ = q(function(target)
+__ENV._ = function(target)
   local trgFnc, trgTable = getTarget(target)
   return q(trgFnc or target)
-end)
+end
 
 -- Get value from global
 __ENV.api = function(s, p)

@@ -26,6 +26,7 @@ wget -f https://raw.githubusercontent.com/Krutoy242/lostuser/main/lostuser.lua &
 ]]
 
 local lu
+local gpu = require('component').gpu
 
 print'\n< LostUser tests >\n'
 
@@ -125,9 +126,20 @@ local function toVisibleString(str)
 end
 
 local function test(description, fn)
-  io.write('■ '..description..': ')
+  gpu.setForeground(0x005599)
+  io.write('■ ')
+  gpu.setForeground(0x999999)
+  io.write(description..': ')
   local succes, result = fn()
-  io.write((succes and '✔' or ('❌\n> ❪' .. toVisibleString(result).. '❫')) .. '\n')
+  if succes then
+    gpu.setForeground(0x009955)
+    io.write('✔')
+  else
+    gpu.setForeground(0xdd5555)
+    io.write('❌\n> ❪' .. toVisibleString(result).. '❫')
+  end
+  gpu.setForeground(0xffffff)
+  io.write('\n')
   printedMessage = ''
 end
 
@@ -156,6 +168,7 @@ getTrades = function() return {
   {trade=function()return 't','u' end, isEnabled=function()return false end},
   {trade=function()return 'v','w' end, isEnabled=function()return true end},
 } end}
+_G.trading = _G.T
 
 test('      Shortand  _3', shouldOutput("_3",                     '_{1,2,3}'))
 test('      Shortand _03', shouldOutput("_03",                    '_{1,2,0=0}'))
