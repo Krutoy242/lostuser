@@ -157,18 +157,17 @@ getTrades = function() return {
   {trade=function()return 'v','w' end, isEnabled=function()return true end},
 } end}
 
-test('      Shortand  _3', shouldOutput("_3",                     '{q}{1=1,2=2,3=3}'))
-test('      Shortand _03', shouldOutput("_03",                    '{q}{1=1,2=2,0=0}'))
-test('Map:     Tbl x Fnc', shouldOutput("Tg!^'v.t!'",             '{q}{1=t,2=v}'))
-test('Map:     Tbl x Num', shouldOutput("T^2",                    '{q}{1=2,2=2,3=2,exp=2,getTrades=2}'))
+test('      Shortand  _3', shouldOutput("_3",                     '_{1,2,3}'))
+test('      Shortand _03', shouldOutput("_03",                    '_{1,2,0=0}'))
+test('Map:     Tbl x Fnc', shouldOutput("Tg!^'tr!'",              '_{t,v}'))
+test('Map:     Tbl x Num', shouldOutput("T^2",                    '_{2,2,2,exp=2,getTrades=2}'))
 test('Map:     Fnc x Num', shouldOutput("Te/3&4",                 '81.0'))
 test('Map:     Fnc x Tbl', shouldOutput("Te^{4,5}",               '1024.0'))
-test('     Truthy Filter', shouldOutput("(T/'v.t')^'v.n'",        '{q}{2=n2}'))
+test('     Truthy Filter', shouldOutput("(T/'tk')^'n'",           '_{2=n2}'))
 test('          Replaces', shouldOutput("ⓡ⒯ⓐⓝ⒡ⓞ⒡",           'true'))
 test('            Macros', shouldOutput("`Z..i`T..(i+1)`''TZT",  '101'))
-test('          Unary ~T', shouldOutput("~_{1,{2,3},{4,a=5,b=_{6,c=7}}}", '{q}{1=1,2=2,3=3,4=4,5=5,6={q}{1=6,c=7}}'))
+test('          Unary ~T', shouldOutput("~_{1,{2,3},{4,a=5,b=_{6,c=7}}}", '_{1,2,3,4,5,_{6,c=7}}'))
 test('          Unary ~F', shouldPrint("~_'i=i+1ⓡi<3',w(i)", '3'))
-
 
 local mi = 3
 _G.R = {
@@ -177,7 +176,7 @@ _G.R = {
 }
 
 test('Lambda:      T x T', shouldPrint("_{Rm,Rsw}/{3}~2,w!", '🡢⇒🡢⇒'))
-test('Lambda:      T x N', shouldOutput("_3-2"             , '{q}{1=1,3=3}'))
+test('Lambda:      T x N', shouldOutput("_3-2"             , '_{1,3=3}'))
 
 mi = 3
 test('        While loop', shouldPrint("_..'Rm3',w!", '🡢🡢🡢'))

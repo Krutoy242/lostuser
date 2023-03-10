@@ -99,6 +99,20 @@ local function serialize(t)
   return s
 end
 
+--- Create new table with members from first one plus second one
+--- If second table not provided - just copy forst one
+---@param a table
+---@param b? table
+---@return string
+-- local function merge(a,b)
+--   local t = {}
+--   for k, v in pairs(a) do t[k] = v end
+--   if b then
+--     for k, v in pairs(b) do t[k] = v end
+--   end
+--   return t
+-- end
+
 --[[
 ███████╗██╗   ██╗███╗   ██╗ ██████╗████████╗██╗ ██████╗ ███╗   ██╗ █████╗ ██╗
 ██╔════╝██║   ██║████╗  ██║██╔════╝╚══██╔══╝██║██╔═══██╗████╗  ██║██╔══██╗██║
@@ -289,9 +303,10 @@ end
 ---@param txt string Lua code to load as function body
 ---@param params string param names devided by comma
 local function makeRunedFunction(txt, params)
-  local p1,p2 = 'return function(...) local '.. params ..' = ... ',txt..' end'
-  local loaded = loadBody(p1..'return '..p2, p1..p2, txt)
-  return function(...) return safeCall(loaded(), ...) end
+  local p1, p2 = 'return function(...)local '.. params ..'=... ', txt..' end'
+  return function(...) return safeCall(
+    loadBody(p1..'return '..p2, p1..p2, txt, ...)(), ...
+  ) end
 end
 
 --- Generate helper functions
@@ -645,13 +660,35 @@ addMacro('!', '()')
 -- Global environment inside loaded code
 local __ENV = q(_G)
 
-loadBody = function(code1, code2, chunkName)
-  local res, err = load(code1, chunkName, nil, __ENV)
-  if err then
-    res, err = load(code2, chunkName, nil, __ENV)
+--- Attempt to load code1 or code2
+---@param code1 string
+---@param code2 string
+---@param chunkName string
+loadBody = function(code1, code2, chunkName, ...)
+  local t
+
+  -- If we have table parameters that need to be exposed
+  -- add them to upvalue
+  local expose = pack(...)
+  if expose.n > 0 then
+    t = q{}
+    for k, v in pairs(__ENV) do t[k] = v end
+    for k, v in pairs(expose) do
+      if type(v) == 'table' then
+        for k, v in pairs(v) do t[k] = v end
+      end
+    end
+    -- for k, v in pairs(t) do print(' '..k)end
+  else
+    t = __ENV
   end
-  if err then localError(err) end
-  return res
+
+  -- Load
+  local res, err = load(code1, chunkName, nil, t)
+  if err then
+    res, err = load(code2, chunkName, nil, t)
+  end
+  return err and localError(err) or res
 end
 
 __ENV.i = 0
