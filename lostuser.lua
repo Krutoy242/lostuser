@@ -21,8 +21,8 @@ https://github.com/Krutoy242/lostuser
 -- Forward declarations
 local pack, unpack, run, loadBody, q, Q = table.pack, table.unpack
 
--- If we run from OpenOS
 ---MINIFY{{
+-- If we run from OpenOS
 if require then
   component, computer = require'component', require'computer'
 end
@@ -698,19 +698,25 @@ local function unfold(f)
   return r
 end
 
+---MINIFY{{
 local runOnce
+---}}
 run = function(input)
   local fnc = loadTranslated(input)
   while true do
     local r = unfold(fnc)
+    ---MINIFY{{
     if runOnce then return unpack(r) end
+    ---}}
     __ENV.i = __ENV.i + 1
     if __ENV.i % 100 == 99 then __ENV.sleep(0.05) end
   end
 end
 
 __ENV.write = function(...)
+  ---MINIFY{{
   if print then runOnce = true return print(...) end
+  ---}}
   localError(tostring(q{...}), true)
 end
 
@@ -744,14 +750,18 @@ end
 -- Assemble
 -----------------------------------------------------------------
 
-local pointer, shellArg, prog = R or D
+local pointer, prog = R or D
+
+---MINIFY{{
+local shellArg
 shellArg, runOnce = ...
 
 -- Program is called from shell
-if shellArg then prog = shellArg
+if shellArg then prog = shellArg end
+---}}
 
 -- Program defined by Robot/Drone name
-elseif pointer and pointer.name then prog = pointer.name() end
+if pointer and pointer.name then prog = pointer.name() end
 
 if not prog or prog=='' then localError'No program defined' end
 
