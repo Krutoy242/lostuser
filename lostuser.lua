@@ -737,15 +737,7 @@ end
 
 -- Get value from global
 __ENV.api = function(s, p)
-  if p==nil then p = _G end
-  local t,k = {}
-  for c in s:gmatch'[^.]+' do
-    if p==nil or type(p)=='function' then break end
-    k = getKey(c, p)
-    p = p[k]
-    t[#t+1] = k
-  end
-  return table.concat(t,'.')
+  return __ENV.write(getKey(s, p or _G))
 end
 
 -----------------------------------------------------------------
