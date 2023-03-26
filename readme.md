@@ -220,6 +220,15 @@ Low dash `_` is special helper function.
   > _{1,2}^1 -- would return {1,1} (see Functional Programming)
   > ```
 
+- **Using `_` with 2 or 3 arguments**  
+  Return second argument if first one is [truthy](#truthy), third otherwise
+  ```lua
+  _(predicate, onTruthy, other?)
+  ```
+  ```lua
+  if truthy(predicate) then return onTruthy else return other end
+  ```
+
 ## Functional Programming
 
 Any table or function that you can get from a global will be converted into special `_{}` table. 

@@ -194,6 +194,7 @@ test('Lambda:      T x N', shouldOutput("_3-2"             , '_{1,3=3}'))
 mi = 3
 test('        While loop', shouldPrint("_..'Rm3',w!", '🡢🡢🡢'))
 test('       Conditional', shouldPrint("`SRsw(i)`MRm(3)` _'M,S'!ⓐ_'SS'!,w!", '🡢⇓'))
+test('          _(p,a,b)', shouldOutput("_(0,2,3)+_(1,4,5)", '7'))
 
 
 _G.G = {
@@ -254,7 +255,7 @@ Gs(1,1,-1,8,8,1)*"v~=0ⓞ_'Dm(k,0,v)s!Dp(0)Dm(-k,0,-v)s!'(k%8,k/8)"
 a=-1,Gs_11a881
 _6^1
 
-? Robot sorting mob drop
+? Robot sorting mob drop. Take from bottom, damagable items to top, other - forward
 Rd/_(IsF(0,i%Igz0+1)ⓐIgSII!.mD,1,3)
 
 ? Cat opener

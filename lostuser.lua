@@ -730,7 +730,11 @@ __ENV.sleep = function(t)
 end
 
 --- Helper function
-__ENV._ = function(target)
+__ENV._ = function(target, ...)
+  local args = table.pack(...)
+  if args.n > 0 then
+    if truthy(target) then return args[1] else return args[2] end
+  end
   local trgFnc, trgTable = getTarget(target)
   return q(trgFnc or target)
 end
