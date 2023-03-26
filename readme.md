@@ -147,8 +147,8 @@ Additional globals:
 
 - `i` - current loop index, starting from 0
 - `sleep(seconds: number = 1)`
-- `api(shortName: string, obj?: table)` - output long name of shortand
 - `write(...)` - error with serialized output
+- `api(shortName: string, obj?: table)` - write long name of shortand
 
 ## Shortening
 

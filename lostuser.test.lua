@@ -251,17 +251,24 @@ _'Dm(v[1],0,v[2]),s!,Dp0'/{u,u*'-v'} -- Move to point, place, and come back
 
 x,z=i%8,i%64//8 u={x,0,z}∅_"_'Dm*u,s!,Dp0'/{u,u*'-v'}"~'Gs(x,z)[32]'
 Gs(1,1,-1,8,8,1)*"v~=0ⓞ_'Dm(k,0,v)s!Dp(0)Dm(-k,0,-v)s!'(k%8,k/8)"
+a=-1,Gs_11a881
+_6^1
 
 ? Robot sorting mob drop
-_'O=IgSI(0,k)IsF(0,k)Rd((OⓐOmDⓐOmD>0)ⓐ1ⓞ3)'~Igz0
+Rd/_(IsF(0,i%Igz0+1)ⓐIgSII!.mD,1,3)
 
 ? Cat opener
-Rsk(3,16)ⓐIe!,_~'Ru0',Rsel-Rd/3/q~16
+Rsk/3&16ⓐIe!,~_'Ru0',_16/Rc|Rsel-Rd/1/q
 
 ? Compressing bot
-Rsel-Rd/3/q~16,IsF/3/'_11/8/4&Rc!/9/RtT'/(i%Igz3+1),Cc // dump, suck, spread, craft
+_16|Rc|Rsel-'Rd0ⓞRd3',IsF/3/'_11/8/4&Rc!/9/RtT'|i%Igz3+1,Cc
+
+? Trader variant
+Rsel-Rd/0/q~RiS0,IsF/0~Igz0,_"Tg0^'tr!'"~5
 
 ?========================================================
+
+?  📝~📝 
 
 // Spread
 _11/8/4&Rc!/9/RtT // F(k) k: number of items in selected slot
@@ -295,6 +302,7 @@ getInventorySize
 getSlotStackSize
 compareToDatabase
 getSlotMaxStackSize
+getItemInventorySize
 getStackInInternalSlot
 
 ? robot:

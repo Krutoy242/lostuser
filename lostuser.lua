@@ -372,7 +372,7 @@ q = function(t)
         --?-- Table x Function|String
         if trgFnc then
           if op=='map' then
-            r = map(source, trgFnc) -- {1,2,3} x f => {f(1),f(2),f(3)}
+            r = map(source, trgFnc)
 
           elseif op=='lambda' then
             r = map(source, trgFnc, true)
@@ -390,14 +390,16 @@ q = function(t)
           elseif op=='lambda' then
             r = map(source, function(k,v) return function() return v(unpack(target)) end end)
 
-          --elseif op=='loop' then r = nil -- TODO: Implement, probably {f,g}~{1,2} => {f(1), g(2)}
+          --elseif op=='loop' then r = nil -- TODO: Implement, probably merge, union, intersection
+          -- _{1,2,a=3}~{a=4,5,6} => {1,2,3,4,5,6}
+          -- _2~_3 => {1,2,1,2,3}
 
         end
 
         --?-- Table x Number|Boolean
         else
           if op=='map' then
-            local u = {} for k in pairs(source) do u[k]=target end r = u -- {1,2,3} x n => {n,n,n}
+            local u = {} for k in pairs(source) do u[k]=target end r = u
 
           elseif op=='lambda' then
             if swap then
@@ -416,10 +418,10 @@ q = function(t)
         --?-- Function x Function|String
         if trgFnc then
           if op=='map' then
-            r = function(...) return source(trgFnc(...)) end -- f x g => f(g()) (Pipe)
+            r = function(...) return source(trgFnc(...)) end
 
           elseif op=='lambda' then
-            r = function(...) return trgFnc(source(...)) end -- f x g => g(f()) (Reversed Pipe)
+            r = function(...) return trgFnc(source(...)) end
 
           elseif op=='loop' then
             r = loop(source, false, trgFnc)
@@ -441,7 +443,7 @@ q = function(t)
         --?-- Function x Number|Boolean
         else
           if op=='map' then
-            r = QFnc(source)(source, target) -- f*1 => f(1)
+            r = QFnc(source)(source, target)
 
           elseif op=='lambda' then
             if swap then
@@ -717,7 +719,7 @@ __ENV.write = function(...)
   ---MINIFY{{
   if print then runOnce = true return print(...) end
   ---}}
-  localError(tostring(q{...}), true)
+  localError(q{...}, true)
 end
 
 __ENV.sleep = function(t)
