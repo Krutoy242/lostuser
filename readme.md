@@ -618,6 +618,11 @@ Example:
   * `Tg0/'~tr'`: Trade all trades.
     > - `~tr`: Call `trade()` while it returns true. Note that inside this function, all arguments exposed as global, so we could acces `trade` as global (actually, its `upvalue`)
 
+  There is another variant of robot name, that would trade all trades 5 times before continue cycle:
+  ```lua
+  Rsel-Rd/0/q~RiS0,IsF/0~Igz0,_"Tg0^'tr!'"~5
+  ```
+
 - **Rune maker**
 
   > Required upgrades: *Inventory*, *Inventory Controller*
@@ -653,6 +658,23 @@ Example:
   * `Rsw3,s^2`: Cut whole tree
   * `Rsk(0,1),Ie!,Ru3,Ie!`: Plant 1 sapling
   * `Ru3,s`: Fertilize sapling
+
+- **Other examples**
+
+  * *Robot sorting mob drop*. Take from bottom, damagable items to top, other - forward
+    ```lua
+    Rd/_(IsF(0,i%Igz0+1)ⓐIgSII!.mD,1,3)
+    ```
+
+  * *Cat opener*. Takes 16 items in front, right-click them and then dump inventory top
+    ```lua
+    Rsk/3&16ⓐIe!,~_'Ru0',_16/Rc|Rsel-Rd/1/q
+    ```
+
+  * *Compressing bot*. Takes from front, craft 3x3 them, dump buttom or forward.
+    ```lua
+    _16|Rc|Rsel-'Rd0ⓞRd3',IsF/3/'_11/8/4&Rc!/9/RtT'|i%Igz3+1,Cc
+    ```
 
 
 ## Links

@@ -237,8 +237,8 @@ test('   Drone waypoints', shouldPrint(
 --[[
 
 
-? Circular miner
-Gi!,_{Rm,Rsw}/{3}~i*3,Rtn⒯
+? Circular miner. Gi! burn fuel in first slot
+Gi!,_'Rm3,Rsw3'~i*3,Rtn⒯
 
 ! Other programs
 
@@ -255,34 +255,7 @@ Gs(1,1,-1,8,8,1)*"v~=0ⓞ_'Dm(k,0,v)s!Dp(0)Dm(-k,0,-v)s!'(k%8,k/8)"
 a=-1,Gs_11a881
 _6^1
 
-? Robot sorting mob drop. Take from bottom, damagable items to top, other - forward
-Rd/_(IsF(0,i%Igz0+1)ⓐIgSII!.mD,1,3)
-
-? Cat opener
-Rsk/3&16ⓐIe!,~_'Ru0',_16/Rc|Rsel-Rd/1/q
-
-? Compressing bot
-_16|Rc|Rsel-'Rd0ⓞRd3',IsF/3/'_11/8/4&Rc!/9/RtT'|i%Igz3+1,Cc
-
-? Trader variant
-Rsel-Rd/0/q~RiS0,IsF/0~Igz0,_"Tg0^'tr!'"~5
-
 ?========================================================
-
-?  📝~📝 
-
-// Spread
-_11/8/4&Rc!/9/RtT // F(k) k: number of items in selected slot
-
-// F(k) Suck and spread items
-// k: external slot
-IsF/3/'_11/8/4&Rc!/9/RtT'
-
-Igz3 // Number of slots in front
-IsF(3,k) // Suck from slot
-
-// Suck and spread each i
-IsF/3/'_11/8/4&Rc!/9/RtT'/(i%Igz3+1)
 
 ? New trader
 o[IgI(3,k).n]ⓐIsF/3&k // If we need this item - suck it
