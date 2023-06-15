@@ -55,13 +55,13 @@ local function escape(s) return s:gsub('%%','%%%%') end
 
 --- Signal that we have error
 ---@param err string
----@param skipTraceback? string
+---@param skipTraceback? number
 local function localError(err, skipTraceback)
   if computer then computer.beep(1800, 0.5) end
   error(escape(
-    tostring(err)
+    tostring(err):gsub('%[string ".+"%]:%d+: ', '')
     -- skipTraceback and tostring(err) or debug.traceback(err)
-  ), 1)
+  ), 0)
 end
 
 --- Check if value is truthy
@@ -719,7 +719,7 @@ __ENV.write = function(...)
   ---MINIFY{{
   if print then runCount = 0 return print(...) end
   ---}}
-  localError(q{...}, true)
+  localError(q{...}, 0)
 end
 
 __ENV.sleep = function(t)
