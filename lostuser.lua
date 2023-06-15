@@ -118,20 +118,9 @@ end
 ╚═╝      ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝   ╚═╝   ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝
 ]]
 
---- Create new table
----@param from integer first value
----@param length integer length of new array
----@return table<integer, any>
-local function newArray(from, length)
-  local arr={}
-  for i=from,length-(1-from) do arr[i] = i end
-  return arr
-end
-
 --- Filter table.
 --- Remove values for keys that not pass predicate
 --- {1, '', 3, 0, foo = false, goo=true}  / 'a1' => {1, 3, goo=true}
---- {1, '', 3, 0, foo = false, goo=true} // 'a1' => {goo=true}
 --- For each t run f(k,v)
 --- map({1,2,3}, (k,v)=>k,v*2) == {{1,2},{2,4},{3,6}}
 ---@param t table
@@ -198,8 +187,8 @@ local function flatten(t)
   local r = {}
   for k, v in pairs(t) do
     if type(v) == 'table' and not isCallable(v) then
-      for k, v in pairs(v) do
-        r[#r+1] = v
+      for k, o in pairs(v) do
+        r[#r+1] = o
       end
     else
       r[#r+1] = v
@@ -244,7 +233,9 @@ local function index(t, keyFull)
     local numStr = keyFull:sub(2)
     local num = tonumber(numStr)
     if num then
-      return q(newArray((numStr:sub(1,1)=='0') and 0 or 1, num))
+      local from, arr = (numStr:sub(1,1)=='0') and 0 or 1, {}
+      for i = from, num - (1 - from) do arr[i] = i end
+      return q(arr)
     end
     -- TODO: add functionality for q{}._
     -- TODO: add for _word
@@ -500,7 +491,7 @@ q = function(t)
   -- 2 --
   -- [[ - ]] mt.__unm = generic'map'
   --[[ ~ ]] mt.__bnot = unary'lambda'
-  -- [[ # ]] mt.__len = generic'??' -- Probably `tostring()` OR `flat()`
+  -- [[ # ]] mt.__len = unary'??'
 
   -- 3 --
   -- [[ * ]] mt.__mul = generic'??'
@@ -548,6 +539,11 @@ q = function(t)
   end
 
   function mt:__index(key)
+    --  TODO: add function indexing
+    --* Possible ideas:
+    --* • f[2] pop 2 from stack and call
+    --* • f.n working with call result, like map table
+    --* • f[{}] possible same as above
     return index(t, key)
   end
 
@@ -556,6 +552,11 @@ q = function(t)
   -- a._={}
   -- _5='k,v'
   function mt:__newindex(k, v)
+    --  TODO: add function new index
+    --* Possible ideas:
+    --* • f[2]=x
+    --* • f.n=x
+    --* • f[{}]=x
     rawset(t, k, q(v))
   end
 
@@ -596,10 +597,6 @@ end
 
 local function loadTranslated(text)
   local code = translate(text)
-  -- if code == nil or code:match('^%s*$') then
-  --   localError('Unable to translate: '..text)
-  --   return nil
-  -- end
   return loadBody('return '..code, code, text)
 end
 
@@ -701,14 +698,17 @@ local function unfold(f)
 end
 
 ---MINIFY{{
-local runOnce
+local runCount
 ---}}
 run = function(input)
   local fnc = loadTranslated(input)
   while true do
     local r = unfold(fnc)
     ---MINIFY{{
-    if runOnce then return unpack(r) end
+    if type(runCount) == 'number' then
+      runCount = runCount - 1
+      if runCount <= 0 then return unpack(r) end
+    end
     ---}}
     __ENV.i = __ENV.i + 1
     if __ENV.i % 100 == 99 then __ENV.sleep(0.05) end
@@ -717,7 +717,7 @@ end
 
 __ENV.write = function(...)
   ---MINIFY{{
-  if print then runOnce = true return print(...) end
+  if print then runCount = 0 return print(...) end
   ---}}
   localError(q{...}, true)
 end
@@ -752,7 +752,7 @@ local pointer, prog = R or D
 
 ---MINIFY{{
 local shellArg
-shellArg, runOnce = ...
+shellArg, runCount = ...
 
 -- Program is called from shell
 if shellArg then prog = shellArg end

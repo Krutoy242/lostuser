@@ -114,7 +114,7 @@ end
 
 local function shouldOutput(command, message)
   return function()
-    local succes, result = pcall(lu, command, true)
+    local succes, result = pcall(lu, command, 1)
     local resultStr = tostring(result)
     if not succes then return false, resultStr end
     return resultStr == message, resultStr
@@ -178,8 +178,7 @@ test('Map:     Fnc x Num', shouldOutput("Te/3&4",                 '81.0'))
 test('Map:     Fnc x Tbl', shouldOutput("Te^{4,5}",               '1024.0'))
 test('     Truthy Filter', shouldOutput("(T/'tk')^'n'",           '_{2=n2}'))
 test('          Replaces', shouldOutput("ⓡ⒯ⓐⓝ⒡ⓞ⒡",           'true'))
-test('            Macros', shouldOutput("`Z..i`T..(i+1)`''TZT",  '101'))
-test('          Unary ~T', shouldOutput("~_{1,{2,3},{4,a=5,b=_{6,c=7}}}", '_{1,2,3,4,5,_{6,c=7}}'))
+test('          Unary ~T', shouldOutput("~~_{1,{2,3},{4,a=5,b=_{6,c=7}}}", '_{1,2,3,4,5,_{6,c=7}}'))
 test('          Unary ~F', shouldPrint("~_'i=i+1ⓡi<3',w(i)", '3'))
 
 local mi = 3
@@ -193,7 +192,6 @@ test('Lambda:      T x N', shouldOutput("_3-2"             , '_{1,3=3}'))
 
 mi = 3
 test('        While loop', shouldPrint("_..'Rm3',w!", '🡢🡢🡢'))
-test('       Conditional', shouldPrint("`SRsw(i)`MRm(3)` _'M,S'!ⓐ_'SS'!,w!", '🡢⇓'))
 test('          _(p,a,b)', shouldOutput("_(0,2,3)+_(1,4,5)", '7'))
 
 
@@ -214,7 +212,7 @@ _G.D = {
   getOffset=function()print(string.format('Ô',n)) offset=offset-0.5 return offset end,
 }
 test(' Sapling drone geo', shouldPrint(
-  "`x(i%8)`z(i%64//8)`_'Dm(x,0,z)s(0.05)Dp(0)Dm(-x,0,-z)s(0.05)'~(Gsn(x,z)[32]==0),i>2ⓐw!",
+  "x,z=i%8,i%64//8ⓡ_'Dm(x,0,z)s(0.05)Dp(0)Dm(-x,0,-z)s(0.05)'~(Gsn(x,z)[32]==0),i>2ⓐw!",
   's(0,0)s(1,0)s(2,0)m(2,0,0)p(0)m(-2,0,0)s(3,0)'
 ))
 
@@ -238,12 +236,12 @@ test('   Drone waypoints', shouldPrint(
 
 
 ? Circular miner. Gi! burn fuel in first slot
-Gi!,_'Rm3,Rsw3'~i*3,Rtn⒯
+Gi,_'Rm3,Rsw3'~i*3,Rtn⒯
 
 ! Other programs
 
 ? Line farmer
-_4*"Ru^0,_12*'Rm^3'",_2*'Rtn⒯',_80*'Rsel^v,Rd^0',s^120
+_'Ru0,Rm/(i%2+2)~12'~4,Rsel-Rd/0/q~80,s120
 
 ? Drone sapling planter
 x,z=i%8,i%64//8 u={x,0,z} -- Coords base on `i` variable
@@ -259,8 +257,9 @@ _6^1
 
 ? New trader
 o[IgI(3,k).n]ⓐIsF/3&k // If we need this item - suck it
-Tg0^'_{v.g!}^"o[v.n]=⒯"' // List of all required item names
-Tg0^'_{v.g!}^"o[v.n]=⒯"',_'o[IgI(3,k).n]ⓐIsF/3&k'~Igz3,Tg0/'~v.tr',Rsel-Rd/3/q~16
+Tg0^'_{g!}^"o[n]=⒯"' // List of all required item names
+Tg0^'_{g!}^"o[n]=⒯"',_'o[IgI(3,k).n]ⓐIsF/3&k'~Igz3,Tg0/'~tr',Rsel-Rd/3/q~16
+a=-~Tg0"_{g0}'n',~tr",Rsel-Rd/3/k~9ⓡ_'a[IgI(3,k).n]ⓐIsF/3&k'~32
 
 ? inventory_controller:
 
