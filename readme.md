@@ -146,6 +146,10 @@ I	=>	inventory_controller
 Additional globals:
 
 - `i` - current loop index, starting from 0
+  > You can add number after `i` to get it by modulus +1.
+  > ```lua
+  > i16 = i % 16 + 1
+  > ```
 - `sleep(seconds: number = 1)`
 - `write(...)` - error with serialized output
 - `api(shortName: string, obj?: table)` - write long name of shortand
@@ -275,7 +279,13 @@ Operator precedence in Lua follows the table below, from higher to lower priorit
 
 `^` and `&` operators do the same. There is two of them only to managing precedence.
 
-Note, that `^` is right associative. This means, right side will be computed first.
+- **Note¹:** `^` is right associative. This means, right side will be computed first.
+
+- **Note²:** You can also call *uncallable* tables. `t(x)` is the same as `t^x`. *Uncallable* tables is tables without `__call` metatable.
+  Example (map `t^f`):
+  ```lua
+  _{1,2,3}'0' -- _{0,0,0}
+  ```
 
 <table>
 <tr>
@@ -301,10 +311,12 @@ _{4,5,6}^{3,1} -- {6,4}
 </td></tr>
 <tr><td>Number, Boolean</td><td>
 
-Fill with value
+<!-- Fill with value
 ```lua
 _{1,2,3}^n -- {n,n,n}
-```
+``` -->
+
+<sub>Not yet implemented</sub>
 
 </td></tr>
 <tr><td rowspan=3>Function</td><td>Function</td><td>
@@ -384,10 +396,11 @@ f/g -- (...)=>g(f(...))
 </td></tr>
 <tr><td>Table</td><td>
 
-Reversed map
+<!-- Reversed map
 ```lua
 f/{a,b} -- {f(a),f(b)}
-```
+``` -->
+<sub>Not yet implemented</sub>
 
 </td></tr>
 <tr><td>Number, Boolean</td><td>
@@ -435,10 +448,11 @@ Rotated composition
 <tr>
   <td rowspan=3>Table</td><td>Function</td><td>
 
-While truthy do
+<!-- While truthy do
 ```lua
 _{f,g}~h -- while truthy(h(j++)) do f(j)g(j) end
-```
+``` -->
+<sub>Not yet implemented</sub>
 
 </td></tr>
 <tr><td>Table</td><td>
@@ -448,10 +462,11 @@ _{f,g}~h -- while truthy(h(j++)) do f(j)g(j) end
 </td></tr>
 <tr><td>Number, Boolean</td><td>
 
-For loop
+<!-- For loop
 ```lua
 _{f,g}~n -- for j=1,n do f(j)g(j) end
-```
+``` -->
+<sub>Not yet implemented</sub>
 
 </td></tr>
 <tr><td rowspan=3>Function</td><td>Function</td><td>
@@ -472,6 +487,18 @@ f~g -- while truthy(g(j++)) do f(j) end
 For loop
 ```lua
 f~n -- for j=1,TONUMBER(n) do f(j) end
+```
+
+</td></tr><tr><td rowspan=2>Number, Boolean</td><td>Table</td><td>
+
+<sub>Not yet implemented</sub>
+
+</td></tr>
+<tr><td>Function</td><td>
+
+Same as `f~n`, but without passing index
+```lua
+n~f -- for j=1,TONUMBER(n) do f() end
 ```
 
 </td></tr>
@@ -518,6 +545,24 @@ Flatten table, using numerical indexes.
 
 </td></tr>
 
+<tr><td rowspan=2>
+
+`-`</td><td>Function</td><td>
+
+<sub>Not yet implemented</sub>
+
+</td></tr>
+<tr><td>Table</td><td>
+
+Swap keys and values
+
+```lua
+-_{'a','b','c'}
+-- {a=1,b=2,c=3}
+```
+
+</td></tr>
+
 </table>
 
 ### Truthy
@@ -547,18 +592,6 @@ Program have several predefined macroses - symbols, that will be replaced everyw
  ∅ => ' __trash='
 ```
 
-You can define your own macroses with special syntax:
-- <code>&#96;A...&#96;</code> where `A` can be any symbol that would be replaced with everything before <code>&#96;</code>
-- You can make several macroses at once devide them with <code>&#96;</code>
-- Macroses could replace values in previous macroses
-
-Example:
-> ```less
-> `TRtn⒯S`MRm3S,`S,Rsw3` MMT
-> // =>
-> Rm3,Rsw3,Rm3,Rsw3,Rtn(true),Rsw3
-> ```
-
 ## Examples
 
 - **Travel between two waypoints and run its label**
@@ -582,7 +615,7 @@ Example:
   Waypoints labels. First one just suck from bottom, second one iterate over 4 slots and drop down.
   ```lua
   _'Dsk0'~4
-  _'Dsel(k)Dd(0)'~4
+  Dsel-Dd/0/q~4
   ```
 
 - **Zig-Zag + Use Down, userful for farms**
@@ -593,18 +626,20 @@ Example:
   
   Robot name:
   ```lua
-  `TRtn(i%2>0)`MRm3,Ru0`_~'M',T,_'M,T'!ⓞ_'T,M'
+  m,t=_'Rm3,Ru0',Rtn/(i2>1)ⓡ~m,t!,_'m!,t!'!ⓞt/m
   ```
-  * `TRtn(i%2>0)`: add macros `T` that would turned into `Rtn(i%2>0)`. Makes robot turn sometimes left, sometimes right.
-  * `MRm3,Ru0`: add macros `M` that would turned into `Rm3,Ru0`. This would make robot move and use item down.
-  * `_~'M'`: Makes robot move forward until it cant move.
-  * `_'M,T'!ⓞ_'T,M'`: Move and turn. If cant move, turn and move again.
+  * `m,t=_'Rm3,Ru0',Rtn/(i2>1)`: define two functions for moving and rotating
+    - `_'Rm3,Ru0'`: define function `Rm3,Ru0` that would move forward and use tool down
+    - `Rtn/(i2>1)`: this making function, that would call `Rtn` (`robot.turn`) with argument `i2>1`. `i2` is shortand for `i%2+1`
+  * `~m`: Makes robot move forward until it cant move.
+  * `t!`: just turn
+  * `_'m!,t!'!ⓞt/m`: Move and turn. If move wassnt succeed, turn and move again.
 
 - **Trader bot**
 
   > Required upgrades: *Trading*, *Inventory*, *Inventory Controller*
   
-  ![](https://i.imgur.com/72eLfym.png)
+  ![](https://i.imgur.com/HEgNabM.png)
 
   Robot name:
   ```lua
@@ -618,9 +653,9 @@ Example:
   * `Tg0/'~tr'`: Trade all trades.
     > - `~tr`: Call `trade()` while it returns true. Note that inside this function, all arguments exposed as global, so we could acces `trade` as global (actually, its `upvalue`)
 
-  There is another variant of robot name, that would trade all trades 5 times before continue cycle:
+  There is another variant of robot name, way advanced. It will pull only items that actually required for trading. This program hardcoded to work with inventory with size 16:
   ```lua
-  Rsel-Rd/0/q~RiS0,IsF/0~Igz0,_"Tg0^'tr!'"~5
+  a=-~Tg0"_{g0}'n',~tr",Rsel-Rd/0/k~16ⓡ_16'IgI/0&k''a[n]ⓐIsF/0&k'
   ```
 
 - **Rune maker**
@@ -633,7 +668,7 @@ Example:
   <img src="https://i.imgur.com/KqlJqMw.gif">
 
   Robot name:
-  ```lua
+  ```less
   _8/'Rsel^v,v==7ⓐ{s3,Rm1,Rd(3,1),Rm0}ⓞ{Ie!,Ru3,Ie!}'
   ```
   * `Rsel^v`: Select iterated slot
@@ -645,18 +680,19 @@ Example:
   > Required upgrades: *Inventory*, *Inventory Controller*
 
   This robot intended to use with Forestry saplings, that usually can't be placed as blocks, but need to be right-clicked instead.  
-  Also, robot need *unbreakable* Broad Axe from TCon with *Global Traveler* trait. Also, my Axe have *Fertilizing* trait - right click to fertilize.
+  Also, robot need *unbreakable* Broad Axe from TCon with *Global Traveler* trait. Also, my Axe have *Fertilizing* trait - right click to fertilize.  
+  Place robot on top of container with saplings.
   
   <img src="https://i.imgur.com/I9W39B0.gif">
 
   Robot name:
   ```lua
-  a,b=Rdt(3)ⓡ#b<6ⓐ{Rsw3,s^2,Rsk(0,1),Ie!,Ru3,Ie!}ⓞRu3,s
+  #st(2,Rdt(3))<6ⓐ{Rsw3,s2,Rsk/0&1,Ie0,Ru3,Ie0}ⓞRu3,s
   ```
-  * `a,b=Rdt(3)`: Detect block in front. Note that `Rdt3` would not work, since it return only 1 value
-  * `#b<6`: trick to determine if block is solid
-  * `Rsw3,s^2`: Cut whole tree
-  * `Rsk(0,1),Ie!,Ru3,Ie!`: Plant 1 sapling
+  * `st(2,Rdt(3))`: Detect block in front. Note that `Rdt3` would not work, since it return only 1 value. `st` is shortand for `select`
+  * `<6`: trick to determine if block is solid
+  * `Rsw3,s2`: Cut whole tree
+  * `Rsk(0,1),Ie!,Ru3,Ie!`: Suck one sapling from bottom, then plant it
   * `Ru3,s`: Fertilize sapling
 
 - **Other examples**
