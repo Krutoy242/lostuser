@@ -217,6 +217,7 @@ end
 local function index(t, keyFull)
   local exact = t[keyFull]
   if exact ~= nil then return q(exact) end
+  local C = keyFull:sub(1,1)
 
   -- Global key that started with _
   if keyFull:sub(1,1) == '_' then
@@ -242,16 +243,9 @@ local function index(t, keyFull)
       return Q(f(tonumber(arg)))
     end
 
-  -- -- Big letter shortand Tg => T.g
-  -- elseif key:match'^[A-Z]' then
-  --   local c = key:sub(1,1)
-  --   local C = t[c]
-  --   if C then
-  --     return q(C[getKey(key:sub(2), C)])
-  --   end
-  -- end
+  -- Big letter shortand Tg => T.g
   elseif key:match'^[A-Z]' then
-    local C, obj = key:sub(1,1)
+    local obj
     if t[C] ~= nil then
       obj = t[C]
     else
@@ -655,7 +649,8 @@ end
 local runCount
 ---}}
 run = function(input)
-  local fnc = loadTranslated(input)
+  local code = translate(input)
+  local fnc = loadBody('return '..code, code, input)
   while true do
     local r = unfold(fnc)
     ---MINIFY{{
@@ -702,7 +697,7 @@ end
 -- Assemble
 -----------------------------------------------------------------
 
-local pointer, prog = R or D
+local pointer, prog = R or D, ''
 
 ---MINIFY{{
 local shellArg
@@ -715,10 +710,14 @@ if shellArg then prog = shellArg end
 -- Program defined by Robot/Drone name
 if pointer and pointer.name then prog = pointer.name() end
 
-if not prog or prog=='' then localError'No program defined' end
+if prog=='' then localError'No program' end
 
 -- Play music
-if not shellArg and prog:sub(1,1) ~= ' ' then
+if
+---MINIFY{{
+not shellArg and
+---}}
+prog:sub(1,1) ~= ' ' then
   for s in prog:sub(1,5):gmatch"%S" do
     computer.beep(math.min(2000, 200 + s:byte() * 10), 0.05)
   end
