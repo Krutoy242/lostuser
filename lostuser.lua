@@ -40,13 +40,6 @@ do
     end
   end
 end
--- do
---   -- Expose all components as globals
---   for address, name in pairs(component.list()) do
---     _G[name] = component.proxy(address)
---   end
--- end
-
 
 --- Remove `%` symbol from chat log since its cause an error FML error
 --- [Client thread/ERROR] [FML]: Exception caught during firing event net.minecraftforge.client.event.ClientChatReceivedEvent@3e83e9ca:
@@ -581,67 +574,27 @@ end
    ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝╚══════╝╚═╝  ╚═╝   ╚═╝   ╚══════╝
 ]]
 
-local _MACROS = {}
+local _MACROS = {
+  'ⓐ', ' and ',
+  'ⓞ', ' or ',
+  'ⓝ', ' not ',
+  'ⓡ', ' return ',
+  '⒯', '(true)',
+  '⒡', '(false)',
+  '∅', ' __trash=',
+  '!', '()',
+}
 
 --- Replace all macroses
 ---@param text string
 local function translate(text)
-  local result = text
   local i = 1
   while i <= #_MACROS do
-    result = result:gsub(_MACROS[i][1], _MACROS[i][2])
-    i=i+1
+    text = text:gsub(_MACROS[i], _MACROS[i+1])
+    i=i+2
   end
-  return result
+  return text
 end
-
-local function loadTranslated(text)
-  local code = translate(text)
-  return loadBody('return '..code, code, text)
-end
-
---[[
-███╗   ███╗ █████╗  ██████╗██████╗  ██████╗ ███████╗
-████╗ ████║██╔══██╗██╔════╝██╔══██╗██╔═══██╗██╔════╝
-██╔████╔██║███████║██║     ██████╔╝██║   ██║███████╗
-██║╚██╔╝██║██╔══██║██║     ██╔══██╗██║   ██║╚════██║
-██║ ╚═╝ ██║██║  ██║╚██████╗██║  ██║╚██████╔╝███████║
-╚═╝     ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝
-]]
-
-local function addMacro(rgx, fnc_or_str)
-  _MACROS[#_MACROS+1] = {rgx, fnc_or_str}
-end
-
------------------------------------------------------------------
--- Simple replaces
------------------------------------------------------------------
-
-addMacro('ⓐ', ' and ')
-addMacro('ⓞ', ' or ')
-addMacro('ⓝ', ' not ')
-addMacro('ⓡ', ' return ')
-addMacro('⒯', '(true)')
-addMacro('⒡', '(false)')
-addMacro('∅', ' __trash=')
-
------------------------------------------------------------------
--- Captures {}
------------------------------------------------------------------
-addMacro('(`.+`)', function (r)
-  for s in r:gmatch'[^`]+' do
-    addMacro(escape(s:sub(1, 1)), escape(s:sub(2)))
-  end
-  return ''
-end)
-
------------------------------------------------------------------
--- Lowest priority
------------------------------------------------------------------
-
--- Exec
-addMacro('!', '()')
-
 
 --[[
 ██╗      ██████╗  █████╗ ██████╗
