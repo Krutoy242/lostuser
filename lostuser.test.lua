@@ -186,12 +186,14 @@ test('          Unary ~F', shouldPrint("~_'i=i+1ⓡi<3',w(i)", '3'))
 
 local mi = 3
 _G.R = {
-  move =function(n)print(({[0]='🡣','🡡','🡠','🡢'})[n]) mi=mi-1 return mi>0 end,
-  swing=function(n)print(({[0]='⇓','⇑','⇐','⇒'})[n]) return true end,
+  move =function(n)print(({[0]='🡣','🡡','🡠','🡢'})[n] or '⁇') mi=mi-1 return mi>0 end,
+  swing=function(n)print(({[0]='⇓','⇑','⇐','⇒'})[n] or '⁇') return true end,
 }
 
-test('Lambda:      T x T', shouldPrint("_{Rm,Rsw}/{3}~2,w!", '🡢⇒🡢⇒'))
-test('Lambda:      T x N', shouldOutput("_3-2"             , '_{1,3=3}'))
+test('Lambda:      T x T', shouldPrint("_{Rm,Rsw}/{3}~2", '🡢⇒🡢⇒', 1))
+test('Lambda:      T x N', shouldOutput("_3-2"          , '_{1,3=3}'))
+test('Loop:        F x N', shouldPrint("Rm~3"           , '🡡🡠🡢', 1))
+test('Loop:        N x F', shouldPrint("3~Rm"           , '⁇⁇⁇', 1))
 
 mi = 3
 test('        While loop', shouldPrint("_..'Rm3',w!", '🡢🡢🡢'))

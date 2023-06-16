@@ -434,7 +434,11 @@ q = function(t)
             end
 
           elseif op=='loop' then
+            if swap then
+              for j=1,TONUMBER(target) do r = source() end
+            else
             r = loop(source, false, function(j) return j <= TONUMBER(target) end)
+            end
 
           end
 
