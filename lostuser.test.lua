@@ -175,7 +175,6 @@ test('      Shortand _03', shouldOutput("_03",                    '_{1,2,0=0}'))
 test('      Shortand  i5', shouldPrint("print(i5)",               '1234512', 7))
 test('Map:     Tbl x Fnc', shouldOutput("Tg!^'tr!'",              '_{t,v}'))
 test('Map(call)Tbl x Fnc', shouldOutput("Tg0'tr!'",              '_{t,v}'))
-test('Map:     Tbl x Num', shouldOutput("T^2",                    '_{2,2,2,exp=2,getTrades=2}'))
 test('Map:     Fnc x Num', shouldOutput("Te/3&4",                 '81.0'))
 test('Map:     Fnc x Tbl', shouldOutput("Te^{4,5}",               '1024.0'))
 test('     Truthy Filter', shouldOutput("(T/'tk')^'n'",           '_{2=n2}'))
@@ -190,7 +189,6 @@ _G.R = {
   swing=function(n)print(({[0]='⇓','⇑','⇐','⇒'})[n] or '⁇') return true end,
 }
 
-test('Lambda:      T x T', shouldPrint("_{Rm,Rsw}/{3}~2", '🡢⇒🡢⇒', 1))
 test('Lambda:      T x N', shouldOutput("_3-2"          , '_{1,3=3}'))
 test('Loop:        F x N', shouldPrint("Rm~3"           , '🡡🡠🡢', 1))
 test('Loop:        N x F', shouldPrint("3~Rm"           , '⁇⁇⁇', 1))
@@ -261,13 +259,6 @@ _6^1
 ?========================================================
 
 ? New trader
-o[IgI(3,k).n]ⓐIsF/3&k // If we need this item - suck it
-Tg0^'_{g!}^"o[n]=⒯"' // List of all required item names
-Tg0^'_{g!}^"o[n]=⒯"',_'o[IgI(3,k).n]ⓐIsF/3&k'~Igz3,Tg0/'~tr',Rsel-Rd/3/q~16
-
-a=-~Tg0"_{g0}'n',~tr" // Save all required items
-_16'IgI/0&k''a[n]ⓐIsF/0&k' // Suck if saved
-a=-~Tg0"_{g0}'n',~tr",Rsel-Rd/0/k~16ⓡ_16'IgI/0&k''a[n]ⓐIsF/0&k'
 0,i16,i16<2ⓐ_a&-~Tg0"_{g0}'n',~tr",Rsel_,Rd_,_'a[IgI_.n]ⓐIsF_'
 
 ? inventory_controller:

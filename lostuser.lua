@@ -358,8 +358,9 @@ q = function(t)
           elseif op=='lambda' then
             r = map(source, trgFnc, true)
 
-          elseif op=='loop' then
-            r = loop(source, true, trgFnc)
+          -- TODO: Implement `t~f`
+          -- elseif op=='loop' then
+          --   r = loop(source, true, trgFnc)
 
           end
 
@@ -380,7 +381,8 @@ q = function(t)
         --?-- Table x Number|Boolean
         else
           if op=='map' then
-            local u = {} for k in pairs(source) do u[k]=target end r = u
+            -- TODO: Implement `t^n`
+            -- r = {} for k in pairs(source) do r[k]=target end
 
           elseif op=='lambda' then
             if swap then
@@ -389,8 +391,10 @@ q = function(t)
               source[target] = nil; r = source
             end
 
-          elseif op=='loop' then
-            r = loop(source, true, function(j) return j <= TONUMBER(target) end) -- TODO: Loop actually should call other function f(k,v), not call each element of Table
+            
+          -- TODO: Implement `t~n`
+          -- elseif op=='loop' then
+          --   r = loop(source, true, function(j) return j <= TONUMBER(target) end) -- TODO: Loop actually should call other function f(k,v), not call each element of Table
 
           end
 
@@ -414,8 +418,9 @@ q = function(t)
           if op=='map' then
             r = source(unpack(target)) -- f x {1,2,3} => f(1,2,3) (Unpack table)
 
-          elseif op=='lambda' then
-            r = map(target, source) -- reversed map f x {a,b,c} => {f(a),f(b),f(c)}
+          -- TODO: Implement `f/t`
+          -- elseif op=='lambda' then
+          --   r = map(target, source)
 
           --elseif op=='loop' then r = nil -- TODO: Implement
 
