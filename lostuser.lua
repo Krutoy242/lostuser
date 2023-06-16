@@ -167,11 +167,9 @@ end
 local function isCallable(t)
   local ty = type(t)
   if ty == 'function' then return true end
-  if ty == 'table' then
+  if ty ~= 'table' then return false end
     local mt = getmetatable(t)
-    if mt and mt.__call then return true end
-  end
-  return false
+  return mt and mt.__q ~= 0 and mt.__call
 end
 
 --- Turn table of tables into table [[1,2],[3,4]] => [1,2,3,4]
@@ -474,7 +472,7 @@ q = function(t)
   --############################################################
 
   local mt = {
-    __q = true,
+    __q = qIsCallable and 1 or 0,
     __tostring = function() return '_'..(qIsCallable and tostring(t) or '{'..serialize(t)..'}') end,
   }
 
@@ -530,6 +528,9 @@ q = function(t)
     mt.__call = QFnc(t)
     return setmetatable({}, mt)
   end
+
+  -- Calling tables is same as map them
+  mt.__call = mt.__pow
 
   function mt:__index(key)
     --  TODO: add function indexing
