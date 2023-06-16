@@ -456,8 +456,8 @@ q = function(t)
         --?-- Table
         if op=='lambda' then
           r = flatten(t)
-        -- elseif op=='map' then
-        --   r = map(t, function(k,v)return truthy(v) end, true)
+        elseif op=='map' then
+          r = {} for k,v in pairs(t) do r[v]=k end
         end
       else
         --?-- Function
@@ -479,7 +479,7 @@ q = function(t)
   --[[ ^ ]] mt.__pow = generic'map'
 
   -- 2 --
-  -- [[ - ]] mt.__unm = generic'map'
+  --[[ - ]] mt.__unm = unary'map'
   --[[ ~ ]] mt.__bnot = unary'lambda'
   -- [[ # ]] mt.__len = unary'??'
 

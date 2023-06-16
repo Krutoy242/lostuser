@@ -181,6 +181,7 @@ test('Map:     Fnc x Tbl', shouldOutput("Te^{4,5}",               '1024.0'))
 test('     Truthy Filter', shouldOutput("(T/'tk')^'n'",           '_{2=n2}'))
 test('          Replaces', shouldOutput("ⓡ⒯ⓐⓝ⒡ⓞ⒡",           'true'))
 test('          Unary ~T', shouldOutput("~~_{1,{2,3},{4,a=5,b=_{6,c=7}}}", '_{1,2,3,4,5,6,7}'))
+test('          Unary -T', shouldOutput("_{'a','b','c'}", '_{a,b,c}'))
 test('          Unary ~F', shouldPrint("~_'i=i+1ⓡi<3',w(i)", '3'))
 
 local mi = 3
