@@ -104,17 +104,17 @@ local function shouldError(errorRgx, ...)
   end
 end
 
-local function shouldPrint(command, message)
+local function shouldPrint(command, message, loopCount)
   return function()
-    local succes, result = pcall(lu, command)
+    local succes, result = pcall(lu, command, loopCount or 1000)
     if not succes then return false, result end
     return printedMessage == message, printedMessage
   end
 end
 
-local function shouldOutput(command, message)
+local function shouldOutput(command, message, loopCount)
   return function()
-    local succes, result = pcall(lu, command, 1)
+    local succes, result = pcall(lu, command, loopCount or 1)
     local resultStr = tostring(result)
     if not succes then return false, resultStr end
     return resultStr == message, resultStr
@@ -172,6 +172,7 @@ _G.trading = _G.T
 
 test('      Shortand  _3', shouldOutput("_3",                     '_{1,2,3}'))
 test('      Shortand _03', shouldOutput("_03",                    '_{1,2,0=0}'))
+test('      Shortand  i5', shouldPrint("print(i5)",               '1234512', 7))
 test('Map:     Tbl x Fnc', shouldOutput("Tg!^'tr!'",              '_{t,v}'))
 test('Map(call)Tbl x Fnc', shouldOutput("Tg0'tr!'",              '_{t,v}'))
 test('Map:     Tbl x Num', shouldOutput("T^2",                    '_{2,2,2,exp=2,getTrades=2}'))
@@ -179,7 +180,7 @@ test('Map:     Fnc x Num', shouldOutput("Te/3&4",                 '81.0'))
 test('Map:     Fnc x Tbl', shouldOutput("Te^{4,5}",               '1024.0'))
 test('     Truthy Filter', shouldOutput("(T/'tk')^'n'",           '_{2=n2}'))
 test('          Replaces', shouldOutput("ⓡ⒯ⓐⓝ⒡ⓞ⒡",           'true'))
-test('          Unary ~T', shouldOutput("~~_{1,{2,3},{4,a=5,b=_{6,c=7}}}", '_{1,2,3,4,5,_{6,c=7}}'))
+test('          Unary ~T', shouldOutput("~~_{1,{2,3},{4,a=5,b=_{6,c=7}}}", '_{1,2,3,4,5,6,7}'))
 test('          Unary ~F', shouldPrint("~_'i=i+1ⓡi<3',w(i)", '3'))
 
 local mi = 3
@@ -260,7 +261,11 @@ _6^1
 o[IgI(3,k).n]ⓐIsF/3&k // If we need this item - suck it
 Tg0^'_{g!}^"o[n]=⒯"' // List of all required item names
 Tg0^'_{g!}^"o[n]=⒯"',_'o[IgI(3,k).n]ⓐIsF/3&k'~Igz3,Tg0/'~tr',Rsel-Rd/3/q~16
-a=-~Tg0"_{g0}'n',~tr",Rsel-Rd/3/k~9ⓡ_'a[IgI(3,k).n]ⓐIsF/3&k'~32
+
+a=-~Tg0"_{g0}'n',~tr" // Save all required items
+_16'IgI/0&k''a[n]ⓐIsF/0&k' // Suck if saved
+a=-~Tg0"_{g0}'n',~tr",Rsel-Rd/0/k~16ⓡ_16'IgI/0&k''a[n]ⓐIsF/0&k'
+0,i16,i16<2ⓐ_a&-~Tg0"_{g0}'n',~tr",Rsel_,Rd_,_'a[IgI_.n]ⓐIsF_'
 
 ? inventory_controller:
 

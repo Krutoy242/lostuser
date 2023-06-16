@@ -220,14 +220,19 @@ local function index(t, keyFull)
   local C = keyFull:sub(1,1)
 
   -- Global key that started with _
-  if keyFull:sub(1,1) == '_' then
-    -- Number: _8 create table {1,2,3,4,5,6,7,8}
+  if C == '_' or C == 'i' then
     local numStr = keyFull:sub(2)
     local num = tonumber(numStr)
+    local from = (numStr:sub(1,1)=='0') and 0 or 1
     if num then
-      local from, arr = (numStr:sub(1,1)=='0') and 0 or 1, {}
+      -- Number: _8 create table {1,2,3,4,5,6,7,8}
+      if C == '_' then
+        local arr = {}
       for i = from, num - (1 - from) do arr[i] = i end
       return q(arr)
+
+      -- i modulus
+      elseif t.i then return t.i % num + from end
     end
     -- TODO: add functionality for q{}._
     -- TODO: add for _word
