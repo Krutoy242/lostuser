@@ -239,12 +239,6 @@ Any table or function that you can get from a global will be converted into spec
 
 This table enchanced with additional operator metamethods that helps with functional-style programming.
 
-Simple example - fill all values of array with `1`:
-
-> ```lua
-> _{1,2,3}^1 -- return {1,1,1}
-> ```
-
 **Operators** behave differently depending or left and right side of operator.
 
 Note that whenever `string` would be detected in right side, it would be loaded and converted to function in manner of `_'fnc'`.
