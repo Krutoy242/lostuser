@@ -534,6 +534,8 @@ q = function(t)
 
   if qIsCallable then
     mt.__call = QFnc(t)
+    -- TODO: #f makes result of function wrapped _{f()}
+    -- function mt:__len() return #t end
     return setmetatable({}, mt)
   end
 
