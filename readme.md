@@ -17,6 +17,8 @@ Robot (or drone!) BIOS program for Minecraft OpenComputers mod.
     - [Globals](#globals)
   - [Shortening](#shortening)
   - [Lodash `_`](#lodash-_)
+    - [Indexing `_`](#indexing-_)
+    - [Calling `_`](#calling-_)
   - [Functional Programming](#functional-programming)
     - [Precedence](#precedence)
     - [Map `^` or `&`](#map--or-)
@@ -202,6 +204,9 @@ Shortening rules:
 
 Low dash `_` is special helper function.
 
+### Indexing `_`
+
+<!-- indexing _ -->
 - **Using `_` with numbers `_123`**  
   Will return new array-like list with length of number.  
   If first digit is `0` - table will be zero-based
@@ -209,7 +214,11 @@ Low dash `_` is special helper function.
   > _8  -- return {1,2,3,4,5,6,7,8}
   > _08 -- return {[0]=0,1,2,3,4,5,6,7}
   > ```
+<!--  -->
 
+### Calling `_`
+
+<!-- calling _ -->
 - **Using `_` on string**  
   Will load code inside this string and return it as function.
   > ```lua
@@ -232,6 +241,7 @@ Low dash `_` is special helper function.
   ```lua
   if truthy(predicate) then return onTruthy else return other end
   ```
+<!--  -->
 
 ## Functional Programming
 
@@ -289,52 +299,73 @@ Operator precedence in Lua follows the table below, from higher to lower priorit
 <tr>
   <td rowspan=3>Table</td><td>Function</td><td>
 
+<!-- t^f -->
 Classical map
 ```lua
 _{4,5,6}^f -- {f(4),f(5),f(6)}
 ```
+<!--  -->
 
 </td></tr>
 <tr><td>Table</td><td>
 
+<!-- t^t -->
 Pick indexes
 ```lua
 _{4,5,6}^{3,1} -- {6,4}
 ```
+<!--  -->
 
 </td></tr>
 <tr><td>Number, Boolean</td><td>
 
-<!-- Fill with value
-```lua
-_{1,2,3}^n -- {n,n,n}
-``` -->
-
+<!-- t^n -->
 <sub>Not yet implemented</sub>
+<!--  -->
 
 </td></tr>
 <tr><td rowspan=3>Function</td><td>Function</td><td>
 
+<!-- f^f -->
 Composition
 ```lua
 f^g -- (...)=>f(g(...))
 ```
+<!--  -->
 
 </td></tr>
 <tr><td>Table</td><td>
 
+<!-- f^t -->
 Unpack as arguments
 ```lua
 f^{1,2,3} -- f(1,2,3)
 ```
+<!--  -->
 
 </td></tr>
 <tr><td>Number, Boolean</td><td>
 
+<!-- f^n -->
 Simple call
 ```lua
 f^1 -- f(1)
 ```
+<!--  -->
+
+</td></tr>
+<tr><td rowspan=2>Number, Boolean</td><td>Table</td><td>
+
+<!-- n^t -->
+<sub>Not yet implemented</sub>
+<!--  -->
+
+</td></tr>
+<tr><td>Function</td><td>
+
+<!-- n^f -->
+<sub>Not yet implemented</sub>
+<!--  -->
 
 </td></tr>
 </table>
@@ -358,67 +389,79 @@ f^1 -- f(1)
 <tr>
   <td rowspan=3>Table</td><td>Function</td><td>
 
+<!-- t/f -->
 Filter, keep only if value is [Truthy](#Truthy)
 ```lua
 _{4,5,6,7}/'v%2' -- {5,7}
 ```
+<!--  -->
 
 </td></tr>
 <tr><td>Table</td><td>
 
+<!-- t/t -->
 Unpack map
 ```lua
 _{f,g}/{0,1} -- {f(0,1),g(0,1)}
 ```
+<!--  -->
 
 </td></tr>
 <tr><td>Number, Boolean</td><td>
 
+<!-- t/n -->
 Remove index
 ```lua
 _3/2 -- {1=1,3=3}
 ```
+<!--  -->
 
 </td></tr>
 <tr><td rowspan=3>Function</td><td>Function</td><td>
 
+<!-- f/f -->
 Reversed composition
 ```lua
 f/g -- (...)=>g(f(...))
 ```
+<!--  -->
 
 </td></tr>
 <tr><td>Table</td><td>
 
-<!-- Reversed map
-```lua
-f/{a,b} -- {f(a),f(b)}
-``` -->
+<!-- f/t -->
 <sub>Not yet implemented</sub>
+<!--  -->
 
 </td></tr>
 <tr><td>Number, Boolean</td><td>
 
+<!-- f/n -->
 Composition
 ```lua
 f/1 -- (...)=>f(1,...)
 ```
+<!--  -->
 
 </td></tr>
 <tr><td rowspan=2>Number, Boolean</td><td>Table</td><td>
 
+<!-- n/t -->
 Get by modulus
 ```lua
 i/t -- t[i % #t + 1]
 ```
+<!--  -->
 
 </td></tr>
 <tr><td>Function</td><td>
 
+<!-- n/f -->
 Rotated composition
 ```lua
 2/f -- (...)=>f(..., 2)
 ```
+<!--  -->
 
 </td></tr>
 </table>
@@ -442,58 +485,66 @@ Rotated composition
 <tr>
   <td rowspan=3>Table</td><td>Function</td><td>
 
-<!-- While truthy do
-```lua
-_{f,g}~h -- while truthy(h(j++)) do f(j)g(j) end
-``` -->
+<!-- t~f -->
 <sub>Not yet implemented</sub>
+<!--  -->
 
 </td></tr>
 <tr><td>Table</td><td>
 
+<!-- t~t -->
 <sub>Not yet implemented</sub>
+<!--  -->
 
 </td></tr>
 <tr><td>Number, Boolean</td><td>
 
-<!-- For loop
-```lua
-_{f,g}~n -- for j=1,n do f(j)g(j) end
-``` -->
+<!-- t~n -->
 <sub>Not yet implemented</sub>
+<!--  -->
 
 </td></tr>
 <tr><td rowspan=3>Function</td><td>Function</td><td>
 
+<!-- f~f -->
 While truthy do
 ```lua
 f~g -- while truthy(g(j++)) do f(j) end
 ```
+<!--  -->
 
 </td></tr>
 <tr><td>Table</td><td>
 
+<!-- f~t -->
 <sub>Not yet implemented</sub>
+<!--  -->
 
 </td></tr>
 <tr><td>Number, Boolean</td><td>
 
+<!-- f~n -->
 For loop
 ```lua
 f~n -- for j=1,TONUMBER(n) do f(j) end
 ```
+<!--  -->
 
 </td></tr><tr><td rowspan=2>Number, Boolean</td><td>Table</td><td>
 
+<!-- n~t -->
 <sub>Not yet implemented</sub>
+<!--  -->
 
 </td></tr>
 <tr><td>Function</td><td>
 
+<!-- n~f -->
 Same as `f~n`, but without passing index
 ```lua
 n~f -- for j=1,TONUMBER(n) do f() end
 ```
+<!--  -->
 
 </td></tr>
 </table>
@@ -518,14 +569,17 @@ n~f -- for j=1,TONUMBER(n) do f() end
 
 `~`</td><td>Function</td><td>
 
+<!-- ~f -->
 While truthy do
 ```lua
 ~f -- repeat until not truthy(f())
 ```
+<!--  -->
 
 </td></tr>
 <tr><td>Table</td><td>
 
+<!-- ~t -->
 Flatten table, using numerical indexes.
 
 > - Order of elements can be different
@@ -536,6 +590,7 @@ Flatten table, using numerical indexes.
 ~_{1,{2,3},{4,a=5,b={6,c=7}}}
 -- {1,2,3,4,5,{6,c=7}}
 ```
+<!--  -->
 
 </td></tr>
 
@@ -543,17 +598,21 @@ Flatten table, using numerical indexes.
 
 `-`</td><td>Function</td><td>
 
+<!-- -f -->
 <sub>Not yet implemented</sub>
+<!--  -->
 
 </td></tr>
 <tr><td>Table</td><td>
 
+<!-- -t -->
 Swap keys and values
 
 ```lua
 -_{'a','b','c'}
 -- {a=1,b=2,c=3}
 ```
+<!--  -->
 
 </td></tr>
 
@@ -702,8 +761,9 @@ Program have several predefined macroses - symbols, that will be replaced everyw
     ```
 
   * *Compressing bot*. Takes from front, craft 3x3 them, dump buttom or forward.
+    > Required upgrades: Crafting, Inventory Controller, Inventory
     ```lua
-    _16|Rc|Rsel-'Rd0ⓞRd3',IsF/3/'_11/8/4&Rc!/9/RtT'|i%Igz3+1,Cc
+    _16|Rc|Rsel-'Rd0ⓞRd3',IsF/3/'_11/8/4&Rc!/9/RtT'|i%Igz3+1,Ccr
     ```
 
 

@@ -44,9 +44,35 @@ end
 
 -- Minify file with Crunch program
 exec('crunch --lz77 lostuser.cut.lua lostuser.min.lua')
-filesystem.remove'lostuser.cut.lua'
+filesystem.remove'/home/lostuser.cut.lua'
 
 -- Write into EEPROM
 exec('flash -q lostuser.min.lua LostUser')
+
+log.start'Update readme'
+local function escape(s)
+  return s:gsub('[%-%.%+%[%]%(%)%$%^%%%?%*]','%%%1')
+end
+local hReadme = io.open("readme.md")
+local readme = hReadme:read("*a")
+hReadme:close()
+for tab, key, content in orig:gmatch"([ \t]*)-%-%[%[(<[^\n]+)\n(.-)]]" do
+  local passed = false
+  readme = readme:gsub(
+    escape(key)..'.-%-%->',
+    function()
+      passed = true
+      return (key..'\n'..content):gsub('\n'..tab..' ? ?', '\n')
+      ..'<!--  -->'
+    end
+  )
+  if not passed then log.fail('Found key but not match in docs: '..key) end
+  io.write('.')
+  os.sleep(0.05)
+end
+hReadme = io.open("readme.md","w")
+hReadme:write(readme)
+hReadme:close()
+log.succes()
 
 gpu.setForeground(0xffffff)

@@ -221,18 +221,38 @@ local function index(t, keyFull)
 
   -- Global key that started with _
   if C == '_' or C == 'i' then
-    local numStr = keyFull:sub(2)
-    local num = tonumber(numStr)
-    local from = (numStr:sub(1,1)=='0') and 0 or 1
+    local postfix = keyFull:sub(2)
+    local num = tonumber(postfix)
+    --[[<!-- indexing _ -->
+      - **Using `_` with numbers `_123`**  
+        Will return new array-like list with length of number.  
+        If first digit is `0` - table will be zero-based
+        > ```lua
+        > _8  -- return {1,2,3,4,5,6,7,8}
+        > _08 -- return {[0]=0,1,2,3,4,5,6,7}
+        > ```
+      - **Using `_` with words `_abc`**  
+        Create function that would write result into `abc` variable.  
+        Function returns passed value.  
+        Note that `_abc` is functionable.
+        > ```lua
+        > _a(4) -- Writes `4` into global `a`, returns 4
+        > _a'Ru3' -- Writes func. that execute `Ru3` into global `a`
+        > _a^Ru -- Create func. that write result of `Ru` into global `a`
+        > b._a^3 -- b.a = 3
+        > ```
+    ]]
     if num then
-      -- Number: _8 create table {1,2,3,4,5,6,7,8}
+      local from = (postfix:sub(1,1)=='0') and 0 or 1
       if C == '_' then
         local arr = {}
-      for i = from, num - (1 - from) do arr[i] = i end
-      return q(arr)
+        for i = from, num - (1 - from) do arr[i] = i end
+        return q(arr)
 
       -- i modulus
-      elseif t.i then return t.i % num + from end
+      elseif t.i then
+        return t.i % num + from
+      end
     end
     -- TODO: add functionality for q{}._
     -- TODO: add for _word
@@ -352,12 +372,28 @@ q = function(t)
       if not qIsCallable then
         --?-- Table x Function|String
         if trgFnc then
+
+          --[[<!-- t^f -->
+            Classical map
+            ```lua
+            _{4,5,6}^f -- {f(4),f(5),f(6)}
+            ```
+          ]]
           if op=='map' then
             r = map(source, trgFnc)
 
+          --[[<!-- t/f -->
+            Filter, keep only if value is [Truthy](#Truthy)
+            ```lua
+            _{4,5,6,7}/'v%2' -- {5,7}
+            ```
+          ]]
           elseif op=='lambda' then
             r = map(source, trgFnc, true)
 
+          --[[<!-- t~f -->
+            <sub>Not yet implemented</sub>
+          ]]
           -- TODO: Implement `t~f`
           -- elseif op=='loop' then
           --   r = loop(source, true, trgFnc)
@@ -366,13 +402,30 @@ q = function(t)
 
         --?-- Table x Table
         elseif trgTable then
+
+          --[[<!-- t^t -->
+            Pick indexes
+            ```lua
+            _{4,5,6}^{3,1} -- {6,4}
+            ```
+          ]]
           if op=='map' then
             r = map(target, function(k,v) return source[v] end) -- _{4,5,6}^{3,1} -- {6,4}
 
+          --[[<!-- t/t -->
+            Unpack map
+            ```lua
+            _{f,g}/{0,1} -- {f(0,1),g(0,1)}
+            ```
+          ]]
           elseif op=='lambda' then
             r = map(source, function(k,v) return function() return v(unpack(target)) end end)
 
-          --elseif op=='loop' then r = nil -- TODO: Implement, probably merge, union, intersection
+          --[[<!-- t~t -->
+            <sub>Not yet implemented</sub>
+          ]]
+          -- TODO: Implement `t~t`, probably merge, union, intersection
+          --elseif op=='loop' then r = nil
           -- _{1,2,a=3}~{a=4,5,6} => {1,2,3,4,5,6}
           -- _2~_3 => {1,2,1,2,3}
 
@@ -380,21 +433,43 @@ q = function(t)
 
         --?-- Table x Number|Boolean
         else
+
+          --[[<!-- t^n -->
+            <sub>Not yet implemented</sub>
+          ]]
           if op=='map' then
-            -- TODO: Implement `t^n`
+            -- TODO: Implement `t^n` push value into table
             -- r = {} for k in pairs(source) do r[k]=target end
 
           elseif op=='lambda' then
             if swap then
+              --[[<!-- n/t -->
+                Get by modulus
+                ```lua
+                i/t -- t[i % #t + 1]
+                ```
+              ]]
               r = source[target % #source + 1]
             else
+              --[[<!-- t/n -->
+                Remove index
+                ```lua
+                _3/2 -- {1=1,3=3}
+                ```
+              ]]
               source[target] = nil; r = source
             end
 
-            
+          --[[<!-- t~n -->
+            <sub>Not yet implemented</sub>
+          ]]
           -- TODO: Implement `t~n`
+          --[[<!-- n~t -->
+            <sub>Not yet implemented</sub>
+          ]]
+          -- TODO: Implement `n~t`
           -- elseif op=='loop' then
-          --   r = loop(source, true, function(j) return j <= TONUMBER(target) end) -- TODO: Loop actually should call other function f(k,v), not call each element of Table
+          --   r = loop(source, true, function(j) return j <= TONUMBER(target) end)
 
           end
 
@@ -402,12 +477,31 @@ q = function(t)
       else
         --?-- Function x Function|String
         if trgFnc then
+
+          --[[<!-- f^f -->
+            Composition
+            ```lua
+            f^g -- (...)=>f(g(...))
+            ```
+          ]]
           if op=='map' then
             r = function(...) return source(trgFnc(...)) end
 
+          --[[<!-- f/f -->
+            Reversed composition
+            ```lua
+            f/g -- (...)=>g(f(...))
+            ```
+          ]]
           elseif op=='lambda' then
             r = function(...) return trgFnc(source(...)) end
 
+          --[[<!-- f~f -->
+            While truthy do
+            ```lua
+            f~g -- while truthy(g(j++)) do f(j) end
+            ```
+          ]]
           elseif op=='loop' then
             r = loop(source, false, trgFnc)
 
@@ -415,34 +509,79 @@ q = function(t)
 
         --?-- Function x Table
         elseif trgTable then
+
+          --[[<!-- f^t -->
+            Unpack as arguments
+            ```lua
+            f^{1,2,3} -- f(1,2,3)
+            ```
+          ]]
           if op=='map' then
             r = source(unpack(target)) -- f x {1,2,3} => f(1,2,3) (Unpack table)
 
+          --[[<!-- f/t -->
+            <sub>Not yet implemented</sub>
+          ]]
           -- TODO: Implement `f/t`
           -- elseif op=='lambda' then
           --   r = map(target, source)
 
-          --elseif op=='loop' then r = nil -- TODO: Implement
+          --[[<!-- f~t -->
+            <sub>Not yet implemented</sub>
+          ]]
+          -- TODO: Implement `f~t`
+          --elseif op=='loop' then r = nil
 
           end
 
         --?-- Function x Number|Boolean
         else
+
+          --[[<!-- f^n -->
+            Simple call
+            ```lua
+            f^1 -- f(1)
+            ```
+          ]]
           if op=='map' then
             r = QFnc(source)(source, target)
 
           elseif op=='lambda' then
             if swap then
+              --[[<!-- n/f -->
+                Rotated composition
+                ```lua
+                2/f -- (...)=>f(..., 2)
+                ```
+              ]]
               r = function(...) return source(..., target) end
             else
+              --[[<!-- f/n -->
+                Composition
+                ```lua
+                f/1 -- (...)=>f(1,...)
+                ```
+              ]]
               r = function(...) return source(target, ...) end
             end
 
           elseif op=='loop' then
             if swap then
+              --[[<!-- n~f -->
+                Same as `f~n`, but without passing index
+                ```lua
+                n~f -- for j=1,TONUMBER(n) do f() end
+                ```
+              ]]
               for j=1,TONUMBER(target) do r = source() end
             else
-            r = loop(source, false, function(j) return j <= TONUMBER(target) end)
+              --[[<!-- f~n -->
+                For loop
+                ```lua
+                f~n -- for j=1,TONUMBER(n) do f(j) end
+                ```
+              ]]
+              r = loop(source, false, function(j) return j <= TONUMBER(target) end)
             end
 
           end
@@ -463,15 +602,51 @@ q = function(t)
 
       if not qIsCallable then
         --?-- Table
+
+        --[[<!-- ~t -->
+          Flatten table, using numerical indexes.
+
+          > - Order of elements can be different
+          > - All keys of table would be converted to inexed
+          > - Only 1 level of flattening
+
+          ```lua
+          ~_{1,{2,3},{4,a=5,b={6,c=7}}}
+          -- {1,2,3,4,5,{6,c=7}}
+          ```
+        ]]
         if op=='lambda' then
           r = flatten(t)
+
+        --[[<!-- -t -->
+          Swap keys and values
+
+          ```lua
+          -_{'a','b','c'}
+          -- {a=1,b=2,c=3}
+          ```
+        ]]
         elseif op=='map' then
           r = {} for k,v in pairs(t) do r[v]=k end
         end
       else
         --?-- Function
+
+        --[[<!-- ~f -->
+          While truthy do
+          ```lua
+          ~f -- repeat until not truthy(f())
+          ```
+        ]]
         if op=='lambda' then
           repeat until not truthy(source())
+
+        --[[<!-- -f -->
+          <sub>Not yet implemented</sub>
+        ]]
+        -- TODO: Implement `-f`, probably composable function `-f (v) => (...) => f(v, ...)`
+        elseif op=='map' then
+
         end
       end
       return q(r)
@@ -535,7 +710,6 @@ q = function(t)
   if qIsCallable then
     mt.__call = QFnc(t)
     -- TODO: #f makes result of function wrapped _{f()}
-    -- function mt:__len() return #t end
     return setmetatable({}, mt)
   end
 
@@ -694,7 +868,30 @@ __ENV.sleep = function(t)
   until u() >= d
 end
 
---- Helper function
+--[[<!-- calling _ -->
+  - **Using `_` on string**  
+    Will load code inside this string and return it as function.
+    > ```lua
+    > _'Rm,s2'()(0) -- call `sleep(2),robot.move(0)`
+    > ```
+    > Note that in this example, the `_` function returns two values - the `robot.move` function and the result `sleep(2)`. Only when we call the returned values a second time, `robot.move(0)` called
+
+  - **Using `_` on *table* or *function***  
+    Will convert them into `_{}` table or `_''` function to use with [Functional Programming](#functional-programming)
+    > ```lua
+    >  {1,2}^1 -- would error
+    > _{1,2}^1 -- would return {1,1} (see Functional Programming)
+    > ```
+
+  - **Using `_` with 2 or 3 arguments**  
+    Return second argument if first one is [truthy](#truthy), third otherwise
+    ```lua
+    _(predicate, onTruthy, other?)
+    ```
+    ```lua
+    if truthy(predicate) then return onTruthy else return other end
+    ```
+]]
 __ENV._ = function(target, ...)
   local args = table.pack(...)
   if args.n > 0 then
