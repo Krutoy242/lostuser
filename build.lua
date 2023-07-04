@@ -22,7 +22,7 @@ log.succes()
 
 log.start'Remove parts than unused in release'
 local cutted = orig
-  :gsub('---MINIFY{{.----}}', '')
+  :gsub('-%-%[%[MINIFY]].--]]', '')
 log.succes()
 
 log.start'Save file'
