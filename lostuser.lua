@@ -21,12 +21,12 @@ https://github.com/Krutoy242/lostuser
 -- Forward declarations
 local pack, unpack, run, loadBody, q, Q = table.pack, table.unpack
 
----MINIFY{{
+--[[MINIFY]]
 -- If we run from OpenOS
 if require then
   component, computer = require'component', require'computer'
 end
----}}
+--]]
 
 -- Define all components as big letter global, short names first
 do
@@ -856,29 +856,25 @@ local function unfold(f)
   return r
 end
 
----MINIFY{{
-local runCount
----}}
+--[[MINIFY]]local runCount--]]
 run = function(input)
   local code = translate(input)
   local fnc = loadBody('return '..code, code, input)
   while true do
     local r = unfold(fnc)
-    ---MINIFY{{
+    --[[MINIFY]]
     if type(runCount) == 'number' then
       runCount = runCount - 1
       if runCount <= 0 then return unpack(r) end
     end
-    ---}}
+    --]]
     __ENV.i = __ENV.i + 1
     if __ENV.i % 100 == 99 then __ENV.sleep(0.05) end
   end
 end
 
 __ENV.write = function(...)
-  ---MINIFY{{
-  if print then runCount = 0 return print(...) end
-  ---}}
+  --[[MINIFY]]if print then runCount = 0 return print(...) end--]]
   localError(q{...}, 0)
 end
 
@@ -933,24 +929,23 @@ end
 
 local pointer, prog = R or D, ''
 
----MINIFY{{
+--[[MINIFY]]
 local shellArg
 shellArg, runCount = ...
 
 -- Program is called from shell
 if shellArg then prog = shellArg end
----}}
+--]]
 
 -- Program defined by Robot/Drone name
-if pointer and pointer.name then prog = pointer.name() end
+if --[[MINIFY]]not prog and--]]
+  pointer and pointer.name then prog = pointer.name()
+end
 
 if prog=='' then localError'No program' end
 
 -- Play music
-if
----MINIFY{{
-not shellArg and
----}}
+if --[[MINIFY]]not shellArg and--]]
 prog:sub(1,1) ~= ' ' then
   for s in prog:sub(1,5):gmatch"%S" do
     computer.beep(math.min(2000, 200 + s:byte() * 10), 0.05)
