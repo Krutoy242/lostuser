@@ -253,9 +253,11 @@ local function index(t, keyFull)
       elseif t.i then
         return t.i % num + from
       end
+    else
+      -- _a(value) => a = value
+      return q(function(v) t[postfix] = v; return v end)
     end
     -- TODO: add functionality for q{}._
-    -- TODO: add for _word
   end
 
   local key,arg = keyFull:match'(.-)(%d*)$'

@@ -172,6 +172,7 @@ _G.trading = _G.T
 
 test('      Shortand  _3', shouldOutput("_3",                     '_{1,2,3}'))
 test('      Shortand _03', shouldOutput("_03",                    '_{1,2,0=0}'))
+test('      Shortand  _a', shouldOutput("_{_a(4),a,type(_a(_'Ru3'))==type(a),os._a^3,os.a}", '_{4,4,true,3,3}'))
 test('      Shortand  i5', shouldPrint("print(i5)",               '1234512', 7))
 test('Map:     Tbl x Fnc', shouldOutput("Tg!^'tr!'",              '_{t,v}'))
 test('Map(call)Tbl x Fnc', shouldOutput("Tg0'tr!'",              '_{t,v}'))

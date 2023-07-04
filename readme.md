@@ -214,6 +214,16 @@ Low dash `_` is special helper function.
   > _8  -- return {1,2,3,4,5,6,7,8}
   > _08 -- return {[0]=0,1,2,3,4,5,6,7}
   > ```
+- **Using `_` with words `_abc`**  
+  Create function that would write result into `abc` variable.  
+  Function returns passed value.  
+  Note that `_abc` is functionable.
+  > ```lua
+  > _a(4) -- Writes `4` into global `a`, returns 4
+  > _a'Ru3' -- Writes func. that execute `Ru3` into global `a`
+  > _a^Ru -- Create func. that write result of `Ru` into global `a`
+  > b._a^3 -- b.a = 3
+  > ```
 <!--  -->
 
 ### Calling `_`
