@@ -26,18 +26,23 @@ local pack, unpack, run, loadBody, q, Q = table.pack, table.unpack
 if require then
   component, computer = require'component', require'computer'
 end
+local skipComponents = {
+  computer=true
+}
 --]]
 
 -- Define all components as big letter global, short names first
 do
   local registered = {} -- Set of registered components
   for address, name in pairs(component.list()) do
+    --[[MINIFY]]if not skipComponents[name] then--]]
     local C,p = name:sub(1, 1):upper(),component.proxy(address)
     _G[name] = _G[name] or p
     if _G[C]==nil or (registered[C] and #registered[C] > #name) then
       _G[C] = p
       registered[C] = name
     end
+    --[[MINIFY]]end--]]
   end
 end
 
