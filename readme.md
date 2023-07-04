@@ -629,6 +629,22 @@ Swap keys and values
 
 </td></tr>
 
+<tr><td>
+
+`#`</td><td>Function</td><td>
+
+<!-- #f -->
+Make a funtion that would wrap it result into table.  
+Useful for functions that returns several values
+```lua
+-- Consider `f(n)` returns three values - 2,3,n
+f&4   -- 2
+#f&4  -- _{2,3,4}
+```
+<!--  -->
+
+</td></tr>
+
 </table>
 
 ### Truthy
