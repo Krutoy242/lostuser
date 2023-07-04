@@ -434,12 +434,24 @@ q = function(t)
         --?-- Table x Number|Boolean
         else
 
-          --[[<!-- t^n -->
-            <sub>Not yet implemented</sub>
-          ]]
           if op=='map' then
-            -- TODO: Implement `t^n` push value into table
-            -- r = {} for k in pairs(source) do r[k]=target end
+            if swap then
+              --[[<!-- n^t -->
+                Get by numerical or boolean index
+                ```lua
+                2^_{4,5,6} -- 5
+                ```
+              ]]
+              r = source[target]
+            else
+              --[[<!-- t^n -->
+                Push value in table
+                ```lua
+                _{1,2,3}^4 -- _{1,2,3,4}
+                ```
+              ]]
+              source[#source + 1] = target; r = source
+            end
 
           elseif op=='lambda' then
             if swap then
