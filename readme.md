@@ -330,7 +330,11 @@ _{4,5,6}^{3,1} -- {6,4}
 <tr><td>Number, Boolean</td><td>
 
 <!-- t^n -->
-<sub>Not yet implemented</sub>
+Push value in END of table
+```lua
+_{1,[3]=3,a=6,[4]=4}^5
+-- _{1,3=3,4=4,5=5,a=6}
+```
 <!--  -->
 
 </td></tr>
@@ -367,7 +371,10 @@ f^1 -- f(1)
 <tr><td rowspan=2>Number, Boolean</td><td>Table</td><td>
 
 <!-- n^t -->
-<sub>Not yet implemented</sub>
+Get by numerical or boolean index
+```lua
+2^_{4,5,6} -- 5
+```
 <!--  -->
 
 </td></tr>
