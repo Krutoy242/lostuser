@@ -415,13 +415,11 @@ q = function(t)
             r = map(target, function(k,v) return source[v] end) -- _{4,5,6}^{3,1} -- {6,4}
 
           --[[<!-- t/t -->
-            Unpack map
-            ```lua
-            _{f,g}/{0,1} -- {f(0,1),g(0,1)}
-            ```
+            <sub>Not yet implemented</sub>
           ]]
-          elseif op=='lambda' then
-            r = map(source, function(k,v) return function() return v(unpack(target)) end end)
+          -- TODO: Implement `t/t`
+          -- elseif op=='lambda' then
+          --   r = map(source, function(k,v) return function() return v(unpack(target)) end end)
 
           --[[<!-- t~t -->
             <sub>Not yet implemented</sub>

@@ -410,10 +410,7 @@ _{4,5,6,7}/'v%2' -- {5,7}
 <tr><td>Table</td><td>
 
 <!-- t/t -->
-Unpack map
-```lua
-_{f,g}/{0,1} -- {f(0,1),g(0,1)}
-```
+<sub>Not yet implemented</sub>
 <!--  -->
 
 </td></tr>
