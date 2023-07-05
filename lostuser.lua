@@ -907,21 +907,12 @@ end
     >  {1,2}^1 -- would error
     > _{1,2}^1 -- would return {1,1} (see Functional Programming)
     > ```
-
-  - **Using `_` with 2 or 3 arguments**  
-    Return second argument if first one is [truthy](#truthy), third otherwise
-    ```lua
-    _(predicate, onTruthy, other?)
-    ```
-    ```lua
-    if truthy(predicate) then return onTruthy else return other end
-    ```
 ]]
 __ENV._ = function(target, ...)
-  local args = table.pack(...)
-  if args.n > 0 then
-    if truthy(target) then return args[1] else return args[2] end
-  end
+  -- local args = table.pack(...)
+  -- if args.n > 0 then
+  --   if truthy(target) then return args[1] else return args[2] end
+  -- end
   local trgFnc, trgTable = getTarget(target)
   return q(trgFnc or target)
 end
