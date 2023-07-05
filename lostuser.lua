@@ -929,6 +929,7 @@ __ENV.sleep = function(t)
   local d = u() + (t or 1)
   repeat computer.pullSignal(d - u())
   until u() >= d
+  return t or 1
 end
 
 --[[<!-- calling _ -->
