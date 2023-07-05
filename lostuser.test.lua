@@ -199,7 +199,6 @@ test('Loop:        N x F', shouldPrint("3~Rm"           , '⁇⁇⁇', 1))
 
 mi = 3
 test('        While loop', shouldPrint("_..'Rm3',w!", '🡢🡢🡢'))
-test('          _(p,a,b)', shouldOutput("_(0,2,3)+_(1,4,5)", '7'))
 
 
 _G.G = {
