@@ -171,7 +171,7 @@ getTrades = function() return {
 _G.trading = _G.T
 
 test('      Shortand  _3', shouldOutput("_3",                     '_{1,2,3}'))
-test('      Shortand _03', shouldOutput("_03",                    '_{1,2,0=0}'))
+test('      Shortand _13', shouldOutput("_013",                   '_{0=0,1,2,3,4,5,6,7,8,9,10,11,12}'))
 test('      Shortand  _a', shouldOutput("_{_a(4),a,type(_a(_'Ru3'))==type(a),os._a^3,os.a}", '_{4,4,true,3,3}'))
 test('      Shortand  i5', shouldPrint("print(i5)",               '1234512', 7))
 test('Map:     Tbl x Fnc', shouldOutput("Tg!^'tr!'",              '_{t,v}'))
@@ -219,8 +219,9 @@ _G.D = {
   getOffset=function()print(string.format('Ô',n)) offset=offset-0.5 return offset end,
 }
 test(' Sapling drone geo', shouldPrint(
-  "x,z=i%8,i%64//8ⓡ_'Dm(x,0,z)s(0.05)Dp(0)Dm(-x,0,-z)s(0.05)'~(Gsn(x,z)[32]==0),i>2ⓐw!",
-  's(0,0)s(1,0)s(2,0)m(2,0,0)p(0)m(-2,0,0)s(3,0)'
+  "x,z=i%8,i%64//8ⓡ_'Dm(x,0,z)s(0.05)Dp(0)Dm(-x,0,-z)s(0.05)'~(Gsn(x,z)[32]==0)",
+  's(0,0)s(1,0)s(2,0)m(2,0,0)p(0)m(-2,0,0)s(3,0)',
+  4
 ))
 
 _G.N = {
@@ -231,19 +232,19 @@ _G.N = {
   } end,
 }
 test('   Drone waypoints', shouldPrint(
-     "∅i>2ⓐw! P=i/Nf300ⓡDm^Pp,s/0~'Dg!>1',_(Pl)",
-  -- "P=i/Nf300ⓡDm^Pp,       _(Pl),i>4ⓐw!",
+  "P=i/Nf300ⓡDm^Pp,s/0~'Dg!>1',_(Pl)",
   'find(300)m(10,0,0)ÔÔ⮋⮋⮋⮋'..
   'find(300)m(20,1,0)ÔÔ⮋⮋⮋⮋'..
   'find(300)m(30,2,0)ÔÔsel(1)⤓sel(2)⤓sel(3)⤓sel(4)⤓'..
-  'find(300)m(10,0,0)ÔÔ⮋⮋⮋⮋'
+  'find(300)m(10,0,0)ÔÔ⮋⮋⮋⮋',
+  4
 ))
 
 --[[
 
 
 ? Circular miner. Gi! burn fuel in first slot
-Gi,_'Rm3,Rsw3'~i*3,Rtn⒯
+Gi,_'Rm3,Rsw3'~i*2,Rtn⒯
 
 ! Other programs
 
