@@ -132,18 +132,19 @@ Note that all return values are calculated first, and only then will the functio
 
 ### Globals
 
-All components exposed to globals.
+<!-- components -->
+1. All components exposed as globals
+2. Components sorted naturally and added to globals by big first letter
 
-Also, they are sorted by name length and added to global variables by the first letter.
-
-```less
-R	=>	robot
-E	=>	eeprom
-T	=>	trading
-C	=>	computer
-I	=>	inventory_controller
-...
-```
+  ```less
+  C	=>	computer
+  E	=>	eeprom
+  I	=>	inventory_controller
+  R	=>	robot
+  T	=>	trading
+  ...
+  ```
+<!--  -->
 
 Additional globals:
 

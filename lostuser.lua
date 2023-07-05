@@ -31,35 +31,77 @@ local skipComponents = {
 }
 --]]
 
--- Define all components as big letter global, short names first
-do
-  local registered = {} -- Set of registered components
-  for address, name in pairs(component.list()) do
-    --[[MINIFY]]if not skipComponents[name] then--]]
-    local C,p = name:sub(1, 1):upper(),component.proxy(address)
-    _G[name] = _G[name] or p
-    if _G[C]==nil or (registered[C] and #registered[C] > #name) then
-      _G[C] = p
-      registered[C] = name
+local function orderedPairs(t, wrapper)
+  local keys,i = {},0
+  for k in pairs(t) do keys[#keys+1]=k end
+  local function padnum(a) local d = tostring(a) return d:gsub("%d+",("%03d%s"):format(#d, d)) end
+  table.sort(keys, function(a,b) return padnum(a) < padnum(b) end)
+  return function()
+    i=i+1
+    if wrapper then
+      return keys[i], wrapper(t[keys[i]])
+    else
+      return keys[i], t[keys[i]]
     end
+  end, t, nil
+end
+
+-- Define all components as big letter global, short names first
+--[[<!-- components -->
+  1. All components exposed as globals
+  2. Components sorted naturally and added to globals by big first letter
+
+    ```less
+    C	=>	computer
+    E	=>	eeprom
+    I	=>	inventory_controller
+    R	=>	robot
+    T	=>	trading
+    ...
+    ```
+]]
+--[[ Exapmle of creative robot:
+C = computer
+C = crafting
+E = eeprom
+E = experience
+F = filesystem
+G = geolyzer
+G = gpu
+I = internet
+I = inventory_controller
+K = keyboard
+M = modem
+R = redstone
+R = robot
+S = screen
+T = tank_controller
+T = trading
+]]
+do
+  for address, name in orderedPairs(component.list()) do
+    --[[MINIFY]]if not skipComponents[name] then--]]
+    local C, p = name:sub(1, 1):upper(), component.proxy(address)
+    _G[name] = _G[name] or p
+    _G[C] = _G[C] or p
     --[[MINIFY]]end--]]
   end
 end
 
---- Remove `%` symbol from chat log since its cause an error FML error
---- [Client thread/ERROR] [FML]: Exception caught during firing event net.minecraftforge.client.event.ClientChatReceivedEvent@3e83e9ca:
---- net.minecraft.util.text.TextComponentTranslationFormatException: Error parsing
-local function escape(s) return s:gsub('%%','%%%%') end
-
 --- Signal that we have error
 ---@param err string
----@param skipTraceback? number
-local function localError(err, skipTraceback)
-  if computer then computer.beep(1800, 0.5) end
-  error(escape(
+local function localError(err)
+  -- if computer then computer.beep(1800, 0.5) end
+  error(
     tostring(err):gsub('%[string ".+"%]:%d+: ', '')
+
+    --- Remove `%` symbol from chat log since its cause an error FML error
+    --- [Client thread/ERROR] [FML]: Exception caught during firing event net.minecraftforge.client.event.ClientChatReceivedEvent@3e83e9ca:
+    --- net.minecraft.util.text.TextComponentTranslationFormatException: Error parsing
+    :gsub('%%','%%%%')
+
     -- skipTraceback and tostring(err) or debug.traceback(err)
-  ), 0)
+  , 0)
 end
 
 --- Check if value is truthy
@@ -85,12 +127,12 @@ end
 ---@param t any
 ---@return string
 local function serialize(t)
-  if type(t)~='table' then return tostring(t) end
-  local s,keys='',{}
-  local function append(l) s=s..(s==''and''or',')..l end
-  for i=1,#t do append(tostring(t[i]))keys[i]=true end
-  for k,v in pairs(t) do if not keys[k] then append(tostring(k)..'='..tostring(v)) end end
-  return s
+  local s,i='',0
+  for k,v in orderedPairs(t) do
+    if k==1 or i>0 then i=i+1 end
+    s=s..(s==''and''or',')..((k==i and k~=0) and '' or tostring(k)..'=')..tostring(v)
+  end
+  return '{'..s..'}'
 end
 
 --- Create new table with members from first one plus second one
@@ -178,7 +220,7 @@ local function isCallable(t)
 end
 
 --- Turn table of tables into table [[1,2],[3,4]] => [1,2,3,4]
----@param t table
+---@param t table QTable
 local function flatten(t)
   local r = {}
   for k, v in pairs(t) do
@@ -273,6 +315,7 @@ local function index(t, keyFull)
     local f = index(t, key)
     if isCallable(f) then
       return Q(f(tonumber(arg)))
+      -- TODO: t3 - return 3d sorted index
     end
 
   -- Big letter shortand Tg => T.g
@@ -633,7 +676,7 @@ q = function(t)
           ```
         ]]
         if op=='lambda' then
-          r = flatten(t)
+          r = flatten(source)
 
         --[[<!-- -t -->
           Swap keys and values
@@ -644,7 +687,8 @@ q = function(t)
           ```
         ]]
         elseif op=='map' then
-          r = {} for k,v in pairs(t) do r[v]=k end
+          r = {} for k,v in pairs(source) do r[v]=k end
+
         end
       else
         --?-- Function
@@ -673,7 +717,7 @@ q = function(t)
 
   local mt = {
     __q = qIsCallable and 1 or 0,
-    __tostring = function() return '_'..(qIsCallable and tostring(t) or '{'..serialize(t)..'}') end,
+    __tostring = function() return '_'..(qIsCallable and tostring(t) or serialize(t)) end,
   }
 
   -- 1 --
@@ -764,13 +808,8 @@ q = function(t)
     rawset(t, k, q(v))
   end
 
-  -- When pairs, returned elements wrapped into q(v)
-  function mt:__pairs()
-    return function(self, k)
-      local k, v = next(t, k)
-      return k, q(v)
-    end, t, nil
-  end
+  -- When pairs, returned ORDERED elements wrapped into q(v)
+  mt.__pairs = function() return orderedPairs(t, q) end
   function mt:__len() return #t end
 
   return setmetatable({}, mt)
@@ -837,7 +876,6 @@ loadBody = function(code1, code2, chunkName, ...)
         for k, v in pairs(v) do t[k] = v end
       end
     end
-    -- for k, v in pairs(t) do print(' '..k)end
   else
     t = __ENV
   end
@@ -880,7 +918,7 @@ end
 
 __ENV.write = function(...)
   --[[MINIFY]]if print then runCount = 0 return print(...) end--]]
-  localError(q{...}, 0)
+  localError(q{...})
 end
 
 __ENV.sleep = function(t)
