@@ -835,7 +835,6 @@ local _MACROS = {
   'ⓡ', ' return ',
   '⒯', '(true)',
   '⒡', '(false)',
-  '∅', ' __trash=',
   '!', '()',
 }
 

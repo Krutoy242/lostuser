@@ -664,7 +664,6 @@ Program have several predefined macroses - symbols, that will be replaced everyw
 ⓡ => ' return '
 ⒯ => '(true)'
 ⒡ => '(false)'
- ∅ => ' __trash='
 ```
 
 ## Examples
