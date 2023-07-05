@@ -761,30 +761,32 @@ Program have several predefined macroses - symbols, that will be replaced everyw
 
   Robot name:
   ```lua
-  #st(2,Rdt(3))<6ⓐ{Rsw3,s2,Rsk/0&1,Ie0,Ru3,Ie0}ⓞRu3,s
+  #(1|#Rdt&3)<6ⓐRsw/3-s/1-Rsk/0-Ie-Ru/3-IeⓞRu3,s
   ```
-  * `st(2,Rdt(3))`: Detect block in front. Note that `Rdt3` would not work, since it return only 1 value. `st` is shortand for `select`
-  * `<6`: trick to determine if block is solid
-  * `Rsw3,s2`: Cut whole tree
-  * `Rsk(0,1),Ie!,Ru3,Ie!`: Suck one sapling from bottom, then plant it
+  * `(1|#Rdt&3)`: Detect block in front, select second returned value - [block description](https://ocdoc.cil.li/component:robot)
+  * `#()<6`: trick to determine if block is solid
+  * `Rsw/3-s/1`: Cut whole tree, wait 1 second
+  * `Rsk/0-Ie-Ru/3-Ie`: Suck sapling from bottom, then plant it. Note that `Rsk` derived one value from `sleep` return
   * `Ru3,s`: Fertilize sapling
 
 - **Other examples**
 
+<!-- 
   * *Robot sorting mob drop*. Take from bottom, damagable items to top, other - forward
     ```lua
     Rd/_(IsF(0,i%Igz0+1)ⓐIgSII!.mD,1,3)
     ```
+-->
 
   * *Cat opener*. Takes 16 items in front, right-click them and then dump inventory top
     ```lua
     Rsk/3&16ⓐIe!,~_'Ru0',_16/Rc|Rsel-Rd/1/q
     ```
 
-  * *Compressing bot*. Takes from front, craft 3x3 them, dump buttom or forward.
+  * *Compressing bot*. Takes from front, craft 3x3 them, dump back.
     > Required upgrades: Crafting, Inventory Controller, Inventory
     ```lua
-    _16|Rc|Rsel-'Rd0ⓞRd3',IsF/3/'_11/8/4&Rc!/9/RtT'|i%Igz3+1,Ccr
+    -(_16-Rc&12)|Rd/3/q&Rsel,IsF/3/'_11/8/4&Rc!/9/RtT'|i81,Cc
     ```
 
 
