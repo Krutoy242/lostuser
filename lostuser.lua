@@ -490,15 +490,18 @@ q = function(t)
                 2^_{4,5,6} -- 5
                 ```
               ]]
-              r = source[target]
+              r = t[target]
             else
               --[[<!-- t^n -->
-                Push value in table
+                Push value in END of table
                 ```lua
-                _{1,2,3}^4 -- _{1,2,3,4}
+                _{1,[3]=3,a=6,[4]=4}^5
+                -- _{1,3=3,4=4,5=5,a=6}
                 ```
               ]]
-              source[#source + 1] = target; r = source
+              local max = 0
+              for k in pairs(source) do if tonumber(k) then max = math.max(max, k) end end
+              t[max+1] = target; r = source
             end
 
           elseif op=='lambda' then

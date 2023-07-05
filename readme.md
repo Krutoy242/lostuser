@@ -322,9 +322,10 @@ _{4,5,6}^{3,1} -- {6,4}
 <tr><td>Number, Boolean</td><td>
 
 <!-- t^n -->
-Push value in table
+Push value in END of table
 ```lua
-_{1,2,3}^4 -- _{1,2,3,4}
+_{1,[3]=3,a=6,[4]=4}^5
+-- _{1,3=3,4=4,5=5,a=6}
 ```
 <!--  -->
 
