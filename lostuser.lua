@@ -259,11 +259,12 @@ end
 
 --- Find value by key in table
 ---@param t table
----@param keyFull string
+---@param keyFull any
 ---@return any Queued value q(v)
 local function index(t, keyFull)
   local exact = t[keyFull]
   if exact ~= nil then return q(exact) end
+  if type(keyFull) ~= 'string' then return end
   local C = keyFull:sub(1,1)
 
   -- Global key that started with _
