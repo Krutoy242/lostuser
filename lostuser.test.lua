@@ -162,12 +162,15 @@ lu = loadfile'lostuser.lua'
 -- test('     Parsing error', shouldError('^.+: attempt to concat', ' w(c..d)'))
 
 _G.T = {
-{name='n1', index=1},{name='n2', take=true},{name='n3', take=0, index=3},
-exp=function(a,b) return a^b end,
-getTrades = function() return {
-  {trade=function()return 't','u' end, isEnabled=function()return false end},
-  {trade=function()return 'v','w' end, isEnabled=function()return true end},
-} end}
+  {name='n1', index=1},
+  {name='n2', take=true},
+  {name='n3', take=0, index=3},
+  getTrades = function() return {
+    {trade=function()return 't','u' end, isEnabled=function()return false end},
+    {trade=function()return 'v','w' end, isEnabled=function()return true end},
+  } end,
+  exp=function(a,b) return a^b end,
+}
 _G.trading = _G.T
 
 test('      Shortand  _3', shouldOutput("_3",                     '_{1,2,3}'))
@@ -175,6 +178,7 @@ test('      Shortand _13', shouldOutput("_013",                   '_{0=0,1,2,3,4
 test('      Shortand  _a', shouldOutput("_{_a(4),a,type(_a(_'Ru3'))==type(a),os._a^3,os.a}", '_{4,4,true,3,3}'))
 test('      Shortand  i5', shouldPrint("print(i5)",               '1234512', 7))
 test('     Ordered Pairs', shouldOutput("_{1,[0]=2,3,c05=4,c4=5}", '_{0=2,1,3,c4=5,c05=4}'))
+test('  Table num getter', shouldOutput("_{tostring(T5)==tostring(Tg),T6==nil}", '_{true,true}'))
 test('Map:     Tbl x Fnc', shouldOutput("Tg!^'tr!'",              '_{t,v}'))
 test('Map(call)Tbl x Fnc', shouldOutput("Tg0'tr!'",              '_{t,v}'))
 test('Map:     Fnc x Num', shouldOutput("Te/3&4",                 '81.0'))

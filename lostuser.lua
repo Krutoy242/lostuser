@@ -346,10 +346,11 @@ local function index(t, keyFull)
   -- Key ends with number - probably function call
   -- Ru3 => robot.use(3)
   if arg ~= '' then
-    local f = index(t, key)
+    local f,n = index(t, key),tonumber(arg)
     if isCallable(f) then
-      return Q(f(tonumber(arg)))
-      -- TODO: t3 - return 3d sorted index
+      return q(f(n))
+    elseif type(f)=='table' then
+      return q(f[getOrderedKeys(f)[n]])
     end
 
   -- Big letter shortand Tg => T.g
