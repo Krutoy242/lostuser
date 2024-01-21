@@ -246,14 +246,10 @@ test('   Drone waypoints', shouldPrint(
 
 --[[
 
-
-? Circular miner. Gi! burn fuel in first slot
-Gi,_'Rm3,Rsw3'~i*2,Rtn⒯
+? Oredict filtering robot
+IsF/3&i255ⓐRd(1&IgSII!.o'({ore=1,dus=0})[sg.s(v,1,3)]'ⓞ3)
 
 ! Other programs
-
-? Line farmer
-_'Ru0,Rm/(i%2+2)~12'~4,Rsel-Rd/0/q~80,s120
 
 ? Drone sapling planter
 x,z=i%8,i%64//8 u={x,0,z} -- Coords base on `i` variable
@@ -266,71 +262,17 @@ a=-1,Gs_11a881
 _6^1
 
 ?========================================================
+-- Unstackable extractor
 
-? New trader
-0,i16,i16<2ⓐ_a&-~Tg0"_{g0}'n',~tr",Rsel_,Rd_,_'a[IgI_.n]ⓐIsF_'
+_'IsF/3&a,Rd1ⓞ{Pps1,Rsel9,Rp1,Rd^Rsel1}'
+IsF/3/a|'Pps1,Rsel9,Rp1,Rd^Rsel1'~-Rd/1 -- require -f
+IsF/3/a|'Pps1,sel9,p1,d^sel1'/R~-Rd/1 -- require f/t signature (expose t to function)
 
-? inventory_controller:
+-- How it would be with f.pointer
+(IgSI-3-_a/i1728).mS&(IsF/3/a-'Pps1,sel9,p1,d^sel1'/R~-Rd/1)
 
-equip
-store
-dropIntoSlot
-getAllStacks
-suckFromSlot
-compareStacks
-storeInternal
-getStackInSlot
-getInventorySize
-getSlotStackSize
-compareToDatabase
-getSlotMaxStackSize
-getItemInventorySize
-getStackInInternalSlot
-
-? robot:
-
-use
-drop
-fill
-move
-name
-slot
-suck
-turn
-count
-drain
-place
-space
-swing
-detect
-select
-compare
-compareTo
-item_used
-tankCount
-tankLevel
-tankSpace
-durability
-selectTank
-transferTo
-item_placed
-compareFluid
-getLightColor
-inventorySize
-setLightColor
-compareFluidTo
-block_activated
-item_interacted
-transferFluidTo
-
-? geolyzer
-
-scan
-store
-detect
-analyze
-canSeeSky
-isSunVisible
+-- Need somehow fix nil and number comparison
+_'BmS<2'~_b&IgSI/3/_a^i1728
 
 ]]
 
