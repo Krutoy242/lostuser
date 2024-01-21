@@ -21,13 +21,15 @@ Robot (or drone!) BIOS program for Minecraft OpenComputers mod.
     - [Calling `_`](#calling-_)
   - [Functional Programming](#functional-programming)
     - [Precedence](#precedence)
-    - [Map `^` or `&`](#map--or-)
+    - [Map `^`, `&` or `+`](#map---or-)
     - [Lambda `-` `/` `|`](#lambda----)
-    - [Loop `~` or `..`](#loop--or-)
+    - [Loop `~` or `*`](#loop--or-)
     - [Unary](#unary)
     - [Truthy](#truthy)
   - [Macros](#macros)
   - [Examples](#examples)
+  - [Additionals](#additionals)
+    - [Numeric dictionary](#numeric-dictionary)
   - [Links](#links)
 
 ## Why?
@@ -192,6 +194,11 @@ Shortening rules:
     > Ru3 -- robot.use(3)
     > s10 -- sleep(10)
     > ```
+    Same time, if its table instead of function, all keys of the table will be naturally sorted and returned `N`th element
+    > ```lua
+    > R16 -- robot.select
+    > ```
+    See more in [other section](#numeric-dictionary).
 
 6. Locals can't be shortened
     > ```lua
@@ -232,6 +239,9 @@ Low dash `_` is special helper function.
 <!-- calling _ -->
 - **Using `_` on string**  
   Will load code inside this string and return it as function.
+  
+  Calling this function is always error-safe - if exception happen inside, function just return `nil`.
+
   > ```lua
   > _'Rm,s2'()(0) -- call `sleep(2),robot.move(0)`
   > ```
@@ -251,9 +261,11 @@ Any table or function that you can get from a global will be converted into spec
 
 This table enchanced with additional operator metamethods that helps with functional-style programming.
 
+Any iteration or `pairs()` calls on this converted tables will output elements in naturally sorted order.
+
 **Operators** behave differently depending or left and right side of operator.
 
-Note that whenever `string` would be detected in right side, it would be loaded and converted to function in manner of `_'fnc'`.
+Note that whenever `string` would be detected, it would be loaded and converted to function in manner of `_'fnc'`.
 
 ### Precedence
 
@@ -281,9 +293,9 @@ Operator precedence in Lua follows the table below, from higher to lower priorit
 ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝     
 -->
 
-### Map `^` or `&`
+### Map `^`, `&` or `+`
 
-`^` and `&` operators do the same. There is two of them only to managing precedence.
+`^`, `&` and `+` operators do the same. There is three of them only to managing precedence.
 
 - **Note¹:** `^` is right associative. This means, right side will be computed first.
 
@@ -436,7 +448,10 @@ f/g -- (...)=>g(f(...))
 <tr><td>Table</td><td>
 
 <!-- f/t -->
-<sub>Not yet implemented</sub>
+Simple call
+```lua
+f/R -- f(R)
+```
 <!--  -->
 
 </td></tr>
@@ -481,7 +496,7 @@ Rotated composition
 ╚══════╝ ╚═════╝  ╚═════╝ ╚═╝     
 -->
 
-### Loop `~` or `..`
+### Loop `~` or `*`
 
 <table>
 <tr>
@@ -605,7 +620,14 @@ Flatten table, using numerical indexes.
 `-`</td><td>Function</td><td>
 
 <!-- -f -->
-<sub>Not yet implemented</sub>
+Make a function which result will be flipped.
+If result is `truthy`, returns `0`. Return `1` otherwise.
+```lua
+-- id here is function that returns its first arg
+(-id)(0) -- 1
+(-id)(4) -- 0
+(- -id)(4) -- 1
+```
 <!--  -->
 
 </td></tr>
@@ -676,14 +698,14 @@ Program have several predefined macroses - symbols, that will be replaced everyw
   
   Drone name:
   ```lua
-  P=i/Nf300ⓡDm^Pp,s/1~'Dg!>1',_(Pl)
+  P=i/Nf300ⓡDm^Pp,s/1~'Dg0>1',_(Pl)
   ```
   * `Nf300`: Run `navigation.findWaypoints(300)`.
   * `i/Nf300`: `i` is index of script execution. `i / table` is "Get by index modulus" `t[i % #t + 1]`.
   * `P=i/Nf300`: Write into global variable `P` a different waypoint each script cycle.
   * `ⓡ`: will be replaced by ` return `
   * `Dm^Pp`: calling `drone.move(table.unpack(P.position))`.
-  * `s/1~'Dg!>1'` => `while drone.getOffset() > 1 do sleep(1) end`.
+  * `s/1~'Dg0>1'` => `while drone.getOffset() > 1 do sleep(1) end`.
   * `_(Pl)`: Load `P.label` as Lua code. This loaded function would be [returned and executed](#return).
 
   Waypoints labels. First one just suck from bottom, second one iterate over 4 slots and drop down.
@@ -712,24 +734,28 @@ Program have several predefined macroses - symbols, that will be replaced everyw
 - **Trader bot**
 
   > Required upgrades: *Trading*, *Inventory*, *Inventory Controller*
-  
+
   ![](https://i.imgur.com/HEgNabM.png)
 
   Robot name:
   ```lua
-  Rsel-Rd/0/q~RiS0,IsF/0~Igz0,Tg0/'~tr'
+  Rsel-'Rd0'~RiS0,IsF/0~Igz0,Tg0'~tr'
   ```
-  * `Rsel-Rd/0/q~RiS0`: Select each slot and dump bottom
-    > - `Rd/0/q`: is a function that would call `robot.drop(0, q)` when executed. Note that there is a trick: `q` is undefined global that we used an shortand for `nil`
+  * `Rsel-'Rd0'~RiS0`: Select each slot and dump bottom
+    > - `'Rd0'`: is a function that would call `robot.drop(0)` when executed.
     > - `RiS0`: is shortand for `robot.inventorySize(0)`. Note that this function not using any arguments so we could call it with `0`
     > - `Rsel`: `robot.select` shortand. Note that we used `-` operator here, that is same as `/` but have lower precedence
   * `IsF/0~Igz0`: For each slot of inventory on the bottom `inventory_controller.getInventorySize(0)` call `inventory_controller.suckFromSlot(0, k)`
-  * `Tg0/'~tr'`: Trade all trades.
+  * `Tg0'~tr'`: Trade all trades.
     > - `~tr`: Call `trade()` while it returns true. Note that inside this function, all arguments exposed as global, so we could acces `trade` as global (actually, its `upvalue`)
 
-  There is another variant of robot name, way advanced. It will pull only items that actually required for trading. This program hardcoded to work with inventory with size 16:
+  There is another variant of robot name, way advanced. It will pull only items that actually required for trading. This program hardcoded to work with **internal and external** inventory with size 16:
   ```lua
-  a=-~Tg0"_{g0}'n',~tr",Rsel-Rd/0/k~16ⓡ_16'IgI/0&k''a[n]ⓐIsF/0&k'
+  -- Trade everything
+  a=-~Tg0"_{g!}'n',~tr"ⓡ_16&R16-'Rd0'&IgI/0&'a[n]ⓐI8/0&k'
+
+  -- Do not sell emeralds [id==388]
+  a=-~Tg0'388^-g0ⓞ{g0.n,~tr}'ⓡ_16&R16-'Rd0'&IgI/0&'a[n]ⓐI8/0&k'
   ```
 
 - **Rune maker**
@@ -771,24 +797,160 @@ Program have several predefined macroses - symbols, that will be replaced everyw
 
 - **Other examples**
 
-<!-- 
+  * *Circular Miner*. Using Hammer with Alumite part (Global Traveler trait). Place Robot underground, place a stack of Charcoal Blocks in selected robot slot. Robot will start to circle around, mining everything.
+    > Required upgrades: Hover
+    > Optional upgrades: Inventory, Generator
+    ```lua
+    Gi,_'Rm3,Rsw3'~i*2,Rtn⒯
+    ```
+
   * *Robot sorting mob drop*. Take from bottom, damagable items to top, other - forward
     ```lua
-    Rd/_(IsF(0,i%Igz0+1)ⓐIgSII!.mD,1,3)
+    Rd|3%2^(IsF(0,i%Igz0+1)ⓐIgSII!.mDⓞ2)
     ```
--->
 
   * *Cat opener*. Takes 16 items in front, right-click them and then dump inventory top
     ```lua
-    Rsk/3&16ⓐIe!,~_'Ru0',_16/Rc|Rsel-Rd/1/q
+    Rsk/3&16ⓐIe!,~_'Ru0',_16/Rc|Rsel/'Rd1'
     ```
 
   * *Compressing bot*. Takes from front, craft 3x3 them, dump back.
     > Required upgrades: Crafting, Inventory Controller, Inventory
     ```lua
-    -(_16-Rc&12)|Rd/3/q&Rsel,IsF/3/'_11/8/4&Rc!/9/RtT'|i81,Cc
+    -(_16-Rc&12)|'Rd3'&Rsel,IsF/3/'_11/8/4&Rc!/9/RtT'|i81,Cc
     ```
 
+  * *Unstackable bot*. Takes item from front only if they are unstackable and put it on top. If cant drop item top, push up and place block.
+    > Required upgrades: Piston, Inventory Controller, Inventory  
+    > Flood all robot slots except 1. Slot 9 should have new inventories for unstackables.
+    ```lua
+    (IgSI/3&_a^i1728ⓞ{}).mS^_{_'IsF/3&a,Rd1ⓞ{Pps1,Rsel9,Rp1,Rsel1}'}
+    ```
+
+## Additionals
+
+### Numeric dictionary
+
+This is not actual dictionary - all this information could be generated in game for every table.
+
+To get sorted numeric values, name robot thi way, where `T` is pointer to desired table:
+```lua
+e((~-T'k')"'\\n'..k..' '..v")
+```
+
+Cheatsheet of most common tables:
+
+<table>
+<tr><td>
+
+> ```ruby
+> robot:
+> R1  use
+> R2  drop
+> R3  fill
+> R4  move
+> R5  name
+> R6  slot
+> R7  suck
+> R8  turn
+> R9  type
+> R10 count
+> R11 drain
+> R12 place
+> R13 space
+> R14 swing
+> R15 detect
+> R16 select
+> R17 address
+> R18 compare
+> R19 compareTo
+> R20 tankCount
+> R21 tankLevel
+> R22 tankSpace
+> R23 durability
+> R24 selectTank
+> R25 transferTo
+> R26 compareFluid
+> R27 getLightColor
+> R28 inventorySize
+> R29 setLightColor
+> R30 compareFluidTo
+> R31 transferFluidTo
+> ```
+
+</td><td>
+
+> ```ruby
+> inventory_controller:
+> I1  slot
+> I2  type
+> I3  equip
+> I4  store
+> I5  address
+> I6  dropIntoSlot
+> I7  getAllStacks
+> I8  suckFromSlot
+> I9  compareStacks
+> I10 storeInternal
+> I11 getStackInSlot
+> I12 isEquivalentTo
+> I13 getInventoryName
+> I14 getInventorySize
+> I15 getSlotStackSize
+> I16 compareToDatabase
+> I17 areStacksEquivalent
+> I18 getSlotMaxStackSize
+> I19 getItemInventorySize
+> I20 dropIntoItemInventory
+> I21 suckFromItemInventory
+> I22 compareStackToDatabase
+> I23 getStackInInternalSlot
+> ```
+
+> ```ruby
+> trade:
+> 1 type
+> 2 trade
+> 3 getInput
+> 4 getOutput
+> 5 isEnabled
+> 6 getMerchantId
+> ```
+
+</td><td>
+
+> ```ruby
+> geolyzer:
+> G1 scan
+> G2 slot
+> G3 type
+> G4 store
+> G5 detect
+> G6 address
+> G7 analyze
+> G8 canSeeSky
+> G9 isSunVisible
+> ```
+
+> ```ruby
+> tank_controller:
+> T1 fill
+> T2 slot
+> T3 type
+> T4 drain
+> T5 address
+> T6 getTankCount
+> T7 getTankLevel
+> T8 getFluidInTank
+> T9 getTankCapacity
+> T10 getTankLevelInSlot
+> T11 getFluidInTankInSlot
+> T12 getTankCapacityInSlot
+> T13 getFluidInInternalTank
+> ```
+
+</td></tr>
+</table>
 
 ## Links
 
