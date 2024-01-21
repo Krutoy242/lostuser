@@ -374,9 +374,10 @@ end
 --- Generate safe function from lua code
 ---@param txt string Lua code to load as function body
 local function makeRunedFunction(txt)
-  local p1, p2 = 'return function(...)local k,v=... ', txt..' end'
+  local code = translate(txt)
+  local p1, p2 = 'return function(...)local k,v=... ', code..' end'
   return function(...) return safeCall(
-    loadBody(p1..'return '..p2, p1..p2, txt, ...)(), ...
+    loadBody(p1..'return '..p2, p1..p2, code, ...)(), ...
   ) end
 end
 
