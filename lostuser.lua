@@ -31,18 +31,35 @@ local skipComponents = {
 }
 --]]
 
-local function orderedPairs(t, wrapper)
-  local keys,i = {},0
+--- Prepare string for natural sort by adding '0' for every number in it
+---@param a string
+---@return string
+local function padnum(a)
+  return a:gsub("%d+", function(d)
+    return ('%04d'):format(d)
+  end)
+end
+
+local function getOrderedKeys(t)
+  local keys = {}
   for k in pairs(t) do keys[#keys+1]=k end
-  local function padnum(a) local d = tostring(a) return d:gsub("%d+",("%03d%s"):format(#d, d)) end
-  table.sort(keys, function(a,b) return padnum(a) < padnum(b) end)
+  table.sort(keys, function(a,b)
+    local c,d = tostring(a), tostring(b)
+    local m,n = #c,#d
+    return m==n and padnum(c):lower() < padnum(d):lower() or m<n
+  end)
+  return keys
+end
+
+--- Same as default Lua `pairs(t)` but iterating in sorted order
+---@param t table Table with one or many keys and values. Keys could be strings, numbers or their combinations.
+---@param wrapper? function Wrap values returned by pairs.
+---@return function
+local function orderedPairs(t, wrapper)
+  local keys,i = getOrderedKeys(t),0
   return function()
     i=i+1
-    if wrapper then
-      return keys[i], wrapper(t[keys[i]])
-    else
-      return keys[i], t[keys[i]]
-    end
+    return keys[i], wrapper and wrapper(t[keys[i]]) or t[keys[i]]
   end, t, nil
 end
 
@@ -264,20 +281,12 @@ end
 ---@param onlyTables? boolean keep only table results
 ---@return string
 local function getKey(short, obj, onlyTables)
-  local t,rgx = {},'^'..short:gsub('.','%1.*')
-  for k,v in pairs(obj) do
-    if type(k)=='string'
-      and (not onlyTables or type(v) == 'table')
-      and k:match(rgx)
-    then
-      t[#t+1] = k
+  local rgx = '^'..short:gsub('.','%1.*')
+  for k,v in orderedPairs(obj) do
+    if type(k)=='string' and (not onlyTables or type(v)=='table') and k:match(rgx) then
+      return k
     end
   end
-  table.sort(t, function(a,b)
-    local m,n=#a,#b
-    return m==n and a:upper() < b:upper() or m<n
-  end)
-  return t[1]
 end
 
 --- Find value by key in table
