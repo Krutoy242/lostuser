@@ -19,7 +19,7 @@ https://github.com/Krutoy242/lostuser
 ]]
 
 -- Forward declarations
-local pack, unpack, run, loadBody, q, Q = table.pack, table.unpack
+local pack, unpack, run, loadBody, q = table.pack, table.unpack
 
 --[[MINIFY]]
 -- If we run from OpenOS
@@ -197,7 +197,30 @@ local function loop(self, isTbl, trgFnc)
       r = self(j)
     end
   end
+  -- TODO: Return index of iteration or something else
   return r
+end
+
+--[[
+████████╗██████╗  █████╗ ███╗   ██╗███████╗██╗      █████╗ ████████╗███████╗
+╚══██╔══╝██╔══██╗██╔══██╗████╗  ██║██╔════╝██║     ██╔══██╗╚══██╔══╝██╔════╝
+   ██║   ██████╔╝███████║██╔██╗ ██║███████╗██║     ███████║   ██║   █████╗
+   ██║   ██╔══██╗██╔══██║██║╚██╗██║╚════██║██║     ██╔══██║   ██║   ██╔══╝
+   ██║   ██║  ██║██║  ██║██║ ╚████║███████║███████╗██║  ██║   ██║   ███████╗
+   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝╚══════╝╚═╝  ╚═╝   ╚═╝   ╚══════╝
+]]
+
+--- Replace all macroses
+---@param text string
+local function translate(text)
+  return text
+    :gsub('ⓐ', ' and ')
+    :gsub('ⓞ', ' or ')
+    :gsub('ⓝ', ' not ')
+    :gsub('ⓡ', ' return ')
+    :gsub('⒯', '(true)')
+    :gsub('⒡', '(false)')
+    :gsub('!', '()')
 end
 
 --[[
@@ -290,6 +313,7 @@ local function index(t, keyFull)
         > b._a^3 -- b.a = 3
         > ```
     ]]
+    -- TODO: f_ or t_ return hashed vlue
     if num then
       local from = (postfix:sub(1,1)=='0') and 0 or 1
       if C == '_' then
@@ -305,7 +329,7 @@ local function index(t, keyFull)
       -- _a(value) => a = value
       return q(function(v) t[postfix] = v; return v end)
     end
-    -- TODO: add functionality for q{}._
+    -- Idea: add functionality for q{}._
   end
 
   local key,arg = keyFull:match'(.-)(%d*)$'
@@ -349,9 +373,8 @@ end
 
 --- Generate safe function from lua code
 ---@param txt string Lua code to load as function body
----@param params string param names devided by comma
-local function makeRunedFunction(txt, params)
-  local p1, p2 = 'return function(...)local '.. params ..'=... ', txt..' end'
+local function makeRunedFunction(txt)
+  local p1, p2 = 'return function(...)local k,v=... ', txt..' end'
   return function(...) return safeCall(
     loadBody(p1..'return '..p2, p1..p2, txt, ...)(), ...
   ) end
@@ -359,24 +382,20 @@ end
 
 --- Generate helper functions
 ---@param target any Anything we targeting function to
----@param params? string param names devided by comma
 ---@return function, boolean
-local function getTarget(target, params)
-  local tt = type(target)
-  local trgFnc
+local function getTarget(target)
+  local tt, trgFnc = type(target)
   if tt == 'string' then
-    trgFnc = makeRunedFunction(target, params or 'k,v')
+    -- Generate safe function from lua code
+    local code = translate(target)
+    local p1, p2 = 'return function(...)local k,v=... ', code..' end'
+    trgFnc = function(...) return safeCall(
+      loadBody(p1..'return '..p2, p1..p2, code, ...)(), ...
+    ) end
   elseif isCallable(target) then
     trgFnc = target
   end
   return trgFnc, tt == 'table'
-end
-
---- Make call function
----@param f function
----@return function
-local function QFnc(f)
-  return function(_, ...) return Q(f(...)) end
 end
 
 --[[
@@ -387,13 +406,6 @@ end
 ██║ ╚═╝ ██║   ██║
 ╚═╝     ╚═╝   ╚═╝
 ]]
-
---- Pack all parameters as q
-Q = function(...)
-  local r = {}
-  for k, v in pairs(pack(...)) do r[k] = q(v) end
-  return unpack(r)
-end
 
 --- Single value q(t)
 q = function(t)
@@ -417,7 +429,7 @@ q = function(t)
         swap = true
       end
 
-      local trgFnc, trgTable = getTarget(target)
+      local trgFnc, targetTypeIsTable = getTarget(target)
       local r
 
       if not qIsCallable then
@@ -447,12 +459,11 @@ q = function(t)
           ]]
           -- TODO: Implement `t~f`
           -- elseif op=='loop' then
-          --   r = loop(source, true, trgFnc)
 
           end
 
         --?-- Table x Table
-        elseif trgTable then
+        elseif targetTypeIsTable then
 
           --[[<!-- t^t -->
             Pick indexes
@@ -533,7 +544,6 @@ q = function(t)
           ]]
           -- TODO: Implement `n~t`
           -- elseif op=='loop' then
-          --   r = loop(source, true, function(j) return j <= TONUMBER(target) end)
 
           end
 
@@ -572,7 +582,7 @@ q = function(t)
           end
 
         --?-- Function x Table
-        elseif trgTable then
+        elseif targetTypeIsTable then
 
           --[[<!-- f^t -->
             Unpack as arguments
@@ -608,7 +618,7 @@ q = function(t)
             ```
           ]]
           if op=='map' then
-            r = QFnc(source)(source, target)
+            r = source(target)
 
           elseif op=='lambda' then
             if swap then
@@ -709,7 +719,7 @@ q = function(t)
         --[[<!-- -f -->
           <sub>Not yet implemented</sub>
         ]]
-        -- TODO: Implement `-f`, probably composable function `-f (v) => (...) => f(v, ...)`
+        -- TODO: Implement `-f`, probably composable function `-f (v) => (...) => f(v, ...)`, or falsy(f)
         elseif op=='map' then
 
         end
@@ -767,13 +777,16 @@ q = function(t)
   --[[
     Possible need to implement:
     - zip
-    - flat
     - gsub
   ]]
   -----------------------------------------------------------------
 
   if qIsCallable then
-    mt.__call = QFnc(t)
+    mt.__call = function(_, ...)
+      local r = pack(t(...))
+      for k, v in pairs(r) do r[k] = q(v) end
+      return unpack(r)
+    end
     --[[<!-- #f -->
       Make a funtion that would wrap it result into table.  
       Useful for functions that returns several values
@@ -789,13 +802,16 @@ q = function(t)
 
   -- Calling tables is same as map them
   mt.__call = mt.__pow
+  --  TODO: Table and Function `:` indexes
+  --* Possible ideas:
+  --* • t:f'' | t:f{} -- ??
+  --* • f:f'' | f:f{} -- ??
 
   function mt:__index(key)
     --  TODO: add function indexing
     --* Possible ideas:
-    --* • f[2] pop 2 from stack and call
-    --* • f.n working with call result, like map table
-    --* • f[{}] possible same as above
+    --* • f.n | f[n] => f()?.n -- safe pointer of function result
+    --* • f[{}] ??
     return index(t, key)
   end
 
@@ -817,36 +833,6 @@ q = function(t)
   function mt:__len() return #t end
 
   return setmetatable({}, mt)
-end
-
---[[
-████████╗██████╗  █████╗ ███╗   ██╗███████╗██╗      █████╗ ████████╗███████╗
-╚══██╔══╝██╔══██╗██╔══██╗████╗  ██║██╔════╝██║     ██╔══██╗╚══██╔══╝██╔════╝
-   ██║   ██████╔╝███████║██╔██╗ ██║███████╗██║     ███████║   ██║   █████╗
-   ██║   ██╔══██╗██╔══██║██║╚██╗██║╚════██║██║     ██╔══██║   ██║   ██╔══╝
-   ██║   ██║  ██║██║  ██║██║ ╚████║███████║███████╗██║  ██║   ██║   ███████╗
-   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝╚══════╝╚═╝  ╚═╝   ╚═╝   ╚══════╝
-]]
-
-local _MACROS = {
-  'ⓐ', ' and ',
-  'ⓞ', ' or ',
-  'ⓝ', ' not ',
-  'ⓡ', ' return ',
-  '⒯', '(true)',
-  '⒡', '(false)',
-  '!', '()',
-}
-
---- Replace all macroses
----@param text string
-local function translate(text)
-  local i = 1
-  while i <= #_MACROS do
-    text = text:gsub(_MACROS[i], _MACROS[i+1])
-    i=i+2
-  end
-  return text
 end
 
 --[[
@@ -952,8 +938,7 @@ __ENV._ = function(target, ...)
   -- if args.n > 0 then
   --   if truthy(target) then return args[1] else return args[2] end
   -- end
-  local trgFnc, trgTable = getTarget(target)
-  return q(trgFnc or target)
+  return q(getTarget(target) or target)
 end
 
 -- Get value from global
