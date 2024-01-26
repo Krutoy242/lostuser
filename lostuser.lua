@@ -605,11 +605,13 @@ q = function(t)
             r = source(unpack(target)) -- f x {1,2,3} => f(1,2,3) (Unpack table)
 
           --[[<!-- f/t -->
-            <sub>Not yet implemented</sub>
+            Simple call
+            ```lua
+            f/R -- f(R)
+            ```
           ]]
-          -- TODO: Implement `f/t`
-          -- elseif op=='lambda' then
-          --   r = map(target, source)
+          elseif op=='lambda' then
+            r = source(target)
 
           --[[<!-- f~t -->
             <sub>Not yet implemented</sub>
