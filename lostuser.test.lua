@@ -190,6 +190,7 @@ test('          Replaces', shouldOutput("ⓡ⒯ⓐⓝ⒡ⓞ⒡",           'true
 test('          Unary ~T', shouldOutput("~~_{1,{2,3},{4,a=5,b=_{6,c=7}}}", '_{1,2,3,4,5,6,7}'))
 test('          Unary -T', shouldOutput("_{'a','b','c'}", '_{a,b,c}'))
 test('          Unary ~F', shouldPrint("~_'i=i+1ⓡi<3',w(i)", '3'))
+test('          Unary -F', shouldOutput("a=-_'k,v'ⓡ_{a(0),a(1),a(2),a(false),a(nil,true)}", '_{1,0,0,1,1}'))
 test('          Unary #f', shouldOutput("f=_'2,3,k'ⓡ_{f&4,#f&4}", '_{2,_{2,3,4}}'))
 
 local mi = 3

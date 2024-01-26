@@ -728,10 +728,17 @@ q = function(t)
           repeat until not truthy(source())
 
         --[[<!-- -f -->
-          <sub>Not yet implemented</sub>
+          Make a function which result will be flipped.
+          If result is `truthy`, returns `0`. Return `1` otherwise.
+          ```lua
+          -- id here is function that returns its first arg
+          (-id)(0) -- 1
+          (-id)(4) -- 0
+          (- -id)(4) -- 1
+          ```
         ]]
-        -- TODO: Implement `-f`, probably composable function `-f (v) => (...) => f(v, ...)`, or falsy(f)
         elseif op=='map' then
+          r = function(...) return truthy(source(...)) and 0 or 1 end
 
         end
       end
