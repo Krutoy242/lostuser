@@ -377,36 +377,22 @@ end
 
 local function safeCall(f, ...)
   local safeResult = pack(pcall(f, ...))
-  if not safeResult[1] then localError(safeResult[2]) end
+  if not safeResult[1] then return end
   return unpack(safeResult, 2)
-end
-
---- Generate safe function from lua code
----@param txt string Lua code to load as function body
-local function makeRunedFunction(txt)
-  local code = translate(txt)
-  local p1, p2 = 'return function(...)local k,v=... ', code..' end'
-  return function(...) return safeCall(
-    loadBody(p1..'return '..p2, p1..p2, code, ...)(), ...
-  ) end
 end
 
 --- Generate helper functions
 ---@param target any Anything we targeting function to
 ---@return function, boolean
-local function getTarget(target)
-  local tt, trgFnc = type(target)
-  if tt == 'string' then
-    -- Generate safe function from lua code
-    local code = translate(target)
-    local p1, p2 = 'return function(...)local k,v=... ', code..' end'
-    trgFnc = function(...) return safeCall(
-      loadBody(p1..'return '..p2, p1..p2, code, ...)(), ...
-    ) end
-  elseif isCallable(target) then
-    trgFnc = target
-  end
-  return trgFnc, tt == 'table'
+local function functionize(target)
+  if type(target) ~= 'string' then return target, isCallable(target) end
+
+  -- Generate safe function from lua code
+  local code = translate(target)
+  local p1, p2 = 'return function(...)local k,v=... ', code..' end'
+  return function(...) return safeCall(
+    loadBody(p1..'return '..p2, p1..p2, code, ...)(), ...
+  ) end, true
 end
 
 --[[
@@ -420,8 +406,7 @@ end
 
 --- Single value q(t)
 q = function(t)
-  local qtype = type(t)
-  local qIsCallable = isCallable(t)
+  local qtype, qIsCallable = type(t), isCallable(t)
   if (qtype ~= 'table' and not qIsCallable) or isQ(t) then return t end
 
   --############################################################
@@ -431,21 +416,68 @@ q = function(t)
   ---@param op string operator identifier
   ---@return any
   local function generic(op)
-    return function(source, target)
+    return function(left, right)
+      local rightIsTable, leftIsCallable, rightIsCallable, r = type(right) == 'table'
+      left, leftIsCallable = functionize(left)
+      right, rightIsCallable = functionize(right)
 
-      -- Determine sides
-      local swap
-      if type(source) ~= 'table' then
-        source, target = target, source
-        swap = true
-      end
+      if not leftIsCallable then
+        if type(left) ~= 'table' then
+          --?-- N x Table
+          if not rightIsCallable then
+            --[[<!-- n^t -->
+              Get by numerical or boolean index
+              ```lua
+              2^_{4,5,6} -- 5
+              ```
+            ]]
+            if op=='map' then
+              r = t[left]
 
-      local trgFnc, targetTypeIsTable = getTarget(target)
-      local r
+            --[[<!-- n/t -->
+              Get by modulus
+              ```lua
+              i/t -- t[i % #t + 1]
+              ```
+            ]]
+            elseif op=='lambda' then
+              r = right[left % #right + 1]
 
-      if not qIsCallable then
-        --?-- Table x Function|String
-        if trgFnc then
+            --[[<!-- n~t -->
+              <sub>Not yet implemented</sub>
+            ]]
+
+            end
+
+          --?-- N x Function
+          else
+            --[[<!-- n^f -->
+              <sub>Not yet implemented</sub>
+            ]]
+            if op=='map' then
+
+            --[[<!-- n/f -->
+              Rotated composition
+              ```lua
+              2/f -- (...)=>f(..., 2)
+              ```
+            ]]
+            elseif op=='lambda' then
+              r = function(...) return right(..., left) end
+
+            --[[<!-- n~f -->
+              Same as `f~n`, but without passing index
+              ```lua
+              n~f -- for j=1,TONUMBER(n) do f() end
+              ```
+            ]]
+            else
+              for j=1,TONUMBER(left) do r = right() end
+
+            end
+          end
+        --?-- Table x Function
+        elseif rightIsCallable then
 
           --[[<!-- t^f -->
             Classical map
@@ -454,7 +486,7 @@ q = function(t)
             ```
           ]]
           if op=='map' then
-            r = map(source, trgFnc)
+            r = map(left, right)
 
           --[[<!-- t/f -->
             Filter, keep only if value is [Truthy](#Truthy)
@@ -463,18 +495,17 @@ q = function(t)
             ```
           ]]
           elseif op=='lambda' then
-            r = map(source, trgFnc, true)
+            r = map(left, right, true)
 
           --[[<!-- t~f -->
             <sub>Not yet implemented</sub>
           ]]
-          -- TODO: Implement `t~f`
           -- elseif op=='loop' then
 
           end
 
         --?-- Table x Table
-        elseif targetTypeIsTable then
+        elseif rightIsTable then
 
           --[[<!-- t^t -->
             Pick indexes
@@ -483,85 +514,55 @@ q = function(t)
             ```
           ]]
           if op=='map' then
-            r = map(target, function(k,v) return source[v] end) -- _{4,5,6}^{3,1} -- {6,4}
+            r = map(right, function(k,v) return left[v] end)
 
           --[[<!-- t/t -->
             <sub>Not yet implemented</sub>
           ]]
-          -- TODO: Implement `t/t`
           -- elseif op=='lambda' then
-          --   r = map(source, function(k,v) return function() return v(unpack(target)) end end)
 
           --[[<!-- t~t -->
             <sub>Not yet implemented</sub>
           ]]
-          -- TODO: Implement `t~t`, probably merge, union, intersection
-          --elseif op=='loop' then r = nil
-          -- _{1,2,a=3}~{a=4,5,6} => {1,2,3,4,5,6}
-          -- _2~_3 => {1,2,1,2,3}
+          --elseif op=='loop' then
 
-        end
+          end
 
-        --?-- Table x Number|Boolean
+        --?-- Table x Number
         else
 
           if op=='map' then
-            if swap then
-              --[[<!-- n^t -->
-                Get by numerical or boolean index
-                ```lua
-                2^_{4,5,6} -- 5
-                ```
-              ]]
-              r = t[target]
-            else
-              --[[<!-- t^n -->
-                Push value in END of table
-                ```lua
-                _{1,[3]=3,a=6,[4]=4}^5
-                -- _{1,3=3,4=4,5=5,a=6}
-                ```
-              ]]
-              local max = 0
-              for k in pairs(source) do if tonumber(k) then max = math.max(max, k) end end
-              t[max+1] = target; r = source
-            end
+            --[[<!-- t^n -->
+              Push value in END of table
+              ```lua
+              _{1,[3]=3,a=6,[4]=4}^5
+              -- _{1,3=3,4=4,5=5,a=6}
+              ```
+            ]]
+            local max = 0
+            for k in pairs(left) do if tonumber(k) then max = math.max(max, k) end end
+            t[max+1], r = right, left
 
           elseif op=='lambda' then
-            if swap then
-              --[[<!-- n/t -->
-                Get by modulus
-                ```lua
-                i/t -- t[i % #t + 1]
-                ```
-              ]]
-              r = source[target % #source + 1]
-            else
-              --[[<!-- t/n -->
-                Remove index
-                ```lua
-                _3/2 -- {1=1,3=3}
-                ```
-              ]]
-              source[target] = nil; r = source
-            end
+            --[[<!-- t/n -->
+              Remove index
+              ```lua
+              _3/2 -- {1=1,3=3}
+              ```
+            ]]
+            left[right], r = nil, left
 
           --[[<!-- t~n -->
             <sub>Not yet implemented</sub>
           ]]
-          -- TODO: Implement `t~n`
-          --[[<!-- n~t -->
-            <sub>Not yet implemented</sub>
-          ]]
-          -- TODO: Implement `n~t`
           -- elseif op=='loop' then
 
           end
 
         end
       else
-        --?-- Function x Function|String
-        if trgFnc then
+        --?-- Function x Function
+        if rightIsCallable then
 
           --[[<!-- f^f -->
             Composition
@@ -570,7 +571,7 @@ q = function(t)
             ```
           ]]
           if op=='map' then
-            r = function(...) return source(trgFnc(...)) end
+            r = function(...) return left(right(...)) end
 
           --[[<!-- f/f -->
             Reversed composition
@@ -579,7 +580,7 @@ q = function(t)
             ```
           ]]
           elseif op=='lambda' then
-            r = function(...) return trgFnc(source(...)) end
+            r = function(...) return right(left(...)) end
 
           --[[<!-- f~f -->
             While truthy do
@@ -587,13 +588,13 @@ q = function(t)
             f~g -- while truthy(g(j++)) do f(j) end
             ```
           ]]
-          elseif op=='loop' then
-            r = loop(source, false, trgFnc)
+          else
+            r = loop(left, false, right)
 
           end
 
         --?-- Function x Table
-        elseif targetTypeIsTable then
+        elseif rightIsTable then
 
           --[[<!-- f^t -->
             Unpack as arguments
@@ -602,7 +603,7 @@ q = function(t)
             ```
           ]]
           if op=='map' then
-            r = source(unpack(target)) -- f x {1,2,3} => f(1,2,3) (Unpack table)
+            r = left(unpack(right)) -- f x {1,2,3} => f(1,2,3) (Unpack table)
 
           --[[<!-- f/t -->
             Simple call
@@ -611,17 +612,16 @@ q = function(t)
             ```
           ]]
           elseif op=='lambda' then
-            r = source(target)
+            r = left(right)
 
           --[[<!-- f~t -->
             <sub>Not yet implemented</sub>
           ]]
-          -- TODO: Implement `f~t`
-          --elseif op=='loop' then r = nil
+          --elseif op=='loop' then
 
           end
 
-        --?-- Function x Number|Boolean
+        --?-- Function x Number
         else
 
           --[[<!-- f^n -->
@@ -631,45 +631,25 @@ q = function(t)
             ```
           ]]
           if op=='map' then
-            r = source(target)
+            r = left(right)
 
           elseif op=='lambda' then
-            if swap then
-              --[[<!-- n/f -->
-                Rotated composition
-                ```lua
-                2/f -- (...)=>f(..., 2)
-                ```
-              ]]
-              r = function(...) return source(..., target) end
-            else
-              --[[<!-- f/n -->
-                Composition
-                ```lua
-                f/1 -- (...)=>f(1,...)
-                ```
-              ]]
-              r = function(...) return source(target, ...) end
-            end
+            --[[<!-- f/n -->
+              Composition
+              ```lua
+              f/1 -- (...)=>f(1,...)
+              ```
+            ]]
+            r = function(...) return left(right, ...) end
 
-          elseif op=='loop' then
-            if swap then
-              --[[<!-- n~f -->
-                Same as `f~n`, but without passing index
-                ```lua
-                n~f -- for j=1,TONUMBER(n) do f() end
-                ```
-              ]]
-              for j=1,TONUMBER(target) do r = source() end
-            else
-              --[[<!-- f~n -->
-                For loop
-                ```lua
-                f~n -- for j=1,TONUMBER(n) do f(j) end
-                ```
-              ]]
-              r = loop(source, false, function(j) return j <= TONUMBER(target) end)
-            end
+          else
+            --[[<!-- f~n -->
+              For loop
+              ```lua
+              f~n -- for j=1,TONUMBER(n) do f(j) end
+              ```
+            ]]
+            r = loop(left, false, function(j) return j <= TONUMBER(right) end)
 
           end
 
@@ -958,7 +938,7 @@ __ENV._ = function(target, ...)
   -- if args.n > 0 then
   --   if truthy(target) then return args[1] else return args[2] end
   -- end
-  return q(getTarget(target) or target)
+  return q(functionize(target))
 end
 
 -- Get value from global

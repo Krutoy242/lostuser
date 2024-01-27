@@ -173,39 +173,42 @@ _G.T = {
 }
 _G.trading = _G.T
 
-test('      Shortand  _3', shouldOutput("_3",                     '_{1,2,3}'))
-test('      Shortand _13', shouldOutput("_013",                   '_{0=0,1,2,3,4,5,6,7,8,9,10,11,12}'))
-test('      Shortand  _a', shouldOutput("_{_a(4),a,type(_a(_'Ru3'))==type(a),os._a^3,os.a}", '_{4,4,true,3,3}'))
-test('      Shortand  i5', shouldPrint("print(i5)",               '1234512', 7))
-test('     Ordered Pairs', shouldOutput("_{1,[0]=2,3,c05=4,c4=5}", '_{0=2,1,3,c4=5,c05=4}'))
-test('  Table num getter', shouldOutput("_{tostring(T5)==tostring(Tg),T6==nil}", '_{true,true}'))
-test('Map:     Tbl x Fnc', shouldOutput("Tg!^'tr!'",              '_{t,v}'))
-test('Map(call)Tbl x Fnc', shouldOutput("Tg0'tr!'",              '_{t,v}'))
-test('Map:     Fnc x Num', shouldOutput("Te/3&4",                 '81.0'))
-test('Map:     Fnc x Tbl', shouldOutput("Te^{4,5}",               '1024.0'))
-test('               t^n', shouldOutput("_{1,[3]=3,a=6,[4]=4}^5",     '_{1,3=3,4=4,5=5,a=6}'))
-test('               n^t', shouldOutput("2^_{4,5,6}",             '5'))
-test('     Truthy Filter', shouldOutput("(T/'tk')^'n'",           '_{2=n2}'))
-test('               f/t', shouldOutput("_'e/3&4'/T",           '81.0'))
-test('          Replaces', shouldOutput("ⓡ⒯ⓐⓝ⒡ⓞ⒡",           'true'))
-test('          Unary ~T', shouldOutput("~~_{1,{2,3},{4,a=5,b=_{6,c=7}}}", '_{1,2,3,4,5,6,7}'))
-test('          Unary -T', shouldOutput("_{'a','b','c'}", '_{a,b,c}'))
-test('          Unary ~F', shouldPrint("~_'i=i+1ⓡi<3',w(i)", '3'))
-test('          Unary -F', shouldOutput("a=-_'k,v'ⓡ_{a(0),a(1),a(2),a(false),a(nil,true)}", '_{1,0,0,1,1}'))
-test('          Unary #f', shouldOutput("f=_'2,3,k'ⓡ_{f&4,#f&4}", '_{2,_{2,3,4}}'))
-
-local mi = 3
+local mi = 0
 _G.R = {
-  move =function(n)print(({[0]='🡣','🡡','🡠','🡢'})[n] or '⁇') mi=mi-1 return mi>0 end,
+  move =function(n)print(({[0]='🡣','🡡','🡠','🡢'})[n] or '⁇') mi=mi+1 return mi % 3 ~= 0 end,
   swing=function(n)print(({[0]='⇓','⇑','⇐','⇒'})[n] or '⁇') return true end,
 }
 
-test('Lambda:      T x N', shouldOutput("_3-2"          , '_{1,3=3}'))
-test('Loop:        F x N', shouldPrint("Rm~3"           , '🡡🡠🡢', 1))
-test('Loop:        N x F', shouldPrint("3~Rm"           , '⁇⁇⁇', 1))
+test('        Replaces', shouldOutput("ⓡ⒯ⓐⓝ⒡ⓞ⒡", 'true'))
+test('    Shortand  _3', shouldOutput("_3", '_{1,2,3}'))
+test('    Shortand _13', shouldOutput("_013", '_{0=0,1,2,3,4,5,6,7,8,9,10,11,12}'))
+test('    Shortand  _a', shouldOutput("_{_a(4),a,type(_a(_'Ru3'))==type(a),os._a^3,os.a}", '_{4,4,true,3,3}'))
+test('    Shortand  i5', shouldPrint("print(i5)", '1234512', 7))
+test('   Ordered Pairs', shouldOutput("_{1,[0]=2,3,c05=4,c4=5}", '_{0=2,1,3,c4=5,c05=4}'))
+test('Table num getter', shouldOutput("_{tostring(T5)==tostring(Tg),T6==nil}", '_{true,true}'))
+test('            t(f)', shouldOutput("Tg0'tr!'", '_{t,v}'))
 
-mi = 3
-test('        While loop', shouldPrint("_..'Rm3',w!", '🡢🡢🡢'))
+test('             n^t', shouldOutput("2^_{4,5,6}", '5'))
+test('             n/t', shouldOutput("5/_{2,3,4}", '4'))
+test('             n~f', shouldPrint("3~Rm", '⁇⁇⁇', 1))
+test('             n/f', shouldOutput("(4/Te)(3)", '81.0'))
+
+test('             t^f', shouldOutput("Tg!^'tr!'", '_{t,v}'))
+test('             t^n', shouldOutput("_{1,[3]=3,a=6,[4]=4}^5", '_{1,3=3,4=4,5=5,a=6}'))
+test('             t/f', shouldOutput("(T/'tk')^'n'", '_{2=n2}'))
+test('             t/n', shouldOutput("_3-2", '_{1,3=3}'))
+
+test('             f^n', shouldOutput("Te/3&4", '81.0'))
+test('             f^t', shouldOutput("Te^{4,5}", '1024.0'))
+test('             f/t', shouldOutput("'e/3&4'/T", '81.0'))
+test('             f~n', shouldPrint("Rm~3", '🡡🡠🡢', 1))
+test('             f~f', shouldPrint("_'print(k)'~'Rm3'", '🡢1🡢2🡢', 1))
+
+test('              -t', shouldOutput("_{'a','b','c'}", '_{a,b,c}'))
+test('              ~t', shouldOutput("~~_{1,{2,3},{4,a=5,b=_{6,c=7}}}", '_{1,2,3,4,5,6,7}'))
+test('              -f', shouldOutput("a=-_'k,v'ⓡ_{a(0),a(1),a(2),a(false),a(nil,true)}", '_{1,0,0,1,1}'))
+test('              ~f', shouldPrint("~_'i=i+1ⓡi<3',w(i)", '3'))
+test('              #f', shouldOutput("f=_'2,3,k'ⓡ_{f&4,#f&4}", '_{2,_{2,3,4}}'))
 
 
 _G.G = {
@@ -224,7 +227,7 @@ _G.D = {
   select=function(n)print(string.format('sel(%d)',n)) end,
   getOffset=function()print(string.format('Ô',n)) offset=offset-0.5 return offset end,
 }
-test(' Sapling drone geo', shouldPrint(
+test('       Drone geo', shouldPrint(
   "x,z=i%8,i%64//8ⓡ_'Dm(x,0,z)s(0.05)Dp(0)Dm(-x,0,-z)s(0.05)'~(Gsn(x,z)[32]==0)",
   's(0,0)s(1,0)s(2,0)m(2,0,0)p(0)m(-2,0,0)s(3,0)',
   4
@@ -237,7 +240,7 @@ _G.N = {
     {position={30,2,0}, redstone=15, label="_'Dsel(k)Dd(0)'~4"},
   } end,
 }
-test('   Drone waypoints', shouldPrint(
+test(' Drone waypoints', shouldPrint(
   "P=i/Nf300ⓡDm^Pp,s/0~'Dg!>1',_(Pl)",
   'find(300)m(10,0,0)ÔÔ⮋⮋⮋⮋'..
   'find(300)m(20,1,0)ÔÔ⮋⮋⮋⮋'..
