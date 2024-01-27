@@ -769,7 +769,7 @@ q = function(t)
   -- [[// ]] mt.__idiv = generic'??'
 
   -- 4 --
-  -- [[ + ]] mt.__add = generic'??'
+  --[[ + ]] mt.__add = mt.__pow
   --[[ - ]] mt.__sub = mt.__div -- lambda
 
   -- 5 --
