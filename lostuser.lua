@@ -763,7 +763,7 @@ q = function(t)
   -- [[ # ]] mt.__len = unary'??'
 
   -- 3 --
-  -- [[ * ]] mt.__mul = generic'??'
+  --[[ * ]] mt.__mul = generic'loop'
   -- [[ % ]] mt.__mod = generic'??'
   --[[ / ]] mt.__div = generic'lambda'
   -- [[// ]] mt.__idiv = generic'??'
@@ -773,7 +773,7 @@ q = function(t)
   --[[ - ]] mt.__sub = mt.__div -- lambda
 
   -- 5 --
-  --[[ .. ]] mt.__concat = generic'loop'
+  -- [[ .. ]] mt.__concat = generic'loop'
 
   -- 6 --
   -- [[<< ]] mt.__shl = generic'??'
@@ -783,7 +783,7 @@ q = function(t)
   --[[ & ]] mt.__band = mt.__pow -- map
 
   -- 8 --
-  --[[ ~ ]] mt.__bxor = mt.__concat -- loop
+  --[[ ~ ]] mt.__bxor = mt.__mul
 
   -- 9 --
   --[[ | ]] mt.__bor = mt.__div -- lambda
