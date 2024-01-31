@@ -1,14 +1,14 @@
-# `Lost User` - simpliest robot
+# `Lost User` - The Simplest Robot
 
-Robot (or drone!) BIOS program for Minecraft OpenComputers mod.
+Robot (or drone!) BIOS program for the Minecraft OpenComputers mod.
 
-- [`Lost User` - simpliest robot](#lost-user---simpliest-robot)
+- [`Lost User` - The Simplest Robot](#lost-user---the-simplest-robot)
   - [Why?](#why)
   - [Setup](#setup)
     - [Assemble](#assemble)
     - [E2E-E](#e2e-e)
-    - [Write program on EEPROM.](#write-program-on-eeprom)
-    - [Insert in robot](#insert-in-robot)
+    - [Write the Program to EEPROM](#write-the-program-to-eeprom)
+    - [Insert into Robot](#insert-into-robot)
   - [Usage](#usage)
   - [Syntax](#syntax)
     - [Statements and Expressions](#statements-and-expressions)
@@ -21,7 +21,7 @@ Robot (or drone!) BIOS program for Minecraft OpenComputers mod.
     - [Calling `_`](#calling-_)
   - [Functional Programming](#functional-programming)
     - [Precedence](#precedence)
-    - [Map `^`, `&` or `+`](#map---or-)
+    - [Map `^`, `+`, or `&`](#map---or-)
     - [Lambda `-` `/` `|`](#lambda----)
     - [Loop `~` or `*`](#loop--or-)
     - [Unary](#unary)
@@ -29,12 +29,12 @@ Robot (or drone!) BIOS program for Minecraft OpenComputers mod.
   - [Macros](#macros)
   - [Examples](#examples)
   - [Additionals](#additionals)
-    - [Numeric dictionary](#numeric-dictionary)
+    - [Numeric Dictionary](#numeric-dictionary)
   - [Links](#links)
 
 ## Why?
 
-OC robots are very difficult to assemble and program. This program for the BIOS will help to use robots as "users" and in many other ways.
+OC robots are complex to assemble and program. This BIOS program helps to use robots as "users" and in many other ways.
 
 ## Setup
 
@@ -50,80 +50,78 @@ Assemble the robot in the minimum configuration:
 
 ### E2E-E
 
+If you play [Enigmatica 2: Expert - Extended](https://www.curseforge.com/minecraft/modpacks/enigmatica-2-expert-extended), the modpack has a predefined EEPROM recipe.  
+Find it in JEI and craft it. It will have a colored glow.
 
-If you play [Enigmatica 2: Expert - Extended](https://www.curseforge.com/minecraft/modpacks/enigmatica-2-expert-extended), modpack have predefined recipe of EEPROM.  
-Just find it in JEI and craft. It would have colored shining.
+![EEPROM Crafting](https://i.imgur.com/GuT7Ke6.gif)
 
-![](https://i.imgur.com/GuT7Ke6.gif)
+If you crafted it, you can skip the next step `Write the Program to EEPROM`.
 
-If you crafted it, you can skip next step `Write program on EEPROM`.
-
-### Write program on EEPROM.
+### Write the Program to EEPROM
 
 > You need a working OC computer to write the BIOS. See [this tutorial](https://www.youtube.com/watch?v=KDqXJzacdQQ) to assemble your first computer.
 
-1. Download file from the internet (need ![](https://is.gd/zrPusF 'Internet Card')), run from command line:
+1. Download the file from the internet (requires an [Internet Card](https://is.gd/zrPusF 'Internet Card')), run from the command line:
 
-```
+```shell
 wget https://raw.githubusercontent.com/Krutoy242/lostuser/main/lostuser.min.lua
 ```
 
-2. To write on existing EEPROM run:
+2. To write to an existing EEPROM, run:
 
-```
+```shell
 flash -q lostuser.min.lua LostUser
 ```
 
-### Insert in robot
+### Insert into Robot
 
-Take EEPROM from computer case and merge with robot.
+Take the EEPROM from the computer case and insert it into the robot.
 
 ![Combining robot with EEPROM](https://i.imgur.com/7AHXvdm.png)
 
 ## Usage
 
-Robot programmed by **renaming it**. You must rename Robot on ![](https://is.gd/pYpuM1 'Anvil') or with ![](https://is.gd/VgGaLN 'Labeller').
+Program the robot by **renaming it**. Rename the Robot on an [Anvil](https://is.gd/pYpuM1 'Anvil') or with a [Labeller](https://is.gd/VgGaLN 'Labeller').
 
-Name your Robot `robot.use(3)`, place on ground, turn on, and see how its clicking blocks in front.
+Name your Robot `robot.use(3)`, place it on the ground, turn it on, and watch it click blocks in front.
 
-![](https://i.imgur.com/ATnKS34.gif)
-
+![Robot activating lever](https://i.imgur.com/ATnKS34.gif)
 
 ## Syntax
 
 **TL;DR**
 
-If you don't want to learn Lua and you need the robot to right/left click, a few simple names for the robot and the result:
+If you don't want to learn Lua and you need the robot to right/left click, here are a few simple names for the robot and the result:
 
-- `robot.use(3)` The robot will right click on the block on the front.
-- `robot.swing(3)` The robot will swing with a sword or break the block in front of it.
+- `robot.use(3)` - The robot will right-click on the block in front.
+- `robot.swing(3)` - The robot will swing with a sword or break the block in front of it.
 
 ### Statements and Expressions
 
 #### Execution
 
-Robot will execute it's name as Lua code in `while true` loop.
+The robot will execute its name as Lua code in a `while true` loop.
 
-Code could be run in any variation - `statement` or `expressions`, but still must follow Lua code flow rules.
+Code can be run in any variation - `statement` or `expression`, but must still follow Lua code flow rules.
 
-> This is statement
+> This is a statement
 > ```lua
 > sleep(1)
 > ```
-> 
-> This is expression
+>
+> This is an expression
 > ```lua
 > 1, sleep(1)
 > ```
-> 
-> Combining statement and expression
+>
+> Combining a statement and an expression
 > ```lua
 > a = robot.move(3) return a and robot.use(0)
 > ```
 
 #### Return
 
-If expression return one or many functions, they would be executed recursively.
+If an expression returns one or more functions, they will be executed recursively.
 
 Note that all return values are calculated first, and only then will the functions be called.
 
@@ -135,72 +133,72 @@ Note that all return values are calculated first, and only then will the functio
 ### Globals
 
 <!-- components -->
-1. All components exposed as globals
-2. Components sorted naturally and added to globals by big first letter
+1. All components are exposed as globals.
+2. Components are sorted naturally and added to globals by the first big letter.
 
-  ```less
-  C	=>	computer
-  E	=>	eeprom
-  I	=>	inventory_controller
-  R	=>	robot
-  T	=>	trading
+  ```ruby
+  C => computer
+  E => eeprom
+  I => inventory_controller
+  R => robot
+  T => trading
   ...
   ```
 <!--  -->
 
 Additional globals:
 
-- `i` - current loop index, starting from 0
-  > You can add number after `i` to get it by modulus +1.
+- `i` - current loop index, starting from 0.
+  > You can add a number after `i` to get it by modulus +1.
   > ```lua
   > i16 = i % 16 + 1
   > ```
 - `sleep(seconds: number = 1)`
-- `write(...)` - error with serialized output
-- `api(shortName: string, obj?: table)` - write long name of shortand
+- `write(...)` - error with serialized output.
+- `api(shortName: string, obj?: table)` - write the long name of the shorthand.
 
 ## Shortening
 
-Since Robot or Drone name could have only `64` characters, pointers must be shortened.
+Since a Robot or Drone name can have only `64` characters, pointers must be shortened.
 
-So, instead wrighting full pointer name, you can shorten it. For example, instead of wrighting `robot.use(3)` you can write `r.u(3)`, or even `Ru3`.
+So, instead of writing the full pointer name, you can shorten it. For example, instead of writing `robot.use(3)`, you can write `r.u(3)`, or even `Ru3`.
 
 Shortening rules:
 
-1. If key have exact non-nil match it would be returned.  
-    > `R.use(3)` - `R` is global represents `robot` component
+1. If a key has an exact non-nil match, it will be returned.
+    > `R.use(3)` - `R` is a global representing the `robot` component.
 
 2. The shorthand must contain the first letter and then, optionally, any number of remaining letters.
-    > ```less
+    > ```lua
     > tbl.unk => table.unpack
     > t.u => table.unpack
     > ```
 
-3. If several names have same first letter, **shortest**, **alphabetically** sorted name would be picked first
+3. If several names have the same first letter, the **shortest**, **alphabetically** sorted name will be picked first.
     > ```lua
     > robot.s   -- robot.slot
     > robot.se  -- robot.space
     > robot.sel -- robot.select
     > ```
 
-4. Big first letter with dot `.` could be used without dot.
+4. A big first letter with a dot `.` can be used without the dot.
     > ```lua
     > -- Same pointers
     > robot.use == R.use == Ruse == Ru
     > ```
 
-5. Number at the end of shortand would call shortand as function with that number as first argument
+5. A number at the end of a shorthand will call the shorthand as a function with that number as the first argument.
     > ```lua
     > Ru3 -- robot.use(3)
     > s10 -- sleep(10)
     > ```
-    Same time, if its table instead of function, all keys of the table will be naturally sorted and returned `N`th element
+    At the same time, if it's a table instead of a function, all keys of the table will be naturally sorted and the `N`th element returned.
     > ```lua
     > R16 -- robot.select
     > ```
-    See more in [other section](#numeric-dictionary).
+    See more in [Numeric Dictionary](#numeric-dictionary).
 
-6. Locals can't be shortened
+6. Local variables can't be shortened.
     > ```lua
     > local query = {len=4}
     > q.l -- Exception: q is nil
@@ -210,26 +208,26 @@ Shortening rules:
 
 ## Lodash `_`
 
-Low dash `_` is special helper function.
+The low dash `_` is a special helper function.
 
 ### Indexing `_`
 
 <!-- indexing _ -->
-- **Using `_` with numbers `_123`**  
-  Will return new array-like list with length of number.  
-  If first digit is `0` - table will be zero-based
+- **Using `_` with numbers `_123`**
+  Will return a new array-like list with the length of the number.
+  If the first digit is `0`, the table will be zero-based.
   > ```lua
-  > _8  -- return {1,2,3,4,5,6,7,8}
-  > _08 -- return {[0]=0,1,2,3,4,5,6,7}
+  > _8  -- returns {1,2,3,4,5,6,7,8}
+  > _08 -- returns {[0]=0,1,2,3,4,5,6,7}
   > ```
-- **Using `_` with words `_abc`**  
-  Create function that would write result into `abc` variable.  
-  Function returns passed value.  
-  Note that `_abc` is functionable.
+- **Using `_` with words `_abc`**
+  Creates a function that will write the result into the `abc` variable.
+  The function returns the passed value.
+  Note that `_abc` is functional.
   > ```lua
-  > _a(4) -- Writes `4` into global `a`, returns 4
-  > _a'Ru3' -- Writes func. that execute `Ru3` into global `a`
-  > _a^Ru -- Create func. that write result of `Ru` into global `a`
+  > _a(4) -- Writes `4` into the global `a`, returns 4
+  > _a'Ru3' -- Writes a function that executes `Ru3` into the global `a`
+  > _a^Ru -- Creates a function that writes the result of `Ru` into the global `a`
   > b._a^3 -- b.a = 3
   > ```
 <!--  -->
@@ -237,35 +235,32 @@ Low dash `_` is special helper function.
 ### Calling `_`
 
 <!-- calling _ -->
-- **Using `_` on string**  
-  Will load code inside this string and return it as function.
-
-  Calling this function is always error-safe - if exception happen inside, function just return `nil`.
+- **Using `_` on a string**
+  Will load the code inside this string and return it as a function. Calling this function is always error-safe—if an exception occurs inside, the function will simply return `nil`.
 
   > ```lua
-  > _'Rm,s2'()(0) -- call `sleep(2),robot.move(0)`
+  > _'Rm,s2'()(0) -- calls `sleep(2),robot.move(0)`
   > ```
-  > Note that in this example, the `_` function returns two values - the `robot.move` function and the result `sleep(2)`. Only when we call the returned values a second time, `robot.move(0)` called
+  > Note that in this example, the `_` function returns two values—the `robot.move` function and the result `sleep(2)`. Only when we call the returned values a second time does `robot.move(0)` get called.
 
-- **Using `_` on *table* or *function***  
-  Will convert them into `_{}` table or `_''` function to use with [Functional Programming](#functional-programming)
+- **Using `_` on a *table* or *function***
+  Will convert them into a `_{}` table or `_''` function to use with [Functional Programming](#functional-programming).
   > ```lua
   >  {1,2}^1 -- would error
   > _{1,2}^1 -- would return {1,1} (see Functional Programming)
   > ```
-<!--  -->
 
 ## Functional Programming
 
-Any table or function that you can get from a global will be converted into special `_{}` table. 
+Any table or function that you can get from a global will be converted into a special `_{}` table.
 
-This table enchanced with additional operator metamethods that helps with functional-style programming.
+This table is enhanced with additional operator metamethods that help with functional-style programming.
 
-Any iteration or `pairs()` calls on this converted tables will output elements in naturally sorted order.
+Any iteration or `pairs()` calls on these converted tables will output elements in naturally sorted order.
 
-**Operators** behave differently depending or left and right side of operator.
+**Operators** behave differently depending on the left and right side of the operator.
 
-Note that whenever `string` would be detected, it would be loaded and converted to function in manner of `_'fnc'`.
+Note that whenever a `string` is detected, it will be loaded and converted to a function in the manner of `_'fnc'`.
 
 ### Precedence
 
@@ -293,13 +288,13 @@ Operator precedence in Lua follows the table below, from higher to lower priorit
 ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝     
 -->
 
-### Map `^`, `&` or `+`
+### Map `^`, `+`, or `&`
 
-`^`, `&` and `+` operators do the same. There is three of them only to managing precedence.
+`^`, `+`, and `&` operators do the same. There are three of them only to manage precedence.
 
-- **Note¹:** `^` is right associative. This means, right side will be computed first.
+- **Note¹:** `^` is right associative. This means the right side will be computed first.
 
-- **Note²:** You can also call *uncallable* tables. `t(x)` is the same as `t^x`. *Uncallable* tables is tables without `__call` metatable.
+- **Note²:** You can also call *uncallable* tables. `t(x)` is the same as `t^x`. *Uncallable* tables are tables without a `__call` metatable.
   Example (map `t^f`):
   ```lua
   _{1,2,3}'0' -- _{0,0,0}
@@ -392,7 +387,7 @@ Get by numerical or boolean index
 </table>
 
 <!--
-██╗      █████╗ ███╗   ███╗██████╗ ██████╗  █████╗ 
+██╗      █████╗ ███╗   ███╗██████╗ ██████╗  █████╗
 ██║     ██╔══██╗████╗ ████║██╔══██╗██╔══██╗██╔══██╗
 ██║     ███████║██╔████╔██║██████╔╝██║  ██║███████║
 ██║     ██╔══██║██║╚██╔╝██║██╔══██╗██║  ██║██╔══██║
@@ -411,7 +406,7 @@ Get by numerical or boolean index
   <td rowspan=3>Table</td><td>Function</td><td>
 
 <!-- t/f -->
-Filter, keep only if value is [Truthy](#Truthy)
+Filter, keep only if value is [Truthy](#truthy)
 ```lua
 _{4,5,6,7}/'v%2' -- {5,7}
 ```
@@ -488,12 +483,12 @@ Rotated composition
 </table>
 
 <!--
-██╗      ██████╗  ██████╗ ██████╗ 
+██╗      ██████╗  ██████╗ ██████╗
 ██║     ██╔═══██╗██╔═══██╗██╔══██╗
 ██║     ██║   ██║██║   ██║██████╔╝
-██║     ██║   ██║██║   ██║██╔═══╝ 
-███████╗╚██████╔╝╚██████╔╝██║     
-╚══════╝ ╚═════╝  ╚═════╝ ╚═╝     
+██║     ██║   ██║██║   ██║██╔═══╝
+███████╗╚██████╔╝╚██████╔╝██║
+╚══════╝ ╚═════╝  ╚═════╝ ╚═╝
 -->
 
 ### Loop `~` or `*`
@@ -573,10 +568,10 @@ n~f -- for j=1,TONUMBER(n) do f() end
 <!--
 ██╗   ██╗███╗   ██╗ █████╗ ██████╗ ██╗   ██╗
 ██║   ██║████╗  ██║██╔══██╗██╔══██╗╚██╗ ██╔╝
-██║   ██║██╔██╗ ██║███████║██████╔╝ ╚████╔╝ 
-██║   ██║██║╚██╗██║██╔══██║██╔══██╗  ╚██╔╝  
-╚██████╔╝██║ ╚████║██║  ██║██║  ██║   ██║   
- ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   
+██║   ██║██╔██╗ ██║███████║██████╔╝ ╚████╔╝
+██║   ██║██║╚██╗██║██╔══██║██╔══██╗  ╚██╔╝
+╚██████╔╝██║ ╚████║██║  ██║██║  ██║   ██║
+ ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝
 -->
 
 ### Unary
@@ -604,7 +599,7 @@ While truthy do
 Flatten table, using numerical indexes.
 
 > - Order of elements can be different
-> - All keys of table would be converted to inexed
+> - All keys of the table would be converted to indexed
 > - Only 1 level of flattening
 
 ```lua
@@ -620,8 +615,8 @@ Flatten table, using numerical indexes.
 `-`</td><td>Function</td><td>
 
 <!-- -f -->
-Make a function which result will be flipped.
-If result is `truthy`, returns `0`. Return `1` otherwise.
+Make a function whose result will be flipped.
+If the result is `truthy`, returns `0`. Return `1` otherwise.
 ```lua
 -- id here is function that returns its first arg
 (-id)(0) -- 1
@@ -649,8 +644,8 @@ Swap keys and values
 `#`</td><td>Function</td><td>
 
 <!-- #f -->
-Make a funtion that would wrap it result into table.  
-Useful for functions that returns several values
+Make a function that would wrap its result into a table.
+Useful for functions that return several values.
 ```lua
 -- Consider `f(n)` returns three values - 2,3,n
 f&4   -- 2
@@ -664,21 +659,21 @@ f&4   -- 2
 
 ### Truthy
 
-Value considered as `truthy` if its not `falsy`.
+A value is considered `truthy` if it is not `falsy`.
 
-`falsy` values is:
+`falsy` values are:
 
 1. `false` or `nil`
-2. `''` empty string
-3. `0` number zero
-4. `nan` not a number (`n~=n`)
+2. `''` (empty string)
+3. `0` (number zero)
+4. `nan` (not a number, `n ~= n`)
 5. `inf` or `-inf` (result of `1/0` or `-1/0`)
 
 ## Macros
 
-Program have several predefined macroses - symbols, that will be replaced everywhere with another text.
+The program has several predefined macros - symbols that will be replaced everywhere with another text.
 
-```js
+```javascript
 ! => '()'
 ⓐ => ' and '
 ⓞ => ' or '
@@ -693,63 +688,63 @@ Program have several predefined macroses - symbols, that will be replaced everyw
 - **Travel between two waypoints and run its label**
 
   > Required upgrades: *Inventory*, *Navigation*
-  
-  ![](https://i.imgur.com/36HdGzO.gif)
-  
+
+  ![Drone navigating waypoints](https://i.imgur.com/36HdGzO.gif)
+
   Drone name:
   ```lua
   P=i/Nf300ⓡDm^Pp,s/1~'Dg0>1',_(Pl)
   ```
   * `Nf300`: Run `navigation.findWaypoints(300)`.
-  * `i/Nf300`: `i` is index of script execution. `i / table` is "Get by index modulus" `t[i % #t + 1]`.
-  * `P=i/Nf300`: Write into global variable `P` a different waypoint each script cycle.
+  * `i/Nf300`: `i` is the index of script execution. `i / table` is "Get by index modulus" `t[i % #t + 1]`.
+  * `P=i/Nf300`: Write into the global variable `P` a different waypoint each script cycle.
   * `ⓡ`: will be replaced by ` return `
   * `Dm^Pp`: calling `drone.move(table.unpack(P.position))`.
   * `s/1~'Dg0>1'` => `while drone.getOffset() > 1 do sleep(1) end`.
   * `_(Pl)`: Load `P.label` as Lua code. This loaded function would be [returned and executed](#return).
 
-  Waypoints labels. First one just suck from bottom, second one iterate over 4 slots and drop down.
+  Waypoints labels. The first one just sucks from the bottom, the second one iterates over 4 slots and drops down.
   ```lua
   _'Dsk0'~4
   Dsel-'Dd0'~4
   ```
 
-- **Zig-Zag + Use Down, userful for farms**
+- **Zig-Zag + Use Down, useful for farms**
 
   > Required upgrades: none
-  
-  ![](https://i.imgur.com/YTd5idO.gif)
-  
+
+  ![Robot farming](https://i.imgur.com/YTd5idO.gif)
+
   Robot name:
   ```lua
   m,t=_'Rm3,Ru0',Rtn/(i2>1)ⓡ~m,t!,_'m!,t!'!ⓞt/m
   ```
   * `m,t=_'Rm3,Ru0',Rtn/(i2>1)`: define two functions for moving and rotating
-    - `_'Rm3,Ru0'`: define function `Rm3,Ru0` that would move forward and use tool down
-    - `Rtn/(i2>1)`: this making function, that would call `Rtn` (`robot.turn`) with argument `i2>1`. `i2` is shortand for `i%2+1`
-  * `~m`: Makes robot move forward until it cant move.
+    - `_'Rm3,Ru0'`: define a function `Rm3,Ru0` that would move forward and use a tool down
+    - `Rtn/(i2>1)`: this makes a function that would call `Rtn` (`robot.turn`) with the argument `i2>1`. `i2` is shorthand for `i%2+1`
+  * `~m`: Makes the robot move forward until it can't move.
   * `t!`: just turn
-  * `_'m!,t!'!ⓞt/m`: Move and turn. If move wassnt succeed, turn and move again.
+  * `_'m!,t!'!ⓞt/m`: Move and turn. If the move wasn't successful, turn and move again.
 
 - **Trader bot**
 
   > Required upgrades: *Trading*, *Inventory*, *Inventory Controller*
 
-  ![](https://i.imgur.com/HEgNabM.png)
+  ![Robot trading](https://i.imgur.com/HEgNabM.png)
 
   Robot name:
   ```lua
   Rsel-'Rd0'~RiS0,IsF/0~Igz0,Tg0'~tr'
   ```
-  * `Rsel-'Rd0'~RiS0`: Select each slot and dump bottom
+  * `Rsel-'Rd0'~RiS0`: Select each slot and dump to the bottom
     > - `'Rd0'`: is a function that would call `robot.drop(0)` when executed.
-    > - `RiS0`: is shortand for `robot.inventorySize(0)`. Note that this function not using any arguments so we could call it with `0`
-    > - `Rsel`: `robot.select` shortand. Note that we used `-` operator here, that is same as `/` but have lower precedence
-  * `IsF/0~Igz0`: For each slot of inventory on the bottom `inventory_controller.getInventorySize(0)` call `inventory_controller.suckFromSlot(0, k)`
+    > - `RiS0`: is shorthand for `robot.inventorySize(0)`. Note that this function is not using any arguments so we could call it with `0`
+    > - `Rsel`: `robot.select` shorthand. Note that we used `-` operator here, which is the same as `/` but has lower precedence
+  * `IsF/0~Igz0`: For each slot of the inventory on the bottom `inventory_controller.getInventorySize(0)` call `inventory_controller.suckFromSlot(0, k)`
   * `Tg0'~tr'`: Trade all trades.
-    > - `~tr`: Call `trade()` while it returns true. Note that inside this function, all arguments exposed as global, so we could acces `trade` as global (actually, its `upvalue`)
+    > - `~tr`: Call `trade()` while it returns true. Note that inside this function, all arguments are exposed as global, so we could access `trade` as global (actually, it's an `upvalue`)
 
-  There is another variant of robot name, way advanced. It will pull only items that actually required for trading. This program hardcoded to work with **internal and external** inventory with size 16:
+  There is another variant of the robot name, way advanced. It will pull only items that are actually required for trading. This program is hardcoded to work with **internal and external** inventory with size 16:
   ```lua
   -- Trade everything
   a=-~Tg0"_{g!}'n',~tr"ⓡ_16&R16-'Rd0'&IgI/0&'a[n]ⓐI8/0&k'
@@ -762,66 +757,70 @@ Program have several predefined macroses - symbols, that will be replaced everyw
 
   > Required upgrades: *Inventory*, *Inventory Controller*
 
-  Place ingredients in first 6 slots of Robot. Living Rock in 7th, wand in 8th.
-  
-  <img src="https://i.imgur.com/OXRuYs3.png" width=25%>
-  <img src="https://i.imgur.com/KqlJqMw.gif">
+  Place ingredients in the first 6 slots of the Robot. Living Rock in the 7th, wand in the 8th.
+
+  <img alt="Rune crafting setup" src="https://i.imgur.com/OXRuYs3.png" width=25%>
+  <img alt="Robot crafting runes" src="https://i.imgur.com/KqlJqMw.gif">
 
   Robot name:
-  ```less
+  ```lua
   _8/'Rsel^v,v==7ⓐ{s3,Rm1,Rd(3,1),Rm0}ⓞ{Ie!,Ru3,Ie!}'
   ```
   * `Rsel^v`: Select iterated slot
-  * `v==7ⓐ{s3,Rm1,Rd(3,1),Rm0}`: if its 7th slot with Living Rock, wait 3 seconds until craft finished, then drop Rock on top.
-  * `Ie!,Ru3,Ie!`: Other slots - just right-click with item
+  * `v==7ⓐ{s3,Rm1,Rd(3,1),Rm0}`: if it's the 7th slot with Living Rock, wait 3 seconds until the craft is finished, then drop Rock on top.
+  * `Ie!,Ru3,Ie!`: Other slots - just right-click with the item
 
 - **Single tree farm**
 
   > Required upgrades: *Inventory*, *Inventory Controller*
 
-  This robot intended to use with Forestry saplings, that usually can't be placed as blocks, but need to be right-clicked instead.  
-  Also, robot need *unbreakable* Broad Axe from TCon with *Global Traveler* trait. Also, my Axe have *Fertilizing* trait - right click to fertilize.  
-  Place robot on top of container with saplings.
-  
-  <img src="https://i.imgur.com/I9W39B0.gif">
+  This robot is intended to use with Forestry saplings, which usually can't be placed as blocks but need to be right-clicked instead.
+  Also, the robot needs an *unbreakable* Broad Axe from TCon with the *Global Traveler* trait. Additionally, my Axe has the *Fertilizing* trait - right-click to fertilize.
+  Place the robot on top of a container with saplings.
+
+  ![Robot farming trees](https://i.imgur.com/I9W39B0.gif "Robot farming trees")
 
   Robot name:
   ```lua
   #(1|#Rdt&3)<6ⓐRsw/3-s/1-Rsk/0-Ie-Ru/3-IeⓞRu3,s
   ```
-  * `(1|#Rdt&3)`: Detect block in front, select second returned value - [block description](https://ocdoc.cil.li/component:robot)
-  * `#()<6`: trick to determine if block is solid
-  * `Rsw/3-s/1`: Cut whole tree, wait 1 second
-  * `Rsk/0-Ie-Ru/3-Ie`: Suck sapling from bottom, then plant it. Note that `Rsk` derived one value from `sleep` return
+  * `(1|#Rdt&3)`: Detect the block in front, select the second returned value - [block description](https://ocdoc.cil.li/component:robot)
+  * `#()<6`: a trick to determine if the block is solid
+  * `Rsw/3-s/1`: Cut the whole tree, wait 1 second
+  * `Rsk/0-Ie-Ru/3-Ie`: Suck sapling from the bottom, then plant it. Note that `Rsk` derived one value from `sleep` return
   * `Ru3,s`: Fertilize sapling
 
 - **Other examples**
 
-  * *Circular Miner*. Using Hammer with Alumite part (Global Traveler trait). Place Robot underground, place a stack of Charcoal Blocks in selected robot slot. Robot will start to circle around, mining everything.
+  * *Circular Miner*. Using a Hammer with an Alumite part (Global Traveler trait). Place the Robot underground, place a stack of Charcoal Blocks in the selected robot slot. The Robot will start to circle around, mining everything.
     > Required upgrades: `Hover`
     > Optional upgrades: `Inventory`, `Generator`
     ```lua
     Gi,_'Rm3,Rsw3'~i*2,Rtn⒯
     ```
 
-  * *Robot sorting mob drop*. Take from bottom, damagable items to top, other - forward
+  * *Robot sorting mob drop*. Take from the bottom, damageable items to the top, others forward.
     ```lua
-    Rd|3%2^(IsF(0,i%Igz0+1)ⓐIgSII!.mDⓞ2)
+    Rd
+3%2^(IsF(0,i%Igz0+1)ⓐIgSII!.mDⓞ2)
     ```
 
-  * *Cat opener*. Takes 16 items in front, right-click them and then dump inventory top
+  * *Cat opener*. Takes 16 items in front, right-clicks them, and then dumps the inventory on top.
     ```lua
-    Rsk/3&16ⓐIe!,~_'Ru0',_16/Rc|Rsel/'Rd1'
+    Rsk/3&16ⓐIe!,~_'Ru0',_16/Rc
+Rsel/'Rd1'
     ```
 
-  * *Compressing bot*. Takes from front, craft 3x3 them, dump back.
+  * *Compressing bot*. Takes from the front, crafts 3x3, then dumps back.
     > Required upgrades: `Crafting`, `Inventory Controller`, `Inventory`
     ```lua
-    -(_16-Rc&12)|'Rd3'&Rsel,IsF/3/'_11/8/4&Rc!/9/RtT'|i81,Cc
+    -(_16-Rc&12)
+'Rd3'&Rsel,IsF/3/'_11/8/4&Rc!/9/RtT'
+i81,Cc
     ```
 
-  * *Unstackable bot*. Takes item from front only if they are unstackable and put it on top. If cant drop item top, push up and place block.
-    > Required upgrades: `Piston`, `Inventory Controller`, `Inventory`  
+  * *Unstackable bot*. Takes an item from the front only if they are unstackable and puts it on top. If it can't drop the item on top, pushes up and places a block.
+    > Required upgrades: `Piston`, `Inventory Controller`, `Inventory`
     > Flood all robot slots except 1. Slot 9 should have new inventories for unstackables.
     ```lua
     (IgSI/3&_a^i1728ⓞ{}).mS^_{_'IsF/3&a,Rd1ⓞ{Pps1,Rsel9,Rp1,Rsel1}'}
@@ -829,11 +828,11 @@ Program have several predefined macroses - symbols, that will be replaced everyw
 
 ## Additionals
 
-### Numeric dictionary
+### Numeric Dictionary
 
-This is not actual dictionary - all this information could be generated in game for every table.
+This is not an actual dictionary - all this information can be generated in-game for every table.
 
-To get sorted numeric values, name robot thi way, where `T` is pointer to desired table:
+To get sorted numeric values, name the robot this way, where `T` is a pointer to the desired table:
 ```lua
 e((~-T'k')"'\\n'..k..' '..v")
 ```
@@ -954,5 +953,5 @@ Cheatsheet of most common tables:
 
 ## Links
 
-- [Repo with source code and readme](https://raw.githubusercontent.com/Krutoy242/lostuser)
+- [Repo with source code and readme](https://github.com/Krutoy242/lostuser)
 - Modpack this robot was programmed for: [Enigmatica 2: Expert - Extended](https://www.curseforge.com/minecraft/modpacks/enigmatica-2-expert-extended)
