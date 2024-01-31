@@ -375,9 +375,12 @@ local function isQ(t)
   return succes and mt and mt.__q
 end
 
-local function safeCall(f, ...)
+local function safeCall(f, safe, ...)
   local safeResult = pack(pcall(f, ...))
-  if not safeResult[1] then return end
+  if not safeResult[1] then
+    if safe then return end
+    localError(safeResult[2])
+  end
   return unpack(safeResult, 2)
 end
 
@@ -391,7 +394,7 @@ local function functionize(target)
   local code = translate(target)
   local p1, p2 = 'return function(...)local k,v=... ', code..' end'
   return function(...) return safeCall(
-    loadBody(p1..'return '..p2, p1..p2, code, ...)(), ...
+    loadBody(p1..'return '..p2, p1..p2, code, ...)(), true, ...
   ) end, true
 end
 
@@ -881,7 +884,7 @@ __ENV.i = 0
 
 -- Recursively call functions that returned
 local function unfold(f)
-  local r = pack(safeCall(f))
+  local r = pack(safeCall(f, false))
   for i=1,r.n do
     if r[i] and isCallable(r[i]) then unfold(r[i]) end
   end
