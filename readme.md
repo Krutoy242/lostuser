@@ -239,7 +239,7 @@ Low dash `_` is special helper function.
 <!-- calling _ -->
 - **Using `_` on string**  
   Will load code inside this string and return it as function.
-  
+
   Calling this function is always error-safe - if exception happen inside, function just return `nil`.
 
   > ```lua
@@ -711,7 +711,7 @@ Program have several predefined macroses - symbols, that will be replaced everyw
   Waypoints labels. First one just suck from bottom, second one iterate over 4 slots and drop down.
   ```lua
   _'Dsk0'~4
-  Dsel-Dd/0/q~4
+  Dsel-'Dd0'~4
   ```
 
 - **Zig-Zag + Use Down, userful for farms**
@@ -798,8 +798,8 @@ Program have several predefined macroses - symbols, that will be replaced everyw
 - **Other examples**
 
   * *Circular Miner*. Using Hammer with Alumite part (Global Traveler trait). Place Robot underground, place a stack of Charcoal Blocks in selected robot slot. Robot will start to circle around, mining everything.
-    > Required upgrades: Hover
-    > Optional upgrades: Inventory, Generator
+    > Required upgrades: `Hover`
+    > Optional upgrades: `Inventory`, `Generator`
     ```lua
     Gi,_'Rm3,Rsw3'~i*2,Rtn⒯
     ```
@@ -815,13 +815,13 @@ Program have several predefined macroses - symbols, that will be replaced everyw
     ```
 
   * *Compressing bot*. Takes from front, craft 3x3 them, dump back.
-    > Required upgrades: Crafting, Inventory Controller, Inventory
+    > Required upgrades: `Crafting`, `Inventory Controller`, `Inventory`
     ```lua
     -(_16-Rc&12)|'Rd3'&Rsel,IsF/3/'_11/8/4&Rc!/9/RtT'|i81,Cc
     ```
 
   * *Unstackable bot*. Takes item from front only if they are unstackable and put it on top. If cant drop item top, push up and place block.
-    > Required upgrades: Piston, Inventory Controller, Inventory  
+    > Required upgrades: `Piston`, `Inventory Controller`, `Inventory`  
     > Flood all robot slots except 1. Slot 9 should have new inventories for unstackables.
     ```lua
     (IgSI/3&_a^i1728ⓞ{}).mS^_{_'IsF/3&a,Rd1ⓞ{Pps1,Rsel9,Rp1,Rsel1}'}

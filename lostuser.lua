@@ -924,6 +924,9 @@ end
 --[[<!-- calling _ -->
   - **Using `_` on string**  
     Will load code inside this string and return it as function.
+
+    Calling this function is always error-safe - if exception happen inside, function just return `nil`.
+
     > ```lua
     > _'Rm,s2'()(0) -- call `sleep(2),robot.move(0)`
     > ```
