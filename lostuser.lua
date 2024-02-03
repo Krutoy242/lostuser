@@ -9,14 +9,10 @@ https://github.com/Krutoy242/lostuser
 
 ]]
 
---[[
-██╗███╗   ██╗██╗████████╗
-██║████╗  ██║██║╚══██╔══╝
-██║██╔██╗ ██║██║   ██║
-██║██║╚██╗██║██║   ██║
-██║██║ ╚████║██║   ██║
-╚═╝╚═╝  ╚═══╝╚═╝   ╚═╝
-]]
+-- Some source code is excluded in release build file.
+-- Removed code started with "--[[MINIFY]]" and ends with "--]]".
+-- This to remove parts of code could be useful for testing and
+-- debugging LostUser from computer rather than EEPROM.
 
 -- Forward declarations
 local pack, unpack, run, loadBody, q = table.pack, table.unpack
@@ -105,14 +101,18 @@ do
   end
 end
 
---- Signal that we have error
+--- Since LostUser will be minified and lz77-compressed,
+--- its call stack and error source code will have no meaning.
+--- Thats why we wrap default Lua global `error()` into custom function
+--- that remove meaningless prefixes and only left error reason.
+--- Also, all `%` symbols should be escaped.
 ---@param err string
 local function localError(err)
   -- if computer then computer.beep(1800, 0.5) end
   error(
     tostring(err):gsub('%[string ".+"%]:%d+: ', '')
 
-    --- Remove `%` symbol from chat log since its cause an error FML error
+    --- Escape `%` symbol from chat log since its cause an error FML error
     --- [Client thread/ERROR] [FML]: Exception caught during firing event net.minecraftforge.client.event.ClientChatReceivedEvent@3e83e9ca:
     --- net.minecraft.util.text.TextComponentTranslationFormatException: Error parsing
     :gsub('%%','%%%%')
@@ -913,12 +913,12 @@ __ENV.write = function(...)
   localError(q{...})
 end
 
-__ENV.sleep = function(t)
-  local u = computer.uptime
-  local d = u() + (t or 1)
-  repeat computer.pullSignal(d - u())
-  until u() >= d
-  return t or 1
+__ENV.sleep = function(timeout)
+  local uptime = computer.uptime
+  local delta = uptime() + (timeout or 1)
+  repeat computer.pullSignal(delta - uptime())
+  until uptime() >= delta
+  return timeout or 1
 end
 
 --[[<!-- calling _ -->
