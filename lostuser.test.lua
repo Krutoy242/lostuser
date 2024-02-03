@@ -248,37 +248,3 @@ test(' Drone waypoints', shouldPrint(
   'find(300)m(10,0,0)ÔÔ⮋⮋⮋⮋',
   4
 ))
-
---[[
-
-? Oredict filtering robot
-IsF/3&i255ⓐRd(1&IgSII!.o'({ore=1,dus=0})[sg.s(v,1,3)]'ⓞ3)
-
-! Other programs
-
-? Drone sapling planter
-x,z=i%8,i%64//8 u={x,0,z} -- Coords base on `i` variable
-Gs(x,z)[32]==0 -- Is air 1 layer down
-_'Dm(v[1],0,v[2]),s!,Dp0'/{u,u*'-v'} -- Move to point, place, and come back
-
-x,z=i%8,i%64//8 u={x,0,z}∅_"_'Dm*u,s!,Dp0'/{u,u*'-v'}"~'Gs(x,z)[32]'
-Gs(1,1,-1,8,8,1)*"v~=0ⓞ_'Dm(k,0,v)s!Dp(0)Dm(-k,0,-v)s!'(k%8,k/8)"
-a=-1,Gs_11a881
-_6^1
-
-?========================================================
--- Unstackable extractor
-
-_'IsF/3&a,Rd1ⓞ{Pps1,Rsel9,Rp1,Rd^Rsel1}'
-IsF/3/a|'Pps1,Rsel9,Rp1,Rd^Rsel1'~-Rd/1 -- require -f
-IsF/3/a|'Pps1,sel9,p1,d^sel1'/R~-Rd/1 -- require f/t signature (expose t to function)
-
--- How it would be with f.pointer
-(IgSI-3-_a/i1728).mS&(IsF/3/a-'Pps1,sel9,p1,d^sel1'/R~-Rd/1)
-
--- Need somehow fix nil and number comparison
-_'BmS<2'~_b&IgSI/3/_a^i1728
-
-]]
-
-
