@@ -801,22 +801,18 @@ The program has several predefined macros - symbols that will be replaced everyw
 
   * *Robot sorting mob drop*. Take from the bottom, damageable items to the top, others forward.
     ```lua
-    Rd
-3%2^(IsF(0,i%Igz0+1)ⓐIgSII!.mDⓞ2)
+    Rd|3%2^(IsF(0,i%Igz0+1)ⓐIgSII!.mDⓞ2)
     ```
 
   * *Cat opener*. Takes 16 items in front, right-clicks them, and then dumps the inventory on top.
     ```lua
-    Rsk/3&16ⓐIe!,~_'Ru0',_16/Rc
-Rsel/'Rd1'
+    Rsk/3&16ⓐIe!,~_'Ru0',_16/Rc|Rsel/'Rd1'
     ```
 
   * *Compressing bot*. Takes from the front, crafts 3x3, then dumps back.
     > Required upgrades: `Crafting`, `Inventory Controller`, `Inventory`
     ```lua
-    -(_16-Rc&12)
-'Rd3'&Rsel,IsF/3/'_11/8/4&Rc!/9/RtT'
-i81,Cc
+    -(_16-Rc&12)|'Rd3'&Rsel,IsF/3/'_11/8/4&Rc!/9/RtT'|i81,Cc
     ```
 
   * *Unstackable bot*. Takes an item from the front only if they are unstackable and puts it on top. If it can't drop the item on top, pushes up and places a block.
