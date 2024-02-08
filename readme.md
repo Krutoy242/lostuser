@@ -687,7 +687,7 @@ The program has several predefined macros - symbols that will be replaced everyw
 
 - **Travel between two waypoints and run its label**
 
-  > Required upgrades: *Inventory*, *Navigation*
+  > Required upgrades: ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__17.png "Inventory Upgrade"), ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__19.png "Navigation Upgrade")
 
   ![Drone navigating waypoints](https://i.imgur.com/36HdGzO.gif)
 
@@ -728,7 +728,7 @@ The program has several predefined macros - symbols that will be replaced everyw
 
 - **Trader bot**
 
-  > Required upgrades: *Trading*, *Inventory*, *Inventory Controller*
+  > Required upgrades: ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__29.png "Trading Upgrade"), ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__17.png "Inventory Upgrade"), ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__18.png "Inventory Controller Upgrade")
 
   ![Robot trading](https://i.imgur.com/HEgNabM.png)
 
@@ -755,7 +755,7 @@ The program has several predefined macros - symbols that will be replaced everyw
 
 - **Rune maker**
 
-  > Required upgrades: *Inventory*, *Inventory Controller*
+  > Required upgrades: ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__17.png "Inventory Upgrade"), ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__18.png "Inventory Controller Upgrade")
 
   Place ingredients in the first 6 slots of the Robot. Living Rock in the 7th, wand in the 8th.
 
@@ -772,10 +772,10 @@ The program has several predefined macros - symbols that will be replaced everyw
 
 - **Single tree farm**
 
-  > Required upgrades: *Inventory*, *Inventory Controller*
+  > Required upgrades: ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__17.png "Inventory Upgrade"), ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__18.png "Inventory Controller Upgrade")
 
-  This robot is intended to use with Forestry saplings, which usually can't be placed as blocks but need to be right-clicked instead.
-  Also, the robot needs an *unbreakable* Broad Axe from TCon with the *Global Traveler* trait. Additionally, my Axe has the *Fertilizing* trait - right-click to fertilize.
+  This robot is intended to use with Forestry saplings, which usually can't be placed as blocks but need to be right-clicked instead.  
+  Also, the robot needs an *unbreakable* Broad Axe from TCon with the *Global Traveler* trait. Additionally, my Axe has the *Fertilizing* trait - right-click to fertilize.  
   Place the robot on top of a container with saplings.
 
   ![Robot farming trees](https://i.imgur.com/I9W39B0.gif "Robot farming trees")
@@ -793,31 +793,35 @@ The program has several predefined macros - symbols that will be replaced everyw
 - **Other examples**
 
   * *Circular Miner*. Using a Hammer with an Alumite part (Global Traveler trait). Place the Robot underground, place a stack of Charcoal Blocks in the selected robot slot. The Robot will start to circle around, mining everything.
-    > Required upgrades: `Hover`
-    > Optional upgrades: `Inventory`, `Generator`
+    > Required upgrades: ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__27.png "Hover Upgrade (Tier 1)")
+    > 
+    > Optional upgrades: ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__17.png "Inventory Upgrade"), ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__16.png "Generator Upgrade")
     ```lua
     Gi,_'Rm3,Rsw3'~i*2,Rtn⒯
     ```
 
   * *Robot sorting mob drop*. Take from the bottom, damageable items to the top, others forward.
+    > Required upgrades: ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__17.png "Inventory Upgrade"), ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__18.png "Inventory Controller Upgrade")
     ```lua
     Rd|3%2^(IsF(0,i%Igz0+1)ⓐIgSII!.mDⓞ2)
     ```
 
   * *Cat opener*. Takes 16 items in front, right-clicks them, and then dumps the inventory on top.
+    > Required upgrades: ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__17.png "Inventory Upgrade"), ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__18.png "Inventory Controller Upgrade")
     ```lua
     Rsk/3&16ⓐIe!,~_'Ru0',_16/Rc|Rsel/'Rd1'
     ```
 
   * *Compressing bot*. Takes from the front, crafts 3x3, then dumps back.
-    > Required upgrades: `Crafting`, `Inventory Controller`, `Inventory`
+    > Required upgrades: ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__11.png "Crafting Upgrade"), ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__17.png "Inventory Upgrade"), ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__18.png "Inventory Controller Upgrade")
     ```lua
     -(_16-Rc&12)|'Rd3'&Rsel,IsF/3/'_11/8/4&Rc!/9/RtT'|i81,Cc
     ```
 
   * *Unstackable bot*. Takes an item from the front only if they are unstackable and puts it on top. If it can't drop the item on top, pushes up and places a block.
-    > Required upgrades: `Piston`, `Inventory Controller`, `Inventory`
     > Flood all robot slots except 1. Slot 9 should have new inventories for unstackables.
+    > 
+    > Required upgrades: ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__20.png "Piston Upgrade"), ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__17.png "Inventory Upgrade"), ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__18.png "Inventory Controller Upgrade")
     ```lua
     (IgSI/3&_a^i1728ⓞ{}).mS^_{_'IsF/3&a,Rd1ⓞ{Pps1,Rsel9,Rp1,Rsel1}'}
     ```
