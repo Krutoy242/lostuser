@@ -133,17 +133,20 @@ Note that all return values are calculated first, and only then will the functio
 ### Globals
 
 <!-- components -->
-1. All components are exposed as globals.
-2. Components are sorted naturally and added to globals by the first big letter.
+1. All components exposed as globals
+2. Components added to globals by big first letter
 
-  ```ruby
-  C => computer
-  E => eeprom
-  I => inventory_controller
-  R => robot
-  T => trading
+  ```lua
+  C	= computer
+  E	= eeprom
+  I	= inventory_controller
+  R	= robot
+  T	= trading
   ...
   ```
+> ⚠️ Warning: If two components starts with same letter, only one that shorter and came first after sorting will be exposed by single letter.
+>
+> For example, if robot have `Redstone Card` component, letter `R` will stand for `robot` rather than `redstone`.
 <!--  -->
 
 Additional globals:
@@ -225,10 +228,14 @@ The low dash `_` is a special helper function.
   The function returns the passed value.
   Note that `_abc` is functional.
   > ```lua
-  > _a(4) -- Writes `4` into the global `a`, returns 4
-  > _a'Ru3' -- Writes a function that executes `Ru3` into the global `a`
-  > _a^Ru -- Creates a function that writes the result of `Ru` into the global `a`
-  > b._a^3 -- b.a = 3
+  > -- Writes `4` into global `a`, returns 4
+  > _a(4) == (function() a = 4; return a end)()
+  > 
+  > -- Create func. that write result of `Ru` into global `a`
+  > _a^Ru == function(...) a = robot.use(...); return a end
+  > 
+  > -- Writes into table member
+  > b._a^3 == b.a = 3
   > ```
 <!--  -->
 
@@ -249,6 +256,7 @@ The low dash `_` is a special helper function.
   >  {1,2}^1 -- would error
   > _{1,2}^1 -- would return {1,1} (see Functional Programming)
   > ```
+<!--  -->
 
 ## Functional Programming
 
@@ -291,6 +299,12 @@ Operator precedence in Lua follows the table below, from higher to lower priorit
 ### Map `^`, `+`, or `&`
 
 `^`, `+`, and `&` operators do the same. There are three of them only to manage precedence.
+
+> ```lua
+> -- Assume that f,g and h is functions
+> f&g+h -- equal to `f & g(h())`
+> f+g&h -- equal to `f(g()) & h`
+> ```
 
 - **Note¹:** `^` is right associative. This means the right side will be computed first.
 
@@ -723,7 +737,7 @@ The program has several predefined macros - symbols that will be replaced everyw
     - `_'Rm3,Ru0'`: define a function `Rm3,Ru0` that would move forward and use a tool down
     - `Rtn/(i2>1)`: this makes a function that would call `Rtn` (`robot.turn`) with the argument `i2>1`. `i2` is shorthand for `i%2+1`
   * `~m`: Makes the robot move forward until it can't move.
-  * `t!`: just turn
+  * `t!`: `t` is Rtn/(i2>1) while `!` replaced with `()` so the line will become `Rtn/(i2>1)()`, which means execute turn immediately.
   * `_'m!,t!'!ⓞt/m`: Move and turn. If the move wasn't successful, turn and move again.
 
 - **Trader bot**

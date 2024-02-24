@@ -62,16 +62,19 @@ end
 -- Define all components as big letter global, short names first
 --[[<!-- components -->
   1. All components exposed as globals
-  2. Components sorted naturally and added to globals by big first letter
+  2. Components added to globals by big first letter
 
-    ```less
-    C	=>	computer
-    E	=>	eeprom
-    I	=>	inventory_controller
-    R	=>	robot
-    T	=>	trading
+    ```lua
+    C	= computer
+    E	= eeprom
+    I	= inventory_controller
+    R	= robot
+    T	= trading
     ...
     ```
+  > ⚠️ Warning: If two components starts with same letter, only one that shorter and came first after sorting will be exposed by single letter.
+  >
+  > For example, if robot have `Redstone Card` component, letter `R` will stand for `robot` rather than `redstone`.
 ]]
 --[[ Exapmle of creative robot:
 C = computer
@@ -305,21 +308,25 @@ local function index(t, keyFull)
     local num = tonumber(postfix)
     --[[<!-- indexing _ -->
       - **Using `_` with numbers `_123`**  
-        Will return new array-like list with length of number.  
-        If first digit is `0` - table will be zero-based
+        Will return a new array-like list with the length of the number.
+        If the first digit is `0`, the table will be zero-based.
         > ```lua
-        > _8  -- return {1,2,3,4,5,6,7,8}
-        > _08 -- return {[0]=0,1,2,3,4,5,6,7}
+        > _8  -- returns {1,2,3,4,5,6,7,8}
+        > _08 -- returns {[0]=0,1,2,3,4,5,6,7}
         > ```
       - **Using `_` with words `_abc`**  
-        Create function that would write result into `abc` variable.  
-        Function returns passed value.  
-        Note that `_abc` is functionable.
+        Creates a function that will write the result into the `abc` variable.
+        The function returns the passed value.
+        Note that `_abc` is functional.
         > ```lua
-        > _a(4) -- Writes `4` into global `a`, returns 4
-        > _a'Ru3' -- Writes func. that execute `Ru3` into global `a`
-        > _a^Ru -- Create func. that write result of `Ru` into global `a`
-        > b._a^3 -- b.a = 3
+        > -- Writes `4` into global `a`, returns 4
+        > _a(4) == (function() a = 4; return a end)()
+        > 
+        > -- Create func. that write result of `Ru` into global `a`
+        > _a^Ru == function(...) a = robot.use(...); return a end
+        > 
+        > -- Writes into table member
+        > b._a^3 == b.a = 3
         > ```
     ]]
     -- TODO: f_ or t_ return hashed vlue
@@ -677,7 +684,7 @@ q = function(t)
           Flatten table, using numerical indexes.
 
           > - Order of elements can be different
-          > - All keys of table would be converted to inexed
+          > - All keys of the table would be converted to indexed
           > - Only 1 level of flattening
 
           ```lua
@@ -713,8 +720,8 @@ q = function(t)
           repeat until not truthy(source())
 
         --[[<!-- -f -->
-          Make a function which result will be flipped.
-          If result is `truthy`, returns `0`. Return `1` otherwise.
+          Make a function whose result will be flipped.
+          If the result is `truthy`, returns `0`. Return `1` otherwise.
           ```lua
           -- id here is function that returns its first arg
           (-id)(0) -- 1
@@ -791,8 +798,8 @@ q = function(t)
       return unpack(r)
     end
     --[[<!-- #f -->
-      Make a funtion that would wrap it result into table.  
-      Useful for functions that returns several values
+      Make a function that would wrap its result into a table.
+      Useful for functions that return several values.
       ```lua
       -- Consider `f(n)` returns three values - 2,3,n
       f&4   -- 2
@@ -922,18 +929,16 @@ __ENV.sleep = function(timeout)
 end
 
 --[[<!-- calling _ -->
-  - **Using `_` on string**  
-    Will load code inside this string and return it as function.
-
-    Calling this function is always error-safe - if exception happen inside, function just return `nil`.
+  - **Using `_` on a string**
+    Will load the code inside this string and return it as a function. Calling this function is always error-safe—if an exception occurs inside, the function will simply return `nil`.
 
     > ```lua
-    > _'Rm,s2'()(0) -- call `sleep(2),robot.move(0)`
+    > _'Rm,s2'()(0) -- calls `sleep(2),robot.move(0)`
     > ```
-    > Note that in this example, the `_` function returns two values - the `robot.move` function and the result `sleep(2)`. Only when we call the returned values a second time, `robot.move(0)` called
+    > Note that in this example, the `_` function returns two values—the `robot.move` function and the result `sleep(2)`. Only when we call the returned values a second time does `robot.move(0)` get called.
 
-  - **Using `_` on *table* or *function***  
-    Will convert them into `_{}` table or `_''` function to use with [Functional Programming](#functional-programming)
+  - **Using `_` on a *table* or *function***
+    Will convert them into a `_{}` table or `_''` function to use with [Functional Programming](#functional-programming).
     > ```lua
     >  {1,2}^1 -- would error
     > _{1,2}^1 -- would return {1,1} (see Functional Programming)
