@@ -15,7 +15,7 @@ https://github.com/Krutoy242/lostuser
 -- debugging LostUser from computer rather than EEPROM.
 
 -- Forward declarations
-local pack, unpack, run, loadBody, q = table.pack, table.unpack
+local pack, unpack, pairs, tostring, type, tonumber, run, loadBody, q = table.pack, table.unpack, pairs, tostring, type, tonumber
 
 --[[MINIFY]]
 -- If we run from OpenOS
