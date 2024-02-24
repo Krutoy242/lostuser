@@ -334,7 +334,7 @@ local function index(t, keyFull)
       elseif t.i then
         return t.i % num + from
       end
-    else
+    elseif C == '_' then
       -- _a(value) => a = value
       return q(function(v) t[postfix] = v; return v end)
     end
