@@ -95,7 +95,9 @@ T = tank_controller
 T = trading
 ]]
 do
-  for address, name in orderedPairs(component.list()) do
+  local comps = {}
+  for address, name in pairs(component.list()) do comps[name]=address end
+  for name, address in orderedPairs(comps) do
     --[[MINIFY]]if not skipComponents[name] then--]]
     local C, p = name:sub(1, 1):upper(), component.proxy(address)
     _G[name] = _G[name] or p
@@ -307,14 +309,14 @@ local function index(t, keyFull)
     local postfix = keyFull:sub(2)
     local num = tonumber(postfix)
     --[[<!-- indexing _ -->
-      - **Using `_` with numbers `_123`**  
+      - **Using `_` with numbers `_123`**
         Will return a new array-like list with the length of the number.
         If the first digit is `0`, the table will be zero-based.
         > ```lua
         > _8  -- returns {1,2,3,4,5,6,7,8}
         > _08 -- returns {[0]=0,1,2,3,4,5,6,7}
         > ```
-      - **Using `_` with words `_abc`**  
+      - **Using `_` with words `_abc`**
         Creates a function that will write the result into the `abc` variable.
         The function returns the passed value.
         Note that `_abc` is functional.
@@ -961,7 +963,7 @@ end
 -- Assemble
 -----------------------------------------------------------------
 
-local pointer, prog = R or D, ''
+local pointer, prog = robot or drone, ''
 
 --[[MINIFY]]
 local shellArg
