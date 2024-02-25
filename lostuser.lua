@@ -301,7 +301,10 @@ end
 local function index(t, keyFull)
   local exact = t[keyFull]
   if exact ~= nil then return q(exact) end
+
+  -- If key is not a string, this means it cant be a shortand
   if type(keyFull) ~= 'string' then return end
+
   local C = keyFull:sub(1,1)
 
   -- Global key that started with _
@@ -917,11 +920,6 @@ run = function(input)
   end
 end
 
-__ENV.write = function(...)
-  --[[MINIFY]]if print then runCount = 0 return print(...) end--]]
-  localError(q{...})
-end
-
 __ENV.sleep = function(timeout)
   local uptime = computer.uptime
   local delta = uptime() + (timeout or 1)
@@ -946,11 +944,7 @@ end
     > _{1,2}^1 -- would return {1,1} (see Functional Programming)
     > ```
 ]]
-__ENV._ = function(target, ...)
-  -- local args = table.pack(...)
-  -- if args.n > 0 then
-  --   if truthy(target) then return args[1] else return args[2] end
-  -- end
+__ENV._ = function(target)
   return q(functionize(target))
 end
 

@@ -157,7 +157,6 @@ Additional globals:
   > i16 = i % 16 + 1
   > ```
 - `sleep(seconds: number = 1)`
-- `write(...)` - error with serialized output.
 - `api(shortName: string, obj?: table)` - write the long name of the shorthand.
 
 ## Shortening
