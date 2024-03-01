@@ -243,7 +243,7 @@ local function isCallable(t)
   local ty = type(t)
   if ty == 'function' then return true end
   if ty ~= 'table' then return false end
-    local mt = getmetatable(t)
+  local mt = getmetatable(t)
   return mt and mt.__q ~= 0 and mt.__call
 end
 
@@ -832,29 +832,31 @@ end
 ╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═════╝
 ]]
 
--- Global environment inside loaded code
-local __ENV = q(_G)
+-- Copy of global environment inside loaded code
+local q_G = q(_G)
 
 --- Attempt to load code1 or code2
 ---@param code1 string
 ---@param code2 string
 ---@param chunkName string
 loadBody = function(code1, code2, chunkName, ...)
-  local t
-
   -- If we have table parameters that need to be exposed
   -- add them to upvalue
-  local expose = pack(...)
+  local t, expose = q_G, pack(...)
+
   if expose.n > 0 then
-    t = q{}
-    for k, v in pairs(__ENV) do t[k] = v end
-    for k, v in pairs(expose) do
-      if type(v) == 'table' then
-        for k, v in pairs(v) do t[k] = v end
+    t = {}
+    for k, v in pairs(_G) do t[k] = v end
+    for i=1, expose.n do
+      if type(expose[i]) == 'table' then
+        for k, v in orderedPairs(expose[i]) do
+          if t[k] == nil then
+            t[k] = v
+          end
+        end
       end
     end
-  else
-    t = __ENV
+    t = q(t)
   end
 
   -- Load
@@ -865,35 +867,9 @@ loadBody = function(code1, code2, chunkName, ...)
   return err and localError(err) or res
 end
 
-__ENV.i = 0
+q_G.i = 0
 
--- Recursively call functions that returned
-local function unfold(f)
-  local r = pack(safeCall(f, false))
-  for i=1,r.n do
-    if r[i] and isCallable(r[i]) then unfold(r[i]) end
-  end
-  return r
-end
-
---[[MINIFY]]local runCount--]]
-run = function(input)
-  local code = translate(input)
-  local fnc = loadBody('return '..code, code, input)
-  while true do
-    local r = unfold(fnc)
-    --[[MINIFY]]
-    if type(runCount) == 'number' then
-      runCount = runCount - 1
-      if runCount <= 0 then return unpack(r) end
-    end
-    --]]
-    __ENV.i = __ENV.i + 1
-    if __ENV.i % 100 == 99 then __ENV.sleep(0.05) end
-  end
-end
-
-__ENV.sleep = function(timeout)
+q_G.sleep = function(timeout)
   local uptime = computer.uptime
   local delta = uptime() + (timeout or 1)
   repeat computer.pullSignal(delta - uptime())
@@ -917,13 +893,23 @@ end
     > _{1,2}^1 -- would return {1,1} (see Functional Programming)
     > ```
 ]]
-__ENV._ = function(target)
+q_G._ = function(target)
   return q(functionize(target))
 end
 
--- Get value from global
-__ENV.api = function(s, p)
-  return __ENV.write(getKey(s, p or _G))
+--- Get full variable name
+---@param key any
+q_G.api = function(key)
+  return error(getKey(key, _G))
+end
+
+-- Recursively call functions that returned
+local function unfold(f)
+  local r = pack(safeCall(f, false))
+  for i=1, r.n do
+    if r[i] and isCallable(r[i]) then unfold(r[i]) end
+  end
+  return r
 end
 
 -----------------------------------------------------------------
@@ -933,8 +919,7 @@ end
 local pointer, prog = robot or drone, ''
 
 --[[MINIFY]]
-local shellArg
-shellArg, runCount = ...
+local shellArg, runCount = ...
 
 -- Program is called from shell
 if shellArg then prog = shellArg end
@@ -948,11 +933,22 @@ end
 if prog=='' then localError'No program' end
 
 -- Play music
-if --[[MINIFY]]not shellArg and--]]
-prog:sub(1,1) ~= ' ' then
-  for s in prog:sub(1,5):gmatch"%S" do
-    computer.beep(math.min(2000, 200 + s:byte() * 10), 0.05)
-  end
+--[[MINIFY]]if not shellArg then--]]
+for s in prog:sub(1,5):gmatch"%S" do
+  computer.beep(math.min(2000, 200 + s:byte() * 10), 0.05)
 end
+--[[MINIFY]]end--]]
 
-return run(prog)
+local code = translate(prog)
+local fnc = loadBody('return '..code, code, prog)
+while true do
+  local r = unfold(fnc)
+  --[[MINIFY]]
+  if type(runCount) == 'number' then
+    runCount = runCount - 1
+    if runCount <= 0 then return unpack(r) end
+  end
+  --]]
+  q_G.i = q_G.i + 1
+  if q_G.i % 100 == 99 then q_G.sleep(0.05) end
+end
