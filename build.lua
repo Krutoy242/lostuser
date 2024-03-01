@@ -3,14 +3,17 @@ local shell = require'shell'
 local filesystem = require'filesystem'
 local gpu = require('component').gpu
 
+local function writeC(text, color)
+  gpu.setForeground(color or 0xaaaaaa)
+  io.write(text)
+end
+
 local log = {
-  start = function(s) gpu.setForeground(0xaaaaaa) io.write(s..' ') end,
-  succes= function() gpu.setForeground(0x009955) io.write'✔\n' end,
+  start = function(s) writeC(s..' ') end,
+  succes= function() writeC('✔\n', 0x009955) end,
   fail= function(err)
-    gpu.setForeground(0xdd5555)
-    io.write('❌\n')
-    gpu.setForeground(0xaa2222)
-    io.write(err..'\n')
+    writeC('❌\n', 0xdd5555)
+    writeC(err..'\n', 0xaa2222)
   end,
 }
 
@@ -43,8 +46,18 @@ local function exec(command)
 end
 
 -- Minify file with Crunch program
+local oldSize = filesystem.size'/home/lostuser.min.lua'
 exec('crunch --lz77 lostuser.cut.lua lostuser.min.lua')
 filesystem.remove'/home/lostuser.cut.lua'
+
+log.start'Minified size:'
+local newSize = filesystem.size'/home/lostuser.min.lua'
+local newLess = newSize <= oldSize
+writeC(oldSize, newLess and 0x999900 or 0x99bb00)
+writeC(' => ')
+writeC(newSize .. '\n', newLess and 0x00aaaa or 0xbb4444)
+
+if ... then return gpu.setForeground(0xffffff) end
 
 -- Write into EEPROM
 exec('flash -q lostuser.min.lua LostUser')
