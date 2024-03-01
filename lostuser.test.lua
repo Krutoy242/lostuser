@@ -187,6 +187,7 @@ test('    Shortand  i5', shouldPrint("print(i5)", '1234512', 7))
 test('   Ordered Pairs', shouldOutput("_{1,[0]=2,3,c05=4,c4=5}", '_{0=2,1,3,c4=5,c05=4}'))
 test('Table num getter', shouldOutput("_{tostring(T5)==tostring(Tg),T6==nil}", '_{true,true}'))
 test('            t(f)', shouldOutput("Tg0'tr!'", '_{t,v}'))
+test('         Globals', shouldOutput([[_{_"_a(3),_'a*_b(2),b'()"()}]], '_{3,6,2}'))
 
 test('             n^t', shouldOutput("2^_{4,5,6}", '5'))
 test('             n/t', shouldOutput("5/_{2,3,4}", '4'))
@@ -207,7 +208,7 @@ test('             f~f', shouldPrint("_'print(k)'~'Rm3'", '🡢1🡢2🡢', 1))
 test('              -t', shouldOutput("_{'a','b','c'}", '_{a,b,c}'))
 test('              ~t', shouldOutput("~~_{1,{2,3},{4,a=5,b=_{6,c=7}}}", '_{1,2,3,4,5,6,7}'))
 test('              -f', shouldOutput("a=-_'k,v'ⓡ_{a(0),a(1),a(2),a(false),a(nil,true)}", '_{1,0,0,1,1}'))
-test('              ~f', shouldPrint("~_'i=i+1ⓡi<3',e(i)", '3'))
+test('              ~f', shouldPrint("~(Rm/2)", '🡠🡠🡠', 1))
 test('              #f', shouldOutput("f=_'2,3,k'ⓡ_{f&4,#f&4}", '_{2,_{2,3,4}}'))
 
 
