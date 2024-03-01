@@ -15,7 +15,7 @@ https://github.com/Krutoy242/lostuser
 -- debugging LostUser from computer rather than EEPROM.
 
 -- Forward declarations
-local pack, unpack, pairs, tostring, type, tonumber, run, loadBody, q = table.pack, table.unpack, pairs, tostring, type, tonumber
+local pack, unpack, pairs, tostring, type, tonumber, loadBody, q = table.pack, table.unpack, pairs, tostring, type, tonumber
 
 --[[MINIFY]]
 -- If we run from OpenOS
@@ -157,20 +157,6 @@ local function serialize(t)
   return '{'..s..'}'
 end
 
---- Create new table with members from first one plus second one
---- If second table not provided - just copy forst one
----@param a table
----@param b? table
----@return string
--- local function merge(a,b)
---   local t = {}
---   for k, v in pairs(a) do t[k] = v end
---   if b then
---     for k, v in pairs(b) do t[k] = v end
---   end
---   return t
--- end
-
 --[[
 ███████╗██╗   ██╗███╗   ██╗ ██████╗████████╗██╗ ██████╗ ███╗   ██╗ █████╗ ██╗
 ██╔════╝██║   ██║████╗  ██║██╔════╝╚══██╔══╝██║██╔═══██╗████╗  ██║██╔══██╗██║
@@ -180,19 +166,16 @@ end
 ╚═╝      ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝   ╚═╝   ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝
 ]]
 
---- Filter table.
---- Remove values for keys that not pass predicate
---- {1, '', 3, 0, foo = false, goo=true}  / 'a1' => {1, 3, goo=true}
---- For each t run f(k,v)
---- map({1,2,3}, (k,v)=>k,v*2) == {{1,2},{2,4},{3,6}}
+--- Filter or map table.
+--- Remove values for keys that not pass predicate.
 ---@param t table
 ---@param f function(k:integer, v:any): boolean
 ---@param isFilter? boolean filter instead of map
 ---@return table<any, any> f(k,v) will be wrapped into table
 local function map(t, f, isFilter)
-  local r = {}
+  local r, res = {}
   for k, v in pairs(t) do
-    local res = f(k,v)
+    res = f(k,v)
     if isFilter then
       if truthy(res) then r[k] = v end
     else
@@ -350,7 +333,6 @@ local function index(t, keyFull)
       -- _a(value) => a = value
       return q(function(v) t[postfix] = v; return v end)
     end
-    -- Idea: add functionality for q{}._
   end
 
   local key,arg = keyFull:match'(.-)(%d*)$'
@@ -380,11 +362,6 @@ local function index(t, keyFull)
 
   -- Other cases
   return q(t[getKey(key, t)])
-end
-
-local function isQ(t)
-  local succes, mt = pcall(getmetatable, t)
-  return succes and mt and mt.__q
 end
 
 local function safeCall(f, safe, ...)
@@ -421,8 +398,12 @@ end
 
 --- Single value q(t)
 q = function(t)
-  local qtype, qIsCallable = type(t), isCallable(t)
-  if (qtype ~= 'table' and not qIsCallable) or isQ(t) then return t end
+  local qIsCallable = isCallable(t)
+  if type(t) ~= 'table' and not qIsCallable then return t end
+
+  -- Already transformed
+  local succes, mt = pcall(getmetatable, t)
+  if succes and mt and mt.__q then return t end
 
   --############################################################
   -- Generic operator
@@ -487,7 +468,7 @@ q = function(t)
               ```
             ]]
             else
-              for j=1,TONUMBER(left) do r = right() end
+              for j=1, TONUMBER(left) do r = right() end
 
             end
           end
@@ -788,16 +769,8 @@ q = function(t)
   -- [[<= ]] mt.__le = generic'??'
   -- [[== ]] mt.__eq = generic'??'
 
-  -----------------------------------------------------------------
-  --[[
-    Possible need to implement:
-    - zip
-    - gsub
-  ]]
-  -----------------------------------------------------------------
-
   if qIsCallable then
-    mt.__call = function(_, ...)
+    function mt:__call(...)
       local r = pack(t(...))
       for k, v in pairs(r) do r[k] = q(v) end
       return unpack(r)
