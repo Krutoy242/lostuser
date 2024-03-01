@@ -188,6 +188,7 @@ test('   Ordered Pairs', shouldOutput("_{1,[0]=2,3,c05=4,c4=5}", '_{0=2,1,3,c4=5
 test('Table num getter', shouldOutput("_{tostring(T5)==tostring(Tg),T6==nil}", '_{true,true}'))
 test('            t(f)', shouldOutput("Tg0'tr!'", '_{t,v}'))
 test('         Globals', shouldOutput([[_{_"_a(3),_'a*_b(2),b'()"()}]], '_{3,6,2}'))
+test('            long', shouldOutput("long'Od0'", 'os.date(0)'))
 
 test('             n^t', shouldOutput("2^_{4,5,6}", '5'))
 test('             n/t', shouldOutput("5/_{2,3,4}", '4'))

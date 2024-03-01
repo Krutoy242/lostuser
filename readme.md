@@ -157,7 +157,10 @@ Additional globals:
   > i16 = i % 16 + 1
   > ```
 - `sleep(seconds: number = 1)`
-- `api(shortName: string, obj?: table)` - write the long name of the shorthand.
+- `long(shortand)` - write the long name of the shorthand.
+  > ```lua
+  > long'Ru3' -- prints "robot.use(3)"
+  > ```
 
 ## Shortening
 
@@ -229,10 +232,10 @@ The low dash `_` is a special helper function.
   > ```lua
   > -- Writes `4` into global `a`, returns 4
   > _a(4) == (function() a = 4; return a end)()
-  > 
+  >
   > -- Create func. that write result of `Ru` into global `a`
   > _a^Ru == function(...) a = robot.use(...); return a end
-  > 
+  >
   > -- Writes into table member
   > b._a^3 == b.a = 3
   > ```

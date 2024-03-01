@@ -94,16 +94,15 @@ S = screen
 T = tank_controller
 T = trading
 ]]
-do
-  local comps = {}
-  for address, name in pairs(component.list()) do comps[name]=address end
-  for name, address in orderedPairs(comps) do
-    --[[MINIFY]]if not skipComponents[name] then--]]
-    local C, p = name:sub(1, 1):upper(), component.proxy(address)
-    _G[name] = _G[name] or p
-    _G[C] = _G[C] or p
-    --[[MINIFY]]end--]]
-  end
+local comps,componentDict = {},{}
+for address, name in pairs(component.list()) do comps[name]=address end
+for name, address in orderedPairs(comps) do
+  --[[MINIFY]]if not skipComponents[name] then--]]
+  local C, p = name:sub(1, 1):upper(), component.proxy(address)
+  _G[name] = _G[name] or p
+  _G[C] = _G[C] or p
+  componentDict[C] = componentDict[C] or name
+  --[[MINIFY]]end--]]
 end
 
 --- Since LostUser will be minified and lz77-compressed,
@@ -278,12 +277,13 @@ local function getKey(short, obj, onlyTables)
 end
 
 --- Find value by key in table
----@param t table
 ---@param keyFull any
+---@param t? table
 ---@return any Queued value q(v)
-local function index(t, keyFull)
+local function index(keyFull, t)
+  t = t or _G
   local exact = t[keyFull]
-  if exact ~= nil then return q(exact) end
+  if exact ~= nil then return q(exact), componentDict[keyFull] or keyFull end
 
   -- If key is not a string, this means it cant be a shortand
   if type(keyFull) ~= 'string' then return end
@@ -309,17 +309,17 @@ local function index(t, keyFull)
         > ```lua
         > -- Writes `4` into global `a`, returns 4
         > _a(4) == (function() a = 4; return a end)()
-        > 
+        >
         > -- Create func. that write result of `Ru` into global `a`
         > _a^Ru == function(...) a = robot.use(...); return a end
-        > 
+        >
         > -- Writes into table member
         > b._a^3 == b.a = 3
         > ```
     ]]
     -- TODO: f_ or t_ return hashed vlue
     if num then
-      local from = (postfix:sub(1,1)=='0') and 0 or 1
+      local from = postfix:sub(1,1) == '0' and 0 or 1
       if C == '_' then
         local arr = {}
         for i = from, num - (1 - from) do arr[i] = i end
@@ -331,37 +331,45 @@ local function index(t, keyFull)
       end
     elseif C == '_' then
       -- _a(value) => a = value
-      return q(function(v) t[postfix] = v; return v end)
+      return q(function(v) t[postfix] = v return v end)
     end
   end
 
-  local key,arg = keyFull:match'(.-)(%d*)$'
+  local key, num = keyFull:match'(.-)(%d*)$'
 
   -- Key ends with number - probably function call
   -- Ru3 => robot.use(3)
-  if arg ~= '' then
-    local f,n = index(t, key),tonumber(arg)
+  if num ~= '' then
+    local n,f,long = tonumber(num), index(key, t)
     if isCallable(f) then
-      return q(f(n))
+      return q(f(n)), long..'('..n..')'
     elseif type(f)=='table' then
-      return q(f[getOrderedKeys(f)[n]])
+      return q(f[getOrderedKeys(f)[n]]), long..'['..n..']'
     end
 
   -- Big letter shortand Tg => T.g
-  elseif key:match'^[A-Z]' then
-    local obj
-    if t[C] ~= nil then
-      obj = t[C]
-    else
-      obj = t[getKey(C:lower(), t, true)]
+  elseif keyFull:match'^[A-Z]' then
+    -- First, get big letter as is
+    local long = getKey(C, t, true)
+
+    -- If not found, get as lowercase shortand
+    if t[long] == nil then
+      long = getKey(C:lower(), t, true)
     end
-    if obj then
-      return #key == 1 and q(obj) or index(obj, key:sub(2))
+
+    if t[long] ~= nil then
+      if #keyFull == 1 then
+        return q(t[long]), long
+      else
+        local r, long2 = index(keyFull:sub(2), t[long])
+        return r, long..'.'..(long2 or '')
+      end
     end
   end
 
   -- Other cases
-  return q(t[getKey(key, t)])
+  local long = getKey(keyFull, t)
+  return q(t[long]), long
 end
 
 local function safeCall(f, safe, ...)
@@ -485,7 +493,7 @@ q = function(t)
             r = map(left, right)
 
           --[[<!-- t/f -->
-            Filter, keep only if value is [Truthy](#Truthy)
+            Filter, keep only if value is [Truthy](#truthy)
             ```lua
             _{4,5,6,7}/'v%2' -- {5,7}
             ```
@@ -800,7 +808,7 @@ q = function(t)
     --* Possible ideas:
     --* • f.n | f[n] => f()?.n -- safe pointer of function result
     --* • f[{}] ??
-    return index(t, key)
+    return index(key, t)
   end
 
   -- Possibilities for __newindex:
@@ -899,8 +907,8 @@ end
 
 --- Get full variable name
 ---@param key any
-q_G.api = function(key)
-  return error(getKey(key, _G))
+q_G.long = function(...)
+  return localError(select(2, index(...)))
 end
 
 -- Recursively call functions that returned
