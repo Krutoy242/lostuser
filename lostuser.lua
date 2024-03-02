@@ -243,7 +243,7 @@ local function isCallable(t)
   if ty == 'function' then return true end
   if ty ~= 'table' then return false end
   local mt = getmetatable(t)
-  return mt and mt.__q ~= 0 and mt.__call
+  return mt and mt.__q ~= 0 and mt.__call, mt
 end
 
 --- Turn table of tables into table [[1,2],[3,4]] => [1,2,3,4]
@@ -357,13 +357,12 @@ local function index(keyFull, t)
       long = getKey(C:lower(), t, true)
     end
 
-    if t[long] ~= nil then
-      if #keyFull == 1 then
-        return q(t[long]), long
-      else
-        local r, long2 = index(keyFull:sub(2), t[long])
-        return r, long..'.'..(long2 or '')
-      end
+    if t[long] == nil then return end
+    if #keyFull == 1 then
+      return q(t[long]), long
+    else
+      local r, long2 = index(keyFull:sub(2), t[long])
+      return r, long..'.'..(long2 or '')
     end
   end
 
@@ -406,12 +405,8 @@ end
 
 --- Single value q(t)
 q = function(t)
-  local qIsCallable = isCallable(t)
-  if type(t) ~= 'table' and not qIsCallable then return t end
-
-  -- Already transformed
-  local succes, mt = pcall(getmetatable, t)
-  if succes and mt and mt.__q then return t end
+  local qIsCallable, mt = isCallable(t)
+  if type(t) ~= 'table' and not qIsCallable or mt and mt.__q then return t end
 
   --############################################################
   -- Generic operator
@@ -733,7 +728,7 @@ q = function(t)
   end
   --############################################################
 
-  local mt = {
+  mt = {
     __q = qIsCallable and 1 or 0,
     __tostring = function() return '_'..(qIsCallable and tostring(t) or serialize(t)) end,
   }
@@ -754,7 +749,7 @@ q = function(t)
 
   -- 4 --
   --[[ + ]] mt.__add = mt.__pow
-  --[[ - ]] mt.__sub = mt.__div -- lambda
+  --[[ - ]] mt.__sub = mt.__div
 
   -- 5 --
   -- [[ .. ]] mt.__concat = generic'loop'
@@ -764,13 +759,13 @@ q = function(t)
   -- [[>> ]] mt.__shr = generic'??'
 
   -- 7 --
-  --[[ & ]] mt.__band = mt.__pow -- map
+  --[[ & ]] mt.__band = mt.__pow
 
   -- 8 --
   --[[ ~ ]] mt.__bxor = mt.__mul
 
   -- 9 --
-  --[[ | ]] mt.__bor = mt.__div -- lambda
+  --[[ | ]] mt.__bor = mt.__div
 
   -- 10 --
   -- [[ < ]] mt.__lt = generic'??'
@@ -779,9 +774,7 @@ q = function(t)
 
   if qIsCallable then
     function mt:__call(...)
-      local r = pack(t(...))
-      for k, v in pairs(r) do r[k] = q(v) end
-      return unpack(r)
+      return unpack(map({t(...)}, function(_,v) return q(v) end))
     end
     --[[<!-- #f -->
       Make a function that would wrap its result into a table.
@@ -821,7 +814,7 @@ q = function(t)
     --* • f[2]=x
     --* • f.n=x
     --* • f[{}]=x
-    rawset(t, k, q(v))
+    rawset(t, k, v)
   end
 
   -- When pairs, returned ORDERED elements wrapped into q(v)
