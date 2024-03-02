@@ -50,7 +50,8 @@ Assemble the robot in the minimum configuration:
 
 ### E2E-E
 
-If you play [Enigmatica 2: Expert - Extended](https://www.curseforge.com/minecraft/modpacks/enigmatica-2-expert-extended), the modpack has a predefined EEPROM recipe.  
+If you play [Enigmatica 2: Expert - Extended](https://www.curseforge.com/minecraft/modpacks/enigmatica-2-expert-extended), the modpack has a predefined EEPROM recipe.
+
 Find it in JEI and craft it. It will have a colored glow.
 
 ![EEPROM Crafting](https://i.imgur.com/GuT7Ke6.gif)
@@ -162,6 +163,15 @@ Additional globals:
   > long'Ru3' -- prints "robot.use(3)"
   > ```
 
+<!--
+███████╗██╗  ██╗ ██████╗ ██████╗ ████████╗███████╗███╗   ██╗██╗███╗   ██╗ ██████╗
+██╔════╝██║  ██║██╔═══██╗██╔══██╗╚══██╔══╝██╔════╝████╗  ██║██║████╗  ██║██╔════╝
+███████╗███████║██║   ██║██████╔╝   ██║   █████╗  ██╔██╗ ██║██║██╔██╗ ██║██║  ███╗
+╚════██║██╔══██║██║   ██║██╔══██╗   ██║   ██╔══╝  ██║╚██╗██║██║██║╚██╗██║██║   ██║
+███████║██║  ██║╚██████╔╝██║  ██║   ██║   ███████╗██║ ╚████║██║██║ ╚████║╚██████╔╝
+╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚══════╝╚═╝  ╚═══╝╚═╝╚═╝  ╚═══╝ ╚═════╝
+ -->
+
 ## Shortening
 
 Since a Robot or Drone name can have only `64` characters, pointers must be shortened.
@@ -187,6 +197,9 @@ Shortening rules:
     > ```
 
 4. A big first letter with a dot `.` can be used without the dot.
+    1. First, bug letter would be indexed.
+    2. If not found, anything that start with this big letter.
+    3. Lastly, anything that start with lowercased first letter.
     > ```lua
     > -- Same pointers
     > robot.use == R.use == Ruse == Ru
@@ -290,12 +303,12 @@ Operator precedence in Lua follows the table below, from higher to lower priorit
 12. `or`
 
 <!--
-███╗   ███╗ █████╗ ██████╗ 
+███╗   ███╗ █████╗ ██████╗
 ████╗ ████║██╔══██╗██╔══██╗
 ██╔████╔██║███████║██████╔╝
-██║╚██╔╝██║██╔══██║██╔═══╝ 
-██║ ╚═╝ ██║██║  ██║██║     
-╚═╝     ╚═╝╚═╝  ╚═╝╚═╝     
+██║╚██╔╝██║██╔══██║██╔═══╝
+██║ ╚═╝ ██║██║  ██║██║
+╚═╝     ╚═╝╚═╝  ╚═╝╚═╝
 -->
 
 ### Map `^`, `+`, or `&`
@@ -790,8 +803,10 @@ The program has several predefined macros - symbols that will be replaced everyw
 
   > Required upgrades: ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__17.png "Inventory Upgrade"), ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__18.png "Inventory Controller Upgrade")
 
-  This robot is intended to use with Forestry saplings, which usually can't be placed as blocks but need to be right-clicked instead.  
-  Also, the robot needs an *unbreakable* Broad Axe from TCon with the *Global Traveler* trait. Additionally, my Axe has the *Fertilizing* trait - right-click to fertilize.  
+  This robot is intended to use with Forestry saplings, which usually can't be placed as blocks but need to be right-clicked instead.
+
+  Also, the robot needs an *unbreakable* Broad Axe from TCon with the *Global Traveler* trait. Additionally, my Axe has the *Fertilizing* trait - right-click to fertilize.
+
   Place the robot on top of a container with saplings.
 
   ![Robot farming trees](https://i.imgur.com/I9W39B0.gif "Robot farming trees")
@@ -810,7 +825,7 @@ The program has several predefined macros - symbols that will be replaced everyw
 
   * *Circular Miner*. Using a Hammer with an Alumite part (Global Traveler trait). Place the Robot underground, place a stack of Charcoal Blocks in the selected robot slot. The Robot will start to circle around, mining everything.
     > Required upgrades: ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__27.png "Hover Upgrade (Tier 1)")
-    > 
+    >
     > Optional upgrades: ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__17.png "Inventory Upgrade"), ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__16.png "Generator Upgrade")
     ```lua
     Gi,_'Rm3,Rsw3'~i*2,Rtn⒯
@@ -836,7 +851,7 @@ The program has several predefined macros - symbols that will be replaced everyw
 
   * *Unstackable bot*. Takes an item from the front only if they are unstackable and puts it on top. If it can't drop the item on top, pushes up and places a block.
     > Flood all robot slots except 1. Slot 9 should have new inventories for unstackables.
-    > 
+    >
     > Required upgrades: ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__20.png "Piston Upgrade"), ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__17.png "Inventory Upgrade"), ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__18.png "Inventory Controller Upgrade")
     ```lua
     (IgSI/3&_a^i1728ⓞ{}).mS^_{_'IsF/3&a,Rd1ⓞ{Pps1,Rsel9,Rp1,Rsel1}'}
