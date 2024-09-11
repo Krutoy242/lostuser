@@ -761,24 +761,17 @@ The program has several predefined macros - symbols that will be replaced everyw
 
   ![Robot trading](https://i.imgur.com/HEgNabM.png)
 
+  **Setup:**
+  - Robot must be placed on top of inventory of size `16`.
+  - Robot must have only one Inventory Upgrade.
+  - Villagers must be in 8 meter radius.
+  
+  **Features:**
+  - Robot will pull items required for trades and sell them.
+  - Robot will not sell emeralds.
+
   Robot name:
   ```lua
-  Rsel-'Rd0'~RiS0,IsF/0~Igz0,Tg0'~tr'
-  ```
-  * `Rsel-'Rd0'~RiS0`: Select each slot and dump to the bottom
-    > - `'Rd0'`: is a function that would call `robot.drop(0)` when executed.
-    > - `RiS0`: is shorthand for `robot.inventorySize(0)`. Note that this function is not using any arguments so we could call it with `0`
-    > - `Rsel`: `robot.select` shorthand. Note that we used `-` operator here, which is the same as `/` but has lower precedence
-  * `IsF/0~Igz0`: For each slot of the inventory on the bottom `inventory_controller.getInventorySize(0)` call `inventory_controller.suckFromSlot(0, k)`
-  * `Tg0'~tr'`: Trade all trades.
-    > - `~tr`: Call `trade()` while it returns true. Note that inside this function, all arguments are exposed as global, so we could access `trade` as global (actually, it's an `upvalue`)
-
-  There is another variant of the robot name, way advanced. It will pull only items that are actually required for trading. This program is hardcoded to work with **internal and external** inventory with size 16:
-  ```lua
-  -- Trade everything
-  a=-~Tg0"_{g!}'n',~tr"ⓡ_16&R16-'Rd0'&IgI/0&'a[n]ⓐI8/0&k'
-
-  -- Do not sell emeralds [id==388]
   a=-~Tg0'388^-g0ⓞ{g0.n,~tr}'ⓡ_16&R16-'Rd0'&IgI/0&'a[n]ⓐI8/0&k'
   ```
 
