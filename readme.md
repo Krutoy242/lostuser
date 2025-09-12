@@ -197,7 +197,7 @@ Shortening rules:
     > ```
 
 4. A big first letter with a dot `.` can be used without the dot.
-    1. First, bug letter would be indexed.
+    1. First, big letter would be indexed.
     2. If not found, anything that start with this big letter.
     3. Lastly, anything that start with lowercased first letter.
     > ```lua
@@ -830,8 +830,13 @@ The program has several predefined macros - symbols that will be replaced everyw
     Rd|3%2^(IsF(0,i%Igz0+1)ⓐIgSII!.mDⓞ2)
     ```
 
-  * *Cat opener*. Takes 16 items in front, right-clicks them, and then dumps the inventory on top.
+  * *Cat fur opener*.
     > Required upgrades: ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__17.png "Inventory Upgrade"), ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__18.png "Inventory Controller Upgrade")
+    > 
+    > **Setup**:
+    > - Inventory with Fur Balls in front.
+    > - Solid block on bottom.
+    > - Free inventory on top.
     ```lua
     Rsk/3&16ⓐIe!,~_'Ru0',_16/Rc|Rsel/'Rd1'
     ```
