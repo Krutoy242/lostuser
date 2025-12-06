@@ -331,6 +331,7 @@ local function index(keyFull, t)
       end
     elseif C == '_' then
       -- _a(value) => a = value
+      -- FIXME: not sure if _a(nil) works here
       return q(function(v) t[postfix] = v return v end)
     end
   end
@@ -365,6 +366,8 @@ local function index(keyFull, t)
       return r, long..'.'..(long2 or '')
     end
   end
+
+  -- TODO: Chaining letters and numbers R16Rd0
 
   -- Other cases
   local long = getKey(keyFull, t)
@@ -450,6 +453,7 @@ q = function(t)
 
           --?-- N x Function
           else
+            -- TODO: Probably composition to allow tricks like -a^f^b => -f(b, a), since ^ have higher precedence
             --[[<!-- n^f -->
               <sub>Not yet implemented</sub>
             ]]
@@ -768,7 +772,7 @@ q = function(t)
   --[[ | ]] mt.__bor = mt.__div
 
   -- 10 --
-  -- [[ < ]] mt.__lt = generic'??'
+  -- [[ < ]] mt.__lt = generic'??' --  TODO: Possible same as -/| but without passing args
   -- [[<= ]] mt.__le = generic'??'
   -- [[== ]] mt.__eq = generic'??'
 
@@ -799,8 +803,9 @@ q = function(t)
   function mt:__index(key)
     --  TODO: add function indexing
     --* Possible ideas:
-    --* • f.n | f[n] => f()?.n -- safe pointer of function result
+    --* • f.n | f[n] => f()?.n -- safe pointer of function result?
     --* • f[{}] ??
+    --* • _''.a.b.c -- could be chained
     return index(key, t)
   end
 
