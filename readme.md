@@ -258,7 +258,7 @@ The low dash `_` is a special helper function.
 
 <!-- calling _ -->
 - **Using `_` on a string**
-  Will load the code inside this string and return it as a function. Calling this function is always error-safe—if an exception occurs inside, the function will simply return `nil`.
+  Will load the code inside this string and return it as a function. Calling this function is always error-safe — if an exception occurs inside, the function will simply return `nil`.
 
   > ```lua
   > _'Rm,s2'()(0) -- calls `sleep(2),robot.move(0)`
@@ -321,7 +321,7 @@ Operator precedence in Lua follows the table below, from higher to lower priorit
 > f+g&h -- equal to `f(g()) & h`
 > ```
 
-- **Note¹:** `^` is right associative. This means the right side will be computed first.
+- **Note¹:** `^` is right associative.
 
 - **Note²:** You can also call *uncallable* tables. `t(x)` is the same as `t^x`. *Uncallable* tables are tables without a `__call` metatable.
   Example (map `t^f`):
@@ -722,12 +722,11 @@ The program has several predefined macros - symbols that will be replaced everyw
 
   Drone name:
   ```lua
-  P=i/Nf300ⓡDm^Pp,s/1~'Dg0>1',_(Pl)
+  _P&i/Nf300,Dm^Pp,s/1~'Dg0>1',_(Pl)
   ```
   * `Nf300`: Run `navigation.findWaypoints(300)`.
   * `i/Nf300`: `i` is the index of script execution. `i / table` is "Get by index modulus" `t[i % #t + 1]`.
-  * `P=i/Nf300`: Write into the global variable `P` a different waypoint each script cycle.
-  * `ⓡ`: will be replaced by ` return `
+  * `_P&i/Nf300`: Write into the global variable `P` a different waypoint each script cycle.
   * `Dm^Pp`: calling `drone.move(table.unpack(P.position))`.
   * `s/1~'Dg0>1'` => `while drone.getOffset() > 1 do sleep(1) end`.
   * `_(Pl)`: Load `P.label` as Lua code. This loaded function would be [returned and executed](#return).
@@ -774,6 +773,26 @@ The program has several predefined macros - symbols that will be replaced everyw
   ```lua
   a=-~Tg0'388^-g0ⓞ{g0.n,~tr}'ⓡ_16&R16-'Rd0'&IgI/0&'a[n]ⓐI8/0&k'
   ```
+<!--
+
+Variations:
+
+• WIPs to get rid of statement'
+a=(-~Tg0'388^-g0ⓞ{g0.n,~tr}')ⓡ(_16)&(R16-'Rd0')&(IgI/0)&('a[n]ⓐI8/0&k')
+-~Tg0'388^-g0ⓞ{g0.n,~tr}' # list of trades {[item_name]: num}
+      388^-g0 # check if ID is 388 (emerald)
+ ~Tg0'g0''n,388^-vⓞ~tr' # list of first buy item names except emeralds
+ ~Tg0'g0''n,388^-vⓞ(is0ⓐ~tr)' # trade only available trades
+Igz0 # Get inventory size buttom
+
+# • Full program ?
+_16/Rc|R16/'Rd0',_a&~Tg0'g0''n,388^-vⓞ(is0ⓐ~tr)',IgI/0/'a[n]ⓐI8/0&k'~Igz0
+_16/Rc|R16/'Rd0',Tg0'g0'/'388^-v'/'is0ⓐ~tr',IgI/0/'a[n]ⓐI8/0&k'~Igz0
+
+# When new syntax implemented ?
+_16Rc/R16'Rd0'
+
+-->
 
 - **Rune maker**
 
@@ -786,9 +805,9 @@ The program has several predefined macros - symbols that will be replaced everyw
 
   Robot name:
   ```lua
-  _8/'Rsel^v,v==7ⓐ{s3,Rm1,Rd(3,1),Rm0}ⓞ{Ie!,Ru3,Ie!}'
+  _8/'R16^v,v==7ⓐ{s3,Rm1,Rd(3,1),Rm0}ⓞ{Ie!,Ru3,Ie!}'
   ```
-  * `Rsel^v`: Select iterated slot
+  * `R16^v`: Select iterated slot
   * `v==7ⓐ{s3,Rm1,Rd(3,1),Rm0}`: if it's the 7th slot with Living Rock, wait 3 seconds until the craft is finished, then drop Rock on top.
   * `Ie!,Ru3,Ie!`: Other slots - just right-click with the item
 
@@ -821,8 +840,21 @@ The program has several predefined macros - symbols that will be replaced everyw
     >
     > Optional upgrades: ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__17.png "Inventory Upgrade"), ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__16.png "Generator Upgrade")
     ```lua
-    Gi,_'Rm3,Rsw3'~i*2,Rtn⒯
+    Gi,_'Rsw3,Rm3'~(i//2*5),Rtn⒯
     ```
+<!--
+# With infinity placing block
+Gi,_'Rsw3,Rm3,Rp0'~(i//2*5),Rtn⒯
+
+# With Borrowing
+Gi,_'~(Rsw/3),~(Rsw/1),Rm3,Rp0'~(i//2*5),Rtn⒯
+
+# With infinity placing block in nether
+Gi,_'Rsw3,Rp3,Rsw3,Rm3,Rp0'~(i//2*5),Rtn⒯
+
+# Twilight Forest Bedrock
+Gi,_'~(Rsw/0),Rsw3,Rm3'~i//2,Rtn⒯
+-->
 
   * *Robot sorting mob drop*. Take from the bottom, damageable items to the top, others forward.
     > Required upgrades: ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__17.png "Inventory Upgrade"), ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__18.png "Inventory Controller Upgrade")
@@ -838,13 +870,13 @@ The program has several predefined macros - symbols that will be replaced everyw
     > - Solid block on bottom.
     > - Free inventory on top.
     ```lua
-    Rsk/3&16ⓐIe!,~_'Ru0',_16/Rc|Rsel/'Rd1'
+    Rsk/3&16ⓐIe!,~_'Ru0',_16/Rc|R16/'Rd1'
     ```
 
   * *Compressing bot*. Takes from the front, crafts 3x3, then dumps back.
     > Required upgrades: ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__11.png "Crafting Upgrade"), ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__17.png "Inventory Upgrade"), ![](https://github.com/Krutoy242/mc-icons/raw/master/i/opencomputers/upgrade__18.png "Inventory Controller Upgrade")
     ```lua
-    -(_16-Rc&12)|'Rd3'&Rsel,IsF/3/'_11/8/4&Rc!/9/RtT'|i81,Cc
+    -(_16-Rc&12)|'Rd3'&R16,IsF/3/'_11/8/4&Rc!/9/RtT'|i81,Cc
     ```
 
   * *Unstackable bot*. Takes an item from the front only if they are unstackable and puts it on top. If it can't drop the item on top, pushes up and places a block.
@@ -854,6 +886,30 @@ The program has several predefined macros - symbols that will be replaced everyw
     ```lua
     (IgSI/3&_a^i1728ⓞ{}).mS^_{_'IsF/3&a,Rd1ⓞ{Pps1,Rsel9,Rp1,Rsel1}'}
     ```
+<!--
+
+OTHER PROGRAMS
+
+• Hammer Leveller
+• Cobble in front, Mechanical Crafter with Sharpening Kits under
+Rsw3,i%99==0ⓐ{Ie!,_a(I23^1).mD-a.d<20ⓐ{Rd0,s2,Rsk0},Ie!}
+
+• Oredict filtering robot
+• Any invntory bottom, ores go front, dust go up
+_"_a&'oreⓐ3ⓞdusⓐ1'/-Igo(0,k).oⓐ{IsF/0&k,Rd&a}"~Igz0
+
+WIP PROGRAMS
+
+# ? Drone sapling planter
+x,z=i%8,i%64//8 u={x,0,z} # Coords base on `i` variable
+Gs(x,z)[32]==0 # Is air 1 layer down
+_'Dm(v[1],0,v[2]),s!,Dp0'/{u,u*'-v'} # Move to point, place, and come back
+x,z=i%8,i%64//8 u={x,0,z}∅_"_'Dm*u,s!,Dp0'/{u,u*'-v'}"~'Gs(x,z)[32]'
+Gs(1,1,-1,8,8,1)*"v~=0ⓞ_'Dm(k,0,v)s!Dp(0)Dm(-k,0,-v)s!'(k%8,k/8)"
+a=-1,Gs_11a881
+
+
+-->
 
 ## Additionals
 
