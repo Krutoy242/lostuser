@@ -220,8 +220,8 @@ local function translate(text)
   return text
     :gsub('ⓐ', ' and ')
     :gsub('ⓞ', ' or ')
-    :gsub('ⓝ', ' not ')
-    :gsub('ⓡ', ' return ')
+    :gsub('ⓝ', ' not ') -- FIXME: Deprecated
+    :gsub('ⓡ', ' return ') -- FIXME: Deprecated, remove loading of statement
     :gsub('⒯', '(true)')
     :gsub('⒡', '(false)')
     :gsub('!', '()')

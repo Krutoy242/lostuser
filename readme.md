@@ -702,14 +702,17 @@ A value is considered `truthy` if it is not `falsy`.
 
 The program has several predefined macros - symbols that will be replaced everywhere with another text.
 
-```javascript
-! => '()'
-ⓐ => ' and '
-ⓞ => ' or '
-ⓝ => ' not '
-ⓡ => ' return '
-⒯ => '(true)'
-⒡ => '(false)'
+```lua
+! -- '()'
+ⓐ -- ' and '
+ⓞ -- ' or '
+⒯ -- '(true)'
+⒡ -- '(false)'
+```
+```lua
+--[[  Deprecated  ]]
+ⓡ -- ' return '
+ⓝ -- ' not '
 ```
 
 ## Examples
@@ -771,7 +774,7 @@ The program has several predefined macros - symbols that will be replaced everyw
 
   Robot name:
   ```lua
-  a=-~Tg0'388^-g0ⓞ{g0.n,~tr}'ⓡ_16&R16-'Rd0'&IgI/0&'a[n]ⓐI8/0&k'
+  _a(-~Tg0'388^-g0ⓞ{g0.n,~tr}'),_16&R16-'Rd0'&IgI/0&'a[n]ⓐI8/0&k'
   ```
 <!--
 
