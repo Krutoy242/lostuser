@@ -725,7 +725,7 @@ The program has several predefined macros - symbols that will be replaced everyw
 
   Drone name:
   ```lua
-  _P&i/Nf300,Dm^Pp,s/1~'Dg0>1',_(Pl)
+  _P(i/Nf300),Dm^Pp,s/1~'Dg0>1',_(Pl)
   ```
   * `Nf300`: Run `navigation.findWaypoints(300)`.
   * `i/Nf300`: `i` is the index of script execution. `i / table` is "Get by index modulus" `t[i % #t + 1]`.
