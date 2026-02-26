@@ -113,6 +113,7 @@ end
 ---@param err string
 local function localError(err)
   -- if computer then computer.beep(1800, 0.5) end
+  -- TODO: Allow error function usage inside functions
   error(
     tostring(err):gsub('%[string ".+"%]:%d+: ', '')
 
@@ -568,6 +569,7 @@ q = function(t)
         if rightIsCallable then
 
           --[[<!-- f^f -->
+            -- TODO: use "No arg pass" composition instead
             Composition
             ```lua
             f^g -- (...)=>f(g(...))
@@ -772,7 +774,7 @@ q = function(t)
   --[[ | ]] mt.__bor = mt.__div
 
   -- 10 --
-  -- [[ < ]] mt.__lt = generic'??' --  TODO: Possible same as -/| but without passing args
+  -- [[ < ]] mt.__lt = generic'??' --  TODO: Possible same as -/| but without passing args, or conditional
   -- [[<= ]] mt.__le = generic'??'
   -- [[== ]] mt.__eq = generic'??'
 
