@@ -739,6 +739,17 @@ The program has several predefined macros - symbols that will be replaced everyw
   _'Dsk0'~4
   Dsel-'Dd0'~4
   ```
+<!--
+💡 Example for moving after waypoint task
+Dsk0,Dm(130,-60,-150),s25
+Dsk0,Dm(-40,160,260),s35
+Dsel-'Dd0'~4,Dm(-70,-9,-130),s20
+
+# Firstly reach last target
+s/1~'Dg0>1',_P(i/Nf100),Dm^Pp,s/1~'Dg0>1',_(Pl)
+
+Dsk0,Dsk1,Dm(100,0,50)
+-->
 
 - **Zig-Zag + Use Down, useful for farms**
 
@@ -748,14 +759,8 @@ The program has several predefined macros - symbols that will be replaced everyw
 
   Robot name:
   ```lua
-  m,t=_'Rm3,Ru0',Rtn/(i2>1)ⓡ~m,t!,_'m!,t!'!ⓞt/m
+  ~_m'Rm3,Ru0',_t(Rtn/(i2>1))!,_'m!,t!'!ⓞt/m
   ```
-  * `m,t=_'Rm3,Ru0',Rtn/(i2>1)`: define two functions for moving and rotating
-    - `_'Rm3,Ru0'`: define a function `Rm3,Ru0` that would move forward and use a tool down
-    - `Rtn/(i2>1)`: this makes a function that would call `Rtn` (`robot.turn`) with the argument `i2>1`. `i2` is shorthand for `i%2+1`
-  * `~m`: Makes the robot move forward until it can't move.
-  * `t!`: `t` is Rtn/(i2>1) while `!` replaced with `()` so the line will become `Rtn/(i2>1)()`, which means execute turn immediately.
-  * `_'m!,t!'!ⓞt/m`: Move and turn. If the move wasn't successful, turn and move again.
 
 - **Trader bot**
 
@@ -790,10 +795,11 @@ Igz0 # Get inventory size buttom
 
 # • Full program ?
 _16/Rc|R16/'Rd0',_a&~Tg0'g0''n,388^-vⓞ(is0ⓐ~tr)',IgI/0/'a[n]ⓐI8/0&k'~Igz0
-_16/Rc|R16/'Rd0',Tg0'g0'/'388^-v'/'is0ⓐ~tr',IgI/0/'a[n]ⓐI8/0&k'~Igz0
+_16/Rc|R16/'Rd0',    Tg0'g0'/'388^-v'/'is0ⓐ~tr',IgI/0/'a[n]ⓐI8/0&k'~Igz0
 
-# When new syntax implemented ?
-_16Rc/R16'Rd0'
+_16Rc/R16/'Rd0' # ? When new CaMeL syntax implemented
+_16Rc/R16'Rd0' # ? If R16'Rd0' means "no arg pass"
+_16Rc/R16Rd0 # ? If Rd0 create function instead of call
 
 -->
 
@@ -808,11 +814,8 @@ _16Rc/R16'Rd0'
 
   Robot name:
   ```lua
-  _8/'R16^v,v==7ⓐ{s3,Rm1,Rd(3,1),Rm0}ⓞ{Ie!,Ru3,Ie!}'
+  _8/'R16^v,v==7ⓐ{s8,Rm1,Rd(3,1),Rm0}ⓞ{Ie!,Ru3,Ie!}'
   ```
-  * `R16^v`: Select iterated slot
-  * `v==7ⓐ{s3,Rm1,Rd(3,1),Rm0}`: if it's the 7th slot with Living Rock, wait 3 seconds until the craft is finished, then drop Rock on top.
-  * `Ie!,Ru3,Ie!`: Other slots - just right-click with the item
 
 - **Single tree farm**
 
