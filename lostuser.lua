@@ -14,8 +14,18 @@ https://github.com/Krutoy242/lostuser
 -- This to remove parts of code could be useful for testing and
 -- debugging LostUser from computer rather than EEPROM.
 
+--[[ OC sandbox limits (machine.lua):
+  _G is the sandbox itself - fully writable, no __newindex guard; load() defaults env to it, text only (allowBytecode=false)
+  getmetatable'' == nil - string metatable unreachable, so strings can't get operators
+  userdata proxies have __metatable='userdata': getmetatable returns that string, setmetatable errors
+  __gc in a metatable is silently stripped (allowGC=false)
+  debug = getinfo (primitives only), traceback, getlocal, getupvalue - no sethook/setupvalue/getregistry/getmetatable
+  so the host's deadline hook can't be unset: ~5s without yield kills the machine
+  component methods are callable tables, not functions - type(Ru)=='table'
+]]
+
 -- Forward declarations
-local pack, unpack, pairs, tostring, type, tonumber, loadBody, q = table.pack, table.unpack, pairs, tostring, type, tonumber
+local pack, unpack, pairs, tostring, type, tonumber, loadBody, q, functionize = table.pack, table.unpack, pairs, tostring, type, tonumber
 
 --[[MINIFY]]
 -- If we run from OpenOS
@@ -305,11 +315,15 @@ local function index(keyFull, t)
         > ```
       - **Using `_` with words `_abc`**
         Creates a function that will write the result into the `abc` variable.
-        The function returns the passed value.
+        The value is converted the same way [Calling `_`](#calling-_) does it,
+        so a string is written as a function. The function returns what it wrote.
         Note that `_abc` is functional.
         > ```lua
         > -- Writes `4` into global `a`, returns 4
         > _a(4) == (function() a = 4; return a end)()
+        >
+        > -- Writes a loadable function into global `m`
+        > _m'Rm3' == _m(_'Rm3')
         >
         > -- Create func. that write result of `Ru` into global `a`
         > _a^Ru == function(...) a = robot.use(...); return a end
@@ -333,7 +347,11 @@ local function index(keyFull, t)
     elseif C == '_' then
       -- _a(value) => a = value
       -- FIXME: not sure if _a(nil) works here
-      return q(function(v) t[postfix] = v return v end)
+      return q(function(v)
+        local r = q(functionize(v))
+        t[postfix] = r
+        return r
+      end)
     end
   end
 
@@ -387,7 +405,7 @@ end
 --- Generate helper functions
 ---@param target any Anything we targeting function to
 ---@return function, boolean
-local function functionize(target)
+functionize = function(target)
   if type(target) ~= 'string' then return target, isCallable(target) end
 
   -- Generate safe function from lua code

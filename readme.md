@@ -240,11 +240,15 @@ The low dash `_` is a special helper function.
   > ```
 - **Using `_` with words `_abc`**
   Creates a function that will write the result into the `abc` variable.
-  The function returns the passed value.
+  The value is converted the same way [Calling `_`](#calling-_) does it,
+  so a string is written as a function. The function returns what it wrote.
   Note that `_abc` is functional.
   > ```lua
   > -- Writes `4` into global `a`, returns 4
   > _a(4) == (function() a = 4; return a end)()
+  >
+  > -- Writes a loadable function into global `m`
+  > _m'Rm3' == _m(_'Rm3')
   >
   > -- Create func. that write result of `Ru` into global `a`
   > _a^Ru == function(...) a = robot.use(...); return a end
