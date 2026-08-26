@@ -227,9 +227,9 @@ function _G.getmetatable(v)
   return rawgetmetatable(v)
 end
 
--- allowBytecode = false
+-- allowBytecode = false, and an omitted env means the sandbox, not nil
 function _G.load(chunk, name, mode, env)
-  return rawload(chunk, name, 't', env)
+  return rawload(chunk, name, 't', env or _G)
 end
 
 -- Only these debug primitives exist in the sandbox
