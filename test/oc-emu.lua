@@ -70,42 +70,88 @@ end, '', 1e6)
 -- Components
 -----------------------------------------------------------------
 
---- OC exposes component methods as callable tables, not functions,
---- so `type(Ru) == 'table'`. Reproduce that.
---- The metatable stays reachable: LostUser's `isCallable` looks for
---- `getmetatable(t).__call`, and it works on a real robot.
-local function callable(f, name)
-  return setmetatable({}, {
-    __call = function(_, ...) return f(...) end,
-    __tostring = function() return 'function: ' .. (name or '?') end,
-  })
-end
-
-local registered = {} -- address -> { name = string, proxy = table }
+local registered = {} -- address -> { name = string, proxy = table, methods = table }
 local addrSeed = 0
+local component
+
+--- OC exposes component methods as callable tables, not functions,
+--- so `type(Ru) == 'table'`. Both metatables below are shared by every
+--- component of the machine and, unlike the userdata wrappers, carry no
+--- `__metatable`, so a program can reach and patch them.
+local componentCallback = {
+  __call = function(self, ...) return component.invoke(self.address, self.name, ...) end,
+  __tostring = function(self) return component.doc(self.address, self.name) or 'function' end,
+}
+
+local componentProxy = {
+  __index = function(self, key)
+    if self.fields[key] and self.fields[key].getter then
+      return component.invoke(self.address, key)
+    else
+      rawget(self, key) -- machine.lua really does forget the `return` here
+    end
+  end,
+  __newindex = function(self, key, value)
+    if self.fields[key] and self.fields[key].setter then
+      return component.invoke(self.address, key, value)
+    elseif self.fields[key] and self.fields[key].getter then
+      error 'field is read-only'
+    else
+      rawset(self, key, value)
+    end
+  end,
+  --- Own keys except `fields`, then the fields themselves
+  __pairs = function(self)
+    local keyProxy, keyField, value
+    return function()
+      if not keyField then
+        repeat
+          keyProxy, value = next(self, keyProxy)
+        until not keyProxy or keyProxy ~= 'fields'
+      end
+      if not keyProxy then keyField, value = next(self.fields, keyField) end
+      return keyProxy or keyField, value
+    end
+  end,
+}
 
 --- Add a fake component visible to `component.list()` / `component.proxy()`
 ---@param name string component type, e.g. 'robot'
 ---@param methods table map of method name -> function
+---@param fields? table map of field name -> { getter = boolean, setter = boolean }
 ---@return string address
-function emu.register(name, methods)
+function emu.register(name, methods, fields)
   addrSeed = addrSeed + 1
   local address = ('%08x-0000-4000-8000-%012d'):format(addrSeed * 0x1111111, addrSeed)
-  local proxy = { address = address, type = name, slot = -1 }
+  local proxy = { address = address, type = name, slot = -1, fields = fields or {} }
+  local impl = {}
   for k, v in pairs(methods or {}) do
-    proxy[k] = type(v) == 'function' and callable(v, name .. '.' .. k) or v
+    impl[k] = v
+    -- A field is invoked by its own name and is not a key of the proxy
+    if not proxy.fields[k] then
+      proxy[k] = setmetatable({ address = address, name = k }, componentCallback)
+    end
   end
-  registered[address] = { name = name, proxy = proxy }
+  registered[address] = { name = name, proxy = setmetatable(proxy, componentProxy), methods = impl }
   return address
 end
 
-local component = {
+--- Forget every component registered so far
+function emu.clear()
+  registered = {}
+end
+
+component = {
+  --- The list doubles as an iterator: `for a, n in component.list() do`
   list = function(filter)
-    local t = {}
+    local t, key = {}
     for address, c in pairs(registered) do
       if not filter or c.name:find(filter, 1, true) then t[address] = c.name end
     end
-    return t
+    return setmetatable(t, { __call = function()
+      key = next(t, key)
+      if key then return key, t[key] end
+    end })
   end,
   proxy = function(address)
     local c = registered[address]
@@ -118,15 +164,22 @@ local component = {
   end,
   invoke = function(address, method, ...)
     local c = registered[address] or error 'no such component'
-    return c.proxy[method](...)
+    local f = c.methods[method] or error('no such method: ' .. tostring(method))
+    return f(...)
+  end,
+  doc = function(address, method)
+    local c = registered[address]
+    return c and c.methods[method] and ('function -- %s.%s'):format(c.name, method)
   end,
   slot = function() return -1 end,
   methods = function(address)
     local t, c = {}, registered[address]
-    for k, v in pairs(c and c.proxy or {}) do
-      if type(v) == 'table' then t[k] = true end
-    end
+    for k in pairs(c and c.methods or {}) do t[k] = true end
     return t
+  end,
+  fields = function(address)
+    local c = registered[address]
+    return c and c.proxy.fields or {}
   end,
 }
 
