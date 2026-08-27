@@ -961,9 +961,13 @@ end
 if prog=='' then localError'No program' end
 
 -- Play music
+-- `prog` comes from a robot name, so it is UTF-8: `string.sub` would cut
+-- a macro like `ⓐ` in half and beep its bytes one by one.
 --[[MINIFY]]if not shellArg then--]]
-for s in prog:sub(1,5):gmatch"%S" do
-  computer.beep(math.min(2000, 200 + s:byte() * 10), 0.05)
+for i = 1, 5 do
+  local s = unicode.sub(prog, i, i)
+  if s == '' then break end
+  if s:match'%S' then computer.beep(math.min(2000, 200 + s:byte() * 10), 0.05) end
 end
 --[[MINIFY]]end--]]
 
