@@ -869,14 +869,15 @@ local q_G = q(_G)
 loadBody = function(code1, code2, chunkName, ...)
   -- If we have table parameters that need to be exposed
   -- add them to upvalue
-  local t, expose = q_G, pack(...)
+  local t, n = q_G, select('#', ...)
 
-  if expose.n > 0 then
+  if n > 0 then
     t = {}
     for k, v in pairs(_G) do t[k] = v end
-    for i=1, expose.n do
-      if type(expose[i]) == 'table' then
-        for k, v in orderedPairs(expose[i]) do
+    for i=1, n do
+      local arg = select(i, ...)
+      if type(arg) == 'table' then
+        for k, v in orderedPairs(arg) do
           if t[k] == nil then
             t[k] = v
           end
