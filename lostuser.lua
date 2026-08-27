@@ -403,6 +403,8 @@ local function safeCall(f, safe, ...)
   return unpack(safeResult, 2)
 end
 
+--  TODO: auto-curry Lua lambdas by debug.getinfo(f).nparams
+
 --- Generate helper functions
 ---@param target any Anything we targeting function to
 ---@return function, boolean
