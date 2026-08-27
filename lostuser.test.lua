@@ -581,3 +581,61 @@ test('  Ex. num.  dict', shouldRaise(
   [[e((~-T'k')"'\\n'..k..' '..v")]],
   '_{\n1 type,\n2 trade,\n3 getInput,\n4 getOutput,\n5 isEnabled,\n6 getMerchantId}'
 ))
+
+--[[
+██████╗ ██╗███████╗ ██████╗ ██████╗ ██╗   ██╗███████╗██████╗ ██╗   ██╗
+██╔══██╗██║██╔════╝██╔════╝██╔═══██╗██║   ██║██╔════╝██╔══██╗╚██╗ ██╔╝
+██║  ██║██║███████╗██║     ██║   ██║██║   ██║█████╗  ██████╔╝ ╚████╔╝
+██║  ██║██║╚════██║██║     ██║   ██║╚██╗ ██╔╝██╔══╝  ██╔══██╗  ╚██╔╝
+██████╔╝██║███████║╚██████╗╚██████╔╝ ╚████╔╝ ███████╗██║  ██║   ██║
+╚═════╝ ╚═╝╚══════╝ ╚═════╝ ╚═════╝   ╚═══╝  ╚══════╝╚═╝  ╚═╝   ╚═╝
+]]
+
+--- `install` above writes globals by hand, so the BIOS startup itself -
+--- `component.list()` used as an iterator, `component.proxy`, and the
+--- first-letter naming - is covered only here, on the emulator.
+if emu then
+  --- Register components for real and let the BIOS discover them
+  ---@param names table component types to register, in registration order
+  ---@param command string program to run
+  ---@param message string expected print output
+  ---@param runs? number how many times the BIOS is started, default 1
+  local function discovered(names, command, message, runs)
+    return function()
+      install{}
+      local function forget()
+        for _, name in ipairs(names) do
+          _G[name], _G[name:sub(1,1):upper()] = nil, nil
+        end
+      end
+      forget()
+      emu.clear()
+      for _, name in ipairs(names) do emu.register(name, component(name)) end
+
+      local ok, err = true, nil
+      for _ = 1, runs or 1 do
+        if ok then ok, err = pcall(lu, command, 1) end
+      end
+      emu.clear()
+      forget()
+
+      if not ok then return false, err end
+      return printedMessage == message, printedMessage
+    end
+  end
+
+  --- A single component becomes both `robot` and `R`
+  test('  List iterator', discovered({'robot'}, 'Ru3', 'use(3)'))
+
+  --- `component.list()` returns a FRESH stateful iterator every call.
+  --- Reusing one exhausted table would leave the second start blind.
+  test('  List reusable', discovered({'robot'}, 'Ru3', ('use(3)'):rep(2), 2))
+
+  --- Same first letter: the shorter name takes it (`geolyzer` over
+  --- `generator`), whatever order `component.list()` yields them in.
+  test('  List letter  ', discovered({'geolyzer', 'generator'}, 'Gc!', 'canSeeSky()'))
+  test('  List letter 2', discovered({'generator', 'geolyzer'}, 'Gc!', 'canSeeSky()'))
+
+  --- Letter for one component, full name still reaches the other
+  test('  List by name ', discovered({'crafting', 'piston'}, 'Pp!,crafting.craft()', 'pull()craft()'))
+end

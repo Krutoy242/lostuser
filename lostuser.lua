@@ -105,7 +105,8 @@ T = tank_controller
 T = trading
 ]]
 local comps,componentDict = {},{}
-for address, name in pairs(component.list()) do comps[name]=address end
+-- `component.list()` is its own iterator: the returned table has `__call`
+for address, name in component.list() do comps[name]=address end
 for name, address in orderedPairs(comps) do
   --[[MINIFY]]if not skipComponents[name] then--]]
   local C, p = name:sub(1, 1):upper(), component.proxy(address)
